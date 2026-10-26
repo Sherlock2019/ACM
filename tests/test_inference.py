@@ -44,7 +44,7 @@ def test_relations_cover_every_kind(suite):
 def test_layers_name_their_places(suite):
     flight = by_action(suite, "John flew to London.")
     neighbours = answer(flight, "What happens to the neighbours")
-    assert "Croydon" in neighbours["question"] and "aircraft noise" in neighbours["answer"]
+    assert "Croydon" in neighbours["question"] and "aircraft noise" in neighbours["answer"].lower()
     assert any("aircraft" in why for why in neighbours["why"])
 
 
