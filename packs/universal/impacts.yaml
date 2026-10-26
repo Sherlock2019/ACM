@@ -1,8 +1,17 @@
-# Wider impacts: what an action does beyond the people and place it touches.
+# Wider impacts: what an action does beyond the people it touches, layer by layer.
 #
-# Two scopes:
-#   society  shared human systems - economy, law, trust, public services, safety
-#   earth    the planet - emissions, biodiversity, resources, waste
+# Scopes, from the place itself outwards (each is a layer of the report):
+#   environment  the local environment WHERE it happens - the site itself
+#   neighbour    the places next to it - noise, pollution, safety spill over
+#   connected    businesses, enterprises and systems tied to the place
+#   city         the city it is in - traffic, air, services, crime
+#   country      the country it is in - national law, economy, inventories
+#   society      shared human systems - economy, law, trust, public services, safety
+#   earth        the planet - emissions, biodiversity, resources, waste
+#
+# Which neighbours, connections, city and country a place has comes from
+# places.yaml. A rule fires whether or not they are known: it states the
+# mechanism, and the report names the layer's extent when the gazetteer knows it.
 #
 # A rule fires when the action's concept is listed (if `concepts` is given) AND
 # something involved in the action - an argument, an instrument, a means of
@@ -17,6 +26,102 @@
 version: 1
 
 rules:
+  # -- local environment ---------------------------------------------------
+  - concepts: [CREATE]
+    categories: [building]
+    impact: { scope: environment, aspect: land use, direction: "-", effect: "the site is built over" }
+
+  - concepts: [DESTROY]
+    categories: [building]
+    impact: { scope: environment, aspect: land use, direction: "0", effect: "the site is cleared" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [ecosystem]
+    impact: { scope: environment, aspect: landscape, direction: "-", effect: "the local landscape and habitat are gone" }
+
+  # -- neighbour environment -----------------------------------------------
+  - concepts: [MOVE]
+    categories: [aircraft]
+    impact: { scope: neighbour, aspect: noise, direction: "-", effect: "aircraft noise and fumes for people living near the airports" }
+
+  - concepts: [MOVE]
+    categories: [fossil_vehicle]
+    impact: { scope: neighbour, aspect: air quality, direction: "-", effect: "exhaust and noise along the route" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [ecosystem]
+    impact: { scope: neighbour, aspect: protection, direction: "-", effect: "nearby communities lose shade, clean air and flood protection" }
+
+  - concepts: [CREATE, DESTROY]
+    categories: [building]
+    impact: { scope: neighbour, aspect: nuisance, direction: "-", effect: "works bring noise, dust and traffic to the neighbours" }
+
+  - concepts: [THEFT]
+    impact: { scope: neighbour, aspect: safety, direction: "-", effect: "people nearby feel less safe" }
+
+  # -- connected environments (business, enterprise, systems) --------------
+  - concepts: [SALE, GIFT]
+    categories: [vehicle, fossil_vehicle]
+    impact: { scope: connected, aspect: registration, direction: "0", effect: "insurers and the vehicle registry must record the new owner" }
+
+  - concepts: [DESTROY]
+    categories: [data]
+    impact: { scope: connected, aspect: dependent systems, direction: "-", effect: "services and teams that rely on this data stop working" }
+
+  - concepts: [DEPLOY]
+    categories: [software]
+    impact: { scope: connected, aspect: integrations, direction: "0", effect: "connected services must work with the new version" }
+
+  - concepts: [THEFT]
+    impact: { scope: connected, aspect: insurance, direction: "-", effect: "insurers and the police are drawn in" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [public_service]
+    impact: { scope: connected, aspect: dependants, direction: "-", effect: "organisations relying on the service must find a replacement" }
+
+  # -- city ----------------------------------------------------------------
+  - concepts: [MOVE]
+    categories: [fossil_vehicle]
+    impact: { scope: city, aspect: traffic, direction: "-", effect: "adds to traffic and urban air pollution" }
+
+  - concepts: [MOVE]
+    categories: [low_carbon_transport]
+    impact: { scope: city, aspect: traffic, direction: "+", effect: "uses public transport instead of road space" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [public_service]
+    impact: { scope: city, aspect: services, direction: "-", effect: "residents lose a service the city relies on" }
+
+  - concepts: [CREATE]
+    categories: [public_service]
+    impact: { scope: city, aspect: services, direction: "+", effect: "residents gain a new service" }
+
+  - concepts: [CREATE]
+    categories: [building]
+    impact: { scope: city, aspect: urban growth, direction: "0", effect: "the city's built-up area grows" }
+
+  - concepts: [THEFT]
+    impact: { scope: city, aspect: crime, direction: "-", effect: "adds to the city's recorded crime" }
+
+  # -- country -------------------------------------------------------------
+  - concepts: [SALE, PURCHASE, PAYMENT]
+    impact: { scope: country, aspect: national economy, direction: "0", effect: "a taxable transaction counts in national economic activity" }
+
+  - concepts: [THEFT]
+    impact: { scope: country, aspect: national law, direction: "-", effect: "a crime under national law" }
+
+  - concepts: [MOVE]
+    categories: [aircraft]
+    impact: { scope: country, aspect: emissions inventory, direction: "-", effect: "counts in the country's transport emissions" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [ecosystem]
+    impact: { scope: country, aspect: natural heritage, direction: "-", effect: "the nation's natural heritage shrinks" }
+
+  - concepts: [DESTROY]
+    categories: [data]
+    impact: { scope: country, aspect: data protection, direction: "-", effect: "losing personal data may have to be reported under data-protection law" }
+
   # -- society -------------------------------------------------------------
   - concepts: [SALE, PURCHASE, PAYMENT]
     impact: { scope: society, aspect: economy, direction: "0", effect: "money circulates through the economy" }

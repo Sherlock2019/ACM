@@ -5,13 +5,16 @@
 > A language model predicts the next word. MLM first works out what a sentence means.
 > **ACM goes one step further: it predicts what an action *does*. It traces the
 > consequences for the one acting, for those it lands on, for other actors' goals,
-> for the place it happens, for society, and for the earth.**
+> and then outwards, layer by layer: the place it happens, its neighbours, the
+> businesses and systems connected to it, its city, its country, society, and the
+> earth.**
 
 ACM is built on the [Meaning Language Model (MLM)](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-),
 which turns a phrase into *Universal Phrase DNA*: who does what, to whom, where,
 when, how and why. ACM turns that structure into a graph of the full action in its
-context. It predicts the consequences circle by circle, and stores every node as a
-vector so it can be compared with past actions. When the actor is **"I"**, the
+context. It predicts the consequences circle by circle (who is affected) and layer
+by layer (where the effects reach, from the site of the action out to the earth).
+It stores every node as a vector so it can be compared with past actions. When the actor is **"I"**, the
 report is the model's view of its **own** planned action.
 
 ![How ACM sees an action](docs/acm-vision.png)
@@ -20,19 +23,21 @@ report is the model's view of its **own** planned action.
 the MLM parser plus the ACM engine. Nothing is placed by hand. Each ring shows what
 ACM's report put there. The coloured strips are the actual node vectors, and the
 scores on the right come from a real search of the graph vector store.*
+*The image predates the neighbour, connected, city and country layers and still
+shows the original six circles; regenerating it needs MLM's parser.*
 
 ---
 
 ## Contents
 
-- [The six circles](#the-six-circles)
+- [The circles and layers](#the-circles-and-layers)
 - [Quick start](#quick-start)
 - [Architecture](#architecture)
 - [Step 1 - Phrase DNA from MLM](#step-1---phrase-dna-from-mlm)
 - [Step 2 - Concepts and state changes](#step-2---concepts-and-state-changes)
 - [Step 3 - Placing each consequence](#step-3---placing-each-consequence)
 - [Step 4 - Other actors: goals and actions](#step-4---other-actors-goals-and-actions)
-- [Step 5 - Society and earth](#step-5---society-and-earth)
+- [Step 5 - The environment layers: local to earth](#step-5---the-environment-layers-local-to-earth)
 - [Step 6 - The action graph and its vectors](#step-6---the-action-graph-and-its-vectors)
 - [Step 7 - The graph vector database](#step-7---the-graph-vector-database)
 - [Command line](#command-line)
@@ -43,18 +48,53 @@ scores on the right come from a real search of the graph vector store.*
 
 ---
 
-## The six circles
+## The circles and layers
 
-| Circle | Question | Example |
-|---|---|---|
-| **Self / Actor** | What happens to the one acting? | loses the car, gains money |
-| **Impacted** | What happens to WHAT / TO WHOM? | Sarah gains the car |
-| **Other actors** | Does it help or block their goals and actions? | Mark's goal "buy the car" is blocked |
-| **Environment** | What changes WHERE it happens? | the database no longer exists in production |
-| **Society** | Economy, law, trust, public services | money circulates through the economy |
-| **Earth** | Emissions, biodiversity, resources, waste | flying emits CO2 |
+Three circles are about **who**: the actor, the ones impacted, and other actors.
+Seven layers are about **where**, from the place itself outwards:
 
-The same report as a mind map, exactly as `acm predict --format mermaid` prints it
+| | Circle / layer | Question | Example |
+|---|---|---|---|
+| who | **Self / Actor** | What happens to the one acting? | loses the car, gains money |
+| who | **Impacted** | What happens to WHAT / TO WHOM? | Sarah gains the car |
+| who | **Other actors** | Does it help or block their goals and actions? | Mark's goal "buy the car" is blocked |
+| where | **Local environment** | What changes WHERE it happens? | the database no longer exists in production |
+| where | **Neighbour environment** | What spills over to the places next to it? | aircraft noise for people living near the airports |
+| where | **Connected environments** | Which businesses, enterprises and systems tied to the place feel it? | services that rely on the deleted data stop working |
+| where | **City** | What changes for the city it is in? | a train trip uses public transport instead of road space |
+| where | **Country** | What changes at national level? | a flight counts in the UK's transport emissions |
+| where | **Society** | Economy, law, trust, public services | money circulates through the economy |
+| where | **Earth** | Emissions, biodiversity, resources, waste | flying emits CO2 |
+
+The layers nest. Each one contains the one before it:
+
+```mermaid
+flowchart TB
+  subgraph EARTH["🌍 Earth - emissions · biodiversity · resources · waste"]
+    subgraph SOCIETY["Society - economy · law · trust · public services"]
+      subgraph COUNTRY["Country - France"]
+        subgraph CITY["City - Paris"]
+          subgraph CONNECTED["Connected - Île-de-France region · Paris businesses and commuters"]
+            subgraph NEIGHBOUR["Neighbour - Boulogne-Billancourt · Saint-Denis · Montreuil"]
+              subgraph LOCAL["Local environment - Paris"]
+                A(["self sells my car to Sarah"])
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+```
+
+Each layer is a module of the same kind. Its **extent**, meaning which places it
+covers for this action, comes from the place gazetteer
+([`places.yaml`](packs/universal/places.yaml)). Its **content**, meaning what the
+action does there, comes from impact rules that name the layer as their `scope`
+([`impacts.yaml`](packs/universal/impacts.yaml)). Adding knowledge to a layer is
+a YAML edit, with no Python changes.
+
+The same report as a mind map, in the shape `acm predict --format mermaid` prints it
 for the scenario in the image:
 
 ```mermaid
@@ -71,8 +111,16 @@ mindmap
     Other actors
       Mark wants to buy my car - BLOCKED ❌
       Sarah wants to have car - ADVANCED ✅
-    Environment: Paris
+    Local environment: Paris
       'sell' takes place here
+    Neighbour environment: Boulogne-Billancourt, Saint-Denis, Montreuil
+      no known impact - no rule matched, which is not evidence of none
+    Connected environments: Île-de-France region, Paris businesses and commuters
+      registration: insurers and the vehicle registry must record the new owner ● changes
+    City: Paris
+      no known impact - no rule matched, which is not evidence of none
+    Country: France
+      national economy: a taxable transaction counts in national economic activity ● changes
     Society
       economy: money circulates through the economy ● changes
     Earth
@@ -91,8 +139,12 @@ git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
 python -m venv .venv && source .venv/bin/activate
 pip install -e ../SLM -e ".[dev]"
-pytest                                   # 30 tests, no parser model needed
+pytest                                   # 40 tests, no parser model needed
 ```
+
+Or let the launcher do it: `./start.sh` creates `.venv`, installs MLM from `../SLM`
+(or `$SLM_DIR`) and ACM, then opens an interactive prompt. `./start.sh predict "..."`
+runs any `acm` command, and `./start.sh test` runs the tests.
 
 To analyse new text, also install MLM's parser:
 
@@ -122,8 +174,20 @@ OTHER ACTORS
   Mark wants to buy my car - BLOCKED ❌  (Sarah has my car, so 'Mark has my car' cannot hold)
   Sarah wants to have car - ADVANCED ✅  (makes 'Sarah has car' true)
 
-ENVIRONMENT  Paris
+LOCAL ENVIRONMENT  Paris
   Paris: 'sell' takes place here
+
+NEIGHBOUR ENVIRONMENT  Boulogne-Billancourt, Saint-Denis, Montreuil
+  no known impact - no rule matched, which is not evidence of none
+
+CONNECTED ENVIRONMENTS  Île-de-France region, Paris businesses and commuters
+  registration: insurers and the vehicle registry must record the new owner (● changes)
+
+CITY  Paris
+  no known impact - no rule matched, which is not evidence of none
+
+COUNTRY  France
+  national economy: a taxable transaction counts in national economic activity (● changes)
 
 SOCIETY
   economy: money circulates through the economy (● changes)
@@ -152,8 +216,10 @@ flowchart TD
   DNA --> ENT[Entity index<br/>pronouns resolved, canonical keys]
   ENT --> BIND[Bind concept roles<br/>sell → SALE: seller · buyer · thing]
   BIND --> FACTS[State changes<br/>has·Sarah, car· = true]
-  FACTS --> PLACE[Place each change<br/>actor · impacted · environment]
-  DNA --> IMP[Impact rules<br/>society · earth]
+  FACTS --> PLACE[Place each change<br/>actor · impacted · local environment]
+  ENT --> GEO[Gazetteer<br/>neighbours · connected · city · country]
+  GEO --> IMP
+  DNA --> IMP[Layer impact rules<br/>environment · neighbour · connected ·<br/>city · country · society · earth]
   ENT --> INT[Other actors' goals and actions<br/>as wanted states]
   FACTS --> REL[Relate<br/>advanced · enabled · blocked · at risk · hindered]
   INT --> REL
@@ -165,25 +231,27 @@ flowchart TD
   GRAPH --> DB[(Graph vector DB)]
   REP --> OUT[Text · Mermaid mind map · JSON]
 
-  PACKS[[YAML packs<br/>concepts · states · impacts · verbs · categories]] -.-> BIND
+  PACKS[[YAML packs<br/>concepts · states · impacts · places · verbs · categories]] -.-> BIND
   PACKS -.-> IMP
+  PACKS -.-> GEO
 ```
 
-| Layer | Answers | Module | Knowledge |
+| Stage | Answers | Module | Knowledge |
 |---|---|---|---|
 | Phrase DNA | Who does what, to whom, where, when, why? | MLM (`splm`) | MLM language packs |
 | Entity index | Which mentions are the same entity? | `acm/entities.py` | MLM context graph |
 | Binding | Which element plays which part in the action? | `acm/engine.py` | `packs/universal/concepts.yaml`, `packs/<lang>/actions.yaml` |
 | State changes | What becomes true or false? | `acm/engine.py` | `packs/universal/states.yaml` |
 | Relations | Does that help or block others? | `acm/engine.py` | state exclusivity, concept `requires` |
-| Impacts | What does it do to society and the earth? | `acm/engine.py` | `packs/universal/impacts.yaml`, `packs/<lang>/categories.yaml` |
+| Environment layers | What surrounds the place: neighbours, connections, city, country? | `acm/engine.py` | `packs/universal/places.yaml` |
+| Impacts | What does it do to each layer, from the site to the earth? | `acm/engine.py` | `packs/universal/impacts.yaml`, `packs/<lang>/categories.yaml` |
 | Graph | How does it all connect, as vectors? | `acm/graph.py` | MLM role inventory |
 | Store | What have we seen before that looks like this? | `acm/store.py` | SQLite |
 | Output | How do we show it? | `acm/render.py`, `acm/cli.py` | - |
 
 As in MLM, **no linguistic or world facts live in Python**. Which verb is a sale,
-what a sale changes, which states are exclusive and what flying does to the
-climate are all YAML under [`packs/`](packs/).
+what a sale changes, which states are exclusive, which country Paris is in and what
+flying does to the climate are all YAML under [`packs/`](packs/).
 
 ---
 
@@ -207,6 +275,11 @@ flowchart LR
 `tense=future  modality=intention  certainty=0.90`. The nested *pay* frame has no
 subject of its own, so ACM gives it the outer actor: the debt being paid is the
 actor's own.
+
+WHERE (the LOCATION, DESTINATION and SOURCE roles) is the starting point for all
+the environment layers. *Paris* becomes the local environment, and the gazetteer
+expands it to its neighbours, connected environments, city and country
+([Step 5](#step-5---the-environment-layers-local-to-earth)).
 
 ---
 
@@ -272,7 +345,7 @@ flowchart TD
   F{{state change}} --> Q1{about the actor?}
   Q1 -- yes --> ACT[SELF / ACTOR]
   Q1 -- no --> Q2{about a place?}
-  Q2 -- yes --> ENV[ENVIRONMENT]
+  Q2 -- yes --> ENV[LOCAL ENVIRONMENT]
   Q2 -- no --> Q3{first argument,<br/>or an animate participant?}
   Q3 -- yes --> IMPD[IMPACTED]
   Q3 -- no --> SKIP[not repeated:<br/>'car belongs to Sarah' = 'Sarah gains car']
@@ -282,11 +355,15 @@ flowchart TD
 
 Examples from the tests:
 
-| Action | Actor | Impacted | Environment |
+| Action | Actor | Impacted | Local environment |
 |---|---|---|---|
 | *The engineer deleted the database in production.* | - | database: no longer exists | production: database no longer exists |
 | *John flew to London.* | is now in London | - | London: John arrives |
 | *John owns a car. He sold it to Sarah.* | loses car, gains money | Sarah: gains car, loses money | - |
+
+State changes stop at the local environment: they are facts about specific
+entities and places. Everything further out, from the neighbours to the earth,
+comes from layer impact rules, covered in Step 5.
 
 ---
 
@@ -335,102 +412,180 @@ flowchart TD
 
 ---
 
-## Step 5 - Society and earth
+## Step 5 - The environment layers: local to earth
 
-Wider impacts come from rules in [`impacts.yaml`](packs/universal/impacts.yaml).
-A rule fires when the action's concept matches and something involved belongs to
-a listed category ([`categories.yaml`](packs/en/categories.yaml)): an argument, an
-instrument, a means of transport, or the verb itself.
+Beyond the people involved, an action ripples outwards through seven layers:
+
+```mermaid
+flowchart LR
+  L[Local environment<br/>WHERE it happens] --> N[Neighbour<br/>the places next to it]
+  N --> C[Connected<br/>business · enterprise ·<br/>systems · region]
+  C --> CI[City]
+  CI --> CO[Country]
+  CO --> S[Society]
+  S --> E[Earth]
+```
+
+Every layer has the same two parts.
+
+**1. Its extent: what the layer *is* for this action.** ACM looks each place the
+action happens at up in the gazetteer,
+[`places.yaml`](packs/universal/places.yaml):
+
+```yaml
+paris:
+  kind: city
+  name: Paris
+  country: france
+  neighbours: [Boulogne-Billancourt, Saint-Denis, Montreuil]
+  connected: [Île-de-France region, Paris businesses and commuters]
+production:
+  kind: system          # site · business · enterprise · system · city · region · country
+  neighbours: [staging and test environments]
+  connected: [the enterprise that runs it, its customers and users, services that call it]
+```
+
+A city is its own city, and a country is taken from the city when it is not given.
+A place that is not in the gazetteer keeps its local environment, but its other
+layers are reported as *not known*, with a note. They are never guessed.
+
+| Place | Neighbour | Connected | City | Country |
+|---|---|---|---|---|
+| Paris | Boulogne-Billancourt, Saint-Denis, Montreuil | Île-de-France region, Paris businesses and commuters | Paris | France |
+| London | Croydon, Watford, Slough | Greater London region, the City of London financial district | London | United Kingdom |
+| production | staging and test environments | the enterprise that runs it, its customers and users, services that call it | not known | not known |
+
+**2. Its content: what the action does to the layer.** This comes from rules in
+[`impacts.yaml`](packs/universal/impacts.yaml), each with a `scope` that names its
+layer. A rule fires when the action's concept matches and something involved
+belongs to a listed category ([`categories.yaml`](packs/en/categories.yaml)): an
+argument, an instrument, a means of transport, or the verb itself.
+
+```yaml
+- concepts: [MOVE]
+  categories: [aircraft]
+  impact: { scope: neighbour, aspect: noise, direction: "-", effect: "aircraft noise and fumes for people living near the airports" }
+```
 
 ```mermaid
 flowchart LR
   subgraph Action
     C[concept: MOVE]
     X[involved: plane · fly]
+    P[WHERE: London]
   end
-  C --> R{rule:<br/>MOVE + aircraft}
+  C --> R{rules:<br/>MOVE + aircraft}
   X -->|category: aircraft| R
-  R --> E[EARTH · emissions ▼<br/>flying emits a large amount of CO2 per person]
+  P -->|gazetteer| G[neighbours: Croydon, Watford, Slough<br/>country: United Kingdom]
+  R --> NB[NEIGHBOUR · noise ▼]
+  R --> CO[COUNTRY · emissions inventory ▼]
+  R --> E[EARTH · emissions ▼]
+  G -.->|names| NB
+  G -.->|names| CO
 ```
 
-| Action | Society | Earth |
-|---|---|---|
-| *John flew to London.* | - | emissions ▼ |
-| *John traveled to Paris by train.* | - | emissions ▲ (low-carbon) |
-| *The company destroyed the forest.* | - | biodiversity ▼ |
-| *John will sell his car to Sarah.* | economy ● | resources ▲ (reuse) |
-| *John stole the car.* | law ▼ | - |
-| *The engineer deleted the database in production.* | data ▼ | - |
-| *John kicked the ball.* | no known impact | no known impact |
+Rules fire whether or not the place is known. A rule states the mechanism, and the
+gazetteer names where it lands. *The company destroyed the forest* names no place,
+so its neighbour layer still says that nearby communities lose shade and flood
+protection, under the heading "no place stated".
 
-"No known impact" means no rule matched. **It is never reported as "no impact".**
+| Action | Local | Neighbour | Connected | City | Country | Society | Earth |
+|---|---|---|---|---|---|---|---|
+| *John flew to London.* | John arrives | noise ▼ | - | - | emissions inventory ▼ | - | emissions ▼ |
+| *John traveled to Paris by train.* | John arrives | - | - | traffic ▲ | - | - | emissions ▲ |
+| *The company destroyed the forest.* | landscape ▼ | protection ▼ | - | - | natural heritage ▼ | - | biodiversity ▼ |
+| *John will sell his car to Sarah in Paris.* | 'sell' takes place | - | registration ● | - | national economy ● | economy ● | resources ▲ |
+| *John stole the car.* | - | safety ▼ | insurance ▼ | crime ▼ | national law ▼ | law ▼ | - |
+| *The engineer deleted the database in production.* | database no longer exists | - | dependent systems ▼ | - | data protection ▼ | data ▼ | - |
+| *John kicked the ball.* | - | - | - | - | - | - | - |
+
+"-" here, and "no known impact" in the output, mean that no rule matched. **It is
+never reported as "no impact".** A negated action shows "nothing changes" on every
+layer.
 
 ---
 
 ## Step 6 - The action graph and its vectors
 
-Everything above becomes one graph per action. This is the real graph for the
-scenario in the image, exactly as `acm graph` prints it:
+Everything above becomes one graph per action. This is the real graph for John's
+version of the scenario (*Mark wants to buy John's car. Sarah needs a car. John
+will sell his car to Sarah in Paris tomorrow to pay his debt.*), exactly as
+`acm graph` prints it from the test fixtures. The place links to each of its
+layers, and each impact sits within its layer:
 
 ```mermaid
 flowchart LR
   n0(["SALE"])
-  n1(("self"))
-  n2["my car"]
+  n1["John"]
+  n2["his car"]
   n3[/"Paris"/]
   n4["Sarah"]
   n5["tomorrow"]
-  n6{{"has(Sarah, my car)"}}
-  n7{{"not has(self, my car)"}}
-  n8{{"has(self, money)"}}
-  n9{{"not has(Sarah, money)"}}
-  n10{{"occurs_at(sell, Paris)"}}
-  n11(("society"))
-  n12>"economy: money circulates through the economy"]
-  n13(("earth"))
-  n14>"resources: an existing object is reused instead of a new one being made"]
-  n15[["Mark: buy my car"]]
-  n16["Mark"]
-  n17[["Sarah: have car"]]
-  n18[["self: pay my debt"]]
+  n6(("neighbour: Boulogne-Billancourt, Saint-Denis, Montreuil"))
+  n7(("connected: Île-de-France region, Paris businesses and commuters"))
+  n8(("city: Paris"))
+  n9(("country: France"))
+  n10{{"has(Sarah, his car)"}}
+  n11{{"not has(John, his car)"}}
+  n12{{"has(John, money)"}}
+  n13{{"not has(Sarah, money)"}}
+  n14{{"occurs_at(sell, Paris)"}}
+  n15>"registration: insurers and the vehicle registry must record the new owner"]
+  n16>"national economy: a taxable transaction counts in national economic activity"]
+  n17(("society"))
+  n18>"economy: money circulates through the economy"]
+  n19(("earth"))
+  n20>"resources: an existing object is reused instead of a new one being made"]
+  n21[["Mark: buy John's car"]]
+  n22["Mark"]
+  n23[["Sarah: have car"]]
+  n24[["John: pay his debt"]]
   n0 -->|"AGENT"| n1
   n0 -->|"PATIENT"| n2
   n0 -->|"LOCATION"| n3
   n0 -->|"DESTINATION"| n4
   n0 -->|"TIME"| n5
-  n0 -->|"causes"| n6
-  n6 -->|"changes:impacted"| n4
-  n0 -->|"causes"| n7
-  n7 -->|"changes:actor"| n1
-  n0 -->|"causes"| n8
-  n8 -->|"changes:actor"| n1
-  n0 -->|"causes"| n9
-  n9 -->|"changes:impacted"| n4
+  n3 -->|"next_to"| n6
+  n3 -->|"connected_to"| n7
+  n3 -->|"in_city"| n8
+  n3 -->|"in_country"| n9
   n0 -->|"causes"| n10
-  n10 -->|"changes:environment"| n3
-  n0 -->|"impacts"| n12
-  n12 -->|"within"| n11
-  n0 -->|"impacts"| n14
-  n14 -->|"within"| n13
-  n16 -->|"wants"| n15
-  n0 -->|"blocked"| n15
-  n4 -->|"wants"| n17
-  n0 -->|"advanced"| n17
-  n1 -->|"wants"| n18
-  n0 -->|"enabled"| n18
+  n10 -->|"changes:impacted"| n4
+  n0 -->|"causes"| n11
+  n11 -->|"changes:actor"| n1
+  n0 -->|"causes"| n12
+  n12 -->|"changes:actor"| n1
+  n0 -->|"causes"| n13
+  n13 -->|"changes:impacted"| n4
+  n0 -->|"causes"| n14
+  n14 -->|"changes:environment"| n3
+  n0 -->|"impacts"| n15
+  n15 -->|"within"| n7
+  n0 -->|"impacts"| n16
+  n16 -->|"within"| n9
+  n0 -->|"impacts"| n18
+  n18 -->|"within"| n17
+  n0 -->|"impacts"| n20
+  n20 -->|"within"| n19
+  n22 -->|"wants"| n21
+  n0 -->|"blocked"| n21
+  n4 -->|"wants"| n23
+  n0 -->|"advanced"| n23
+  n1 -->|"wants"| n24
+  n0 -->|"enabled"| n24
 ```
 
 | Shape | Node kind |
 |---|---|
 | `([ ])` stadium | action |
-| `(( ))` circle | self, society, earth |
+| `(( ))` circle | self; a layer: neighbour, connected, city, country, society, earth |
 | `[ ]` rectangle | entity, time |
 | `[/ /]` parallelogram | place |
 | `{{ }}` hexagon | state change |
-| `> ]` flag | society / earth impact |
+| `> ]` flag | layer impact |
 | `[[ ]]` subroutine | another actor's goal or action |
 
-**Every node carries a 79-dimensional vector.** The dimensions are built from MLM's
+**Every node carries an 83-dimensional vector.** The dimensions are built from MLM's
 role and entity-type inventories, so they grow if those do:
 
 ```mermaid
@@ -438,7 +593,7 @@ flowchart LR
   V[node vector] --- K[kind<br/>9]
   V --- RO[MLM role<br/>17]
   V --- ET[entity type<br/>9]
-  V --- CI[circle<br/>6]
+  V --- CI[circle / layer<br/>10]
   V --- LH[lemma hash<br/>32]
   V --- SC[certainty · polarity ·<br/>past · present · future · negation<br/>6]
 ```
@@ -500,7 +655,11 @@ sequenceDiagram
 ```
 
 Queries available: `search(vector, kind=...)`, `similar_actions(report)`,
-`history(entity)` (everything that ever happened to Sarah) and `stats()`. Search
+`history(entity)` (everything that ever happened to Sarah) and `stats()`.
+Layers are stored like any other part of the graph. `history("paris")` therefore
+also returns the place's `next_to`, `connected_to`, `in_city` and `in_country`
+links, and `search(vector, kind="impact")` finds past impacts that look alike on
+any layer. Search
 is exact numpy cosine, which is fine for thousands of nodes. FAISS or pgvector is
 the upgrade path behind the same methods.
 
@@ -515,7 +674,20 @@ acm remember "..." [--db data/acm.db]   # store the graph
 acm similar  "..." [--db data/acm.db]   # nearest stored actions
 ```
 
-(`acm` is installed as a script; `python -m acm.cli` works too.)
+(`acm` is installed as a script; `python -m acm.cli` works too.) All three output
+formats include every circle and layer. `--format json` puts each layer's
+consequences in `consequences` (with `target` set to `environment`, `neighbour`,
+`connected`, `city`, `country`, `society` or `earth`) and the layer extents in
+`scopes`.
+
+The launcher wraps the same commands:
+
+```bash
+./start.sh                              # interactive: type an action; '+...' adds a context line
+./start.sh predict "..." --format mermaid
+./start.sh test                         # pytest
+./start.sh setup                        # (re)install MLM and ACM into .venv
+```
 
 Python:
 
@@ -526,6 +698,8 @@ from acm.render import to_mindmap
 engine = ConsequenceEngine()
 report = engine.analyze("I will sell my car to Sarah.", context=["Mark wants to buy my car."])
 report.for_target(Target.IMPACTED)      # consequences per circle
+report.for_target(Target.COUNTRY)       # ... or per layer
+report.scopes["city"]                   # what each layer is here: city, country, neighbours, ...
 report.other_relations()                # Mark: BLOCKED
 print(to_mindmap(report))
 ```
@@ -539,8 +713,11 @@ These carry over from MLM and are enforced in code and tests:
 - **An unknown verb gets no verdict.** If ACM has no concept for a verb, its
   consequences are generic and marked uninformative, and every goal relation is
   *no evidence*, never *unaffected*.
-- **No rule is not no impact.** When no society or earth rule fires, the output
-  says so explicitly.
+- **No rule is not no impact.** When no rule fires for a layer, from the local
+  environment to the earth, the output says so explicitly.
+- **An unknown place is not placed.** A place missing from the gazetteer keeps its
+  local environment, but its neighbours, connections, city and country are reported
+  as *not known*, with a note. They are never guessed.
 - **Negation and conditions count.** A negated action changes nothing. A
   conditional one states its condition and has lower certainty (×0.6).
 - **Certainty is reported.** Past actions score 1.0 and planned ones 0.8–0.9, or
@@ -559,8 +736,15 @@ These carry over from MLM and are enforced in code and tests:
 `packs/universal/concepts.yaml`. The loader rejects unknown states, wrong
 argument counts and unknown roles.
 
-**An impact:** add a rule to `packs/universal/impacts.yaml` and, if needed, words
-to `packs/<lang>/categories.yaml`.
+**An impact:** add a rule to `packs/universal/impacts.yaml` with the layer as its
+`scope` (`environment`, `neighbour`, `connected`, `city`, `country`, `society`
+or `earth`) and, if needed, words to `packs/<lang>/categories.yaml`. The loader
+rejects unknown scopes.
+
+**A place:** add an entry to `packs/universal/places.yaml` with its `kind`,
+`neighbours`, `connected` environments, and the `city` and `country` it belongs to.
+Those two are keys of other entries, and the loader checks that they are a city
+and a country.
 
 **A language:** add `packs/<lang>/actions.yaml` (verbs plus goal markers) and
 `categories.yaml`. MLM must support the language.
@@ -573,12 +757,15 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 ## Limitations
 
 - **Seed knowledge.** There are 15 concepts, about 40 English verbs (fewer in French
-  and Vietnamese) and about 20 impact rules. Anything outside them falls back to
-  generic consequences.
+  and Vietnamese), about 40 impact rules and about 20 gazetteer places. Anything
+  outside them falls back to generic consequences or to "not known".
+- **Layers come from a gazetteer, not a map.** The neighbours and connections of a
+  place are a hand-written list, and a common-noun place such as *production* or
+  *factory* has no city or country of its own.
 - **Entity identity is coarse.** Common nouns are keyed by head lemma, so "John's
   car" and "his car" match, but two different cars would also match.
-- **Society and earth impacts are rules, not models.** They show the mechanism,
-  not a full footprint.
+- **Layer impacts are rules, not models.** From the neighbour layer to the earth
+  they show the mechanism, not a measured footprint.
 - **MLM's parse errors propagate.** For example, French *à Sarah* is read as a
   location.
 - **Explanations are rendered in English only;** the reasoning is
@@ -591,7 +778,7 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 ## Tests and scripts
 
 ```bash
-pytest                              # 30 tests over committed CoNLL-U fixtures
+pytest                              # 40 tests over committed CoNLL-U fixtures
 python scripts/make_fixtures.py     # regenerate fixtures (needs MLM's parser); review the diff
 python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real run
 ```
@@ -600,11 +787,12 @@ python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real
 
 ```
 ACM/
-  packs/universal/   states, concepts, impacts, settings
+  start.sh           launcher: setup, interactive prompt, any acm command, tests
+  packs/universal/   states, concepts, impacts (per layer), places (gazetteer), settings
   packs/<lang>/      actions (verb → concept, goal markers), categories
   src/acm/           engine, entities, graph (vectors), store, render, cli
   scripts/           make_fixtures.py, draw_vision.py
-  tests/             30 tests over committed fixtures
+  tests/             40 tests over committed fixtures
   docs/              acm-vision.svg / .png
 ```
 

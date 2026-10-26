@@ -14,6 +14,8 @@ from typing import Any
 
 import yaml
 
+from acm.schema import LAYERS
+
 PACKS_DIR = Path(__file__).resolve().parents[2] / "packs"
 
 
@@ -94,9 +96,26 @@ class Concept:
         return tuple(effect for effect in self.effects if effect.primary)
 
 
+PLACE_KINDS = frozenset({"site", "business", "enterprise", "system", "city", "region", "country"})
+
+
+@dataclass(frozen=True)
+class PlaceSpec:
+    """A gazetteer entry: what surrounds a place, what it is tied to, where it sits."""
+
+    key: str
+    name: str
+    kind: str
+    city: str | None = None  # gazetteer key of the city it is in
+    country: str | None = None  # gazetteer key of the country it is in
+    neighbours: tuple[str, ...] = ()
+    connected: tuple[str, ...] = ()
+    aliases: tuple[str, ...] = ()
+
+
 @dataclass(frozen=True)
 class ImpactRule:
-    """A society or earth impact, conditional on concept and/or category."""
+    """An impact on one environment layer, conditional on concept and/or category."""
 
     scope: str
     aspect: str
@@ -187,6 +206,24 @@ class ConsequencePacks:
             )
             for rule in rules
         )
+
+        places = _load_yaml(universal / "places.yaml").get("places", {})
+        self.places: dict[str, PlaceSpec] = {
+            key.lower(): PlaceSpec(
+                key=key.lower(),
+                name=str(spec.get("name", key)),
+                kind=spec["kind"],
+                city=spec.get("city"),
+                country=spec.get("country"),
+                neighbours=tuple(spec.get("neighbours", [])),
+                connected=tuple(spec.get("connected", [])),
+                aliases=tuple(alias.lower() for alias in spec.get("aliases", [])),
+            )
+            for key, spec in places.items()
+        }
+        self._place_index = {
+            name: place for place in self.places.values() for name in (place.key, *place.aliases)
+        }
         self._validate()
         self._languages: dict[str, dict[str, Any]] = {}
 
@@ -209,8 +246,15 @@ class ConsequencePacks:
             unknown = rule.concepts - set(self.concepts)
             if unknown:
                 raise ValueError(f"impact rule {rule.effect!r}: unknown concepts {sorted(unknown)}")
-            if rule.scope not in {"society", "earth"}:
+            if rule.scope not in {layer.value for layer in LAYERS}:
                 raise ValueError(f"impact rule {rule.effect!r}: unknown scope {rule.scope!r}")
+        for place in self.places.values():
+            if place.kind not in PLACE_KINDS:
+                raise ValueError(f"place {place.key!r}: unknown kind {place.kind!r}")
+            for field_name, kind in (("city", "city"), ("country", "country")):
+                ref = getattr(place, field_name)
+                if ref is not None and self.places.get(ref.lower(), PlaceSpec("", "", "")).kind != kind:
+                    raise ValueError(f"place {place.key!r}: {field_name} {ref!r} is not a {kind} in the gazetteer")
 
     def language(self, code: str) -> dict[str, Any]:
         if code not in self._languages:
@@ -226,6 +270,20 @@ class ConsequencePacks:
 
     def impacts_for(self, concept: str | None, categories: set[str]) -> list[ImpactRule]:
         return [rule for rule in self.impact_rules if rule.matches(concept, categories)]
+
+    def place(self, name: str | None) -> PlaceSpec | None:
+        return self._place_index.get(name.lower()) if name else None
+
+    def city_of(self, place: PlaceSpec) -> PlaceSpec | None:
+        return place if place.kind == "city" else self.place(place.city)
+
+    def country_of(self, place: PlaceSpec) -> PlaceSpec | None:
+        if place.kind == "country":
+            return place
+        if place.country:
+            return self.place(place.country)
+        city = self.city_of(place)
+        return self.place(city.country) if city is not None and city is not place else None
 
     def concept_for(self, lemma: str, language: str) -> Concept | None:
         name = self.language(language).get("actions", {}).get(lemma.lower())

@@ -20,9 +20,29 @@ class Target(str, Enum):
     ACTOR = "actor"  # WHO - the one acting (possibly the model itself)
     IMPACTED = "impacted"  # WHAT / TO WHOM - the subjects the action lands on
     OTHER_ACTORS = "other_actors"  # other actors' goals and actions
-    ENVIRONMENT = "environment"  # WHERE - the place acted upon
+    ENVIRONMENT = "environment"  # WHERE - the local environment acted upon
+    NEIGHBOUR = "neighbour"  # the places next to it
+    CONNECTED = "connected"  # businesses, enterprises and systems tied to it
+    CITY = "city"  # the city it is in
+    COUNTRY = "country"  # the country it is in
     SOCIETY = "society"  # shared human systems
     EARTH = "earth"  # the planet
+
+
+#: The environment layers, from the place itself outwards. Each one can carry
+#: impact rules (packs/universal/impacts.yaml).
+LAYERS: tuple[Target, ...] = (
+    Target.ENVIRONMENT,
+    Target.NEIGHBOUR,
+    Target.CONNECTED,
+    Target.CITY,
+    Target.COUNTRY,
+    Target.SOCIETY,
+    Target.EARTH,
+)
+
+#: Layers whose extent is resolved from the place gazetteer (packs/universal/places.yaml).
+GEO_LAYERS: tuple[Target, ...] = (Target.NEIGHBOUR, Target.CONNECTED, Target.CITY, Target.COUNTRY)
 
 
 class RelationStatus(str, Enum):
@@ -67,7 +87,7 @@ class Consequence(BaseModel):
     """A change, seen from the entity or scope it is reported under."""
 
     fact: StateFact | None = Field(
-        default=None, description="The state change; None for society/earth impacts"
+        default=None, description="The state change; None for layer impacts"
     )
     target: Target
     about: str
@@ -118,6 +138,10 @@ class ConsequenceReport(BaseModel):
         default=False, description="The actor is 'I': the model is assessing its own action"
     )
     places: list[str] = Field(default_factory=list)
+    scopes: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="What each geographic layer is for this action: neighbour/connected/city/country -> names",
+    )
     tense: str | None = None
     modality: str | None = None
     certainty: float = 1.0

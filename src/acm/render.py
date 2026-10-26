@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from acm.schema import ConsequenceReport, Relation, RelationStatus, Target
+from acm.schema import GEO_LAYERS, LAYERS, ConsequenceReport, Relation, RelationStatus, Target
 
 GOAL_WORDS = {
     RelationStatus.ADVANCED: "ADVANCED ✅",
@@ -27,6 +27,15 @@ ACTION_WORDS = {
 }
 DIRECTION = {"+": "▲ helps", "-": "▼ harms", "0": "● changes"}
 NO_IMPACT = "no known impact - no rule matched, which is not evidence of none"
+LAYER_TITLES = {
+    Target.ENVIRONMENT: "Local environment",
+    Target.NEIGHBOUR: "Neighbour environment",
+    Target.CONNECTED: "Connected environments",
+    Target.CITY: "City",
+    Target.COUNTRY: "Country",
+    Target.SOCIETY: "Society",
+    Target.EARTH: "Earth",
+}
 
 
 def status_word(relation: Relation) -> str:
@@ -40,9 +49,11 @@ def relation_line(relation: Relation) -> str:
 
 
 def _grouped(report: ConsequenceReport, target: Target) -> dict[str, list[str]]:
+    """State changes under a target, by the entity they are about."""
     groups: dict[str, list[str]] = {}
     for consequence in report.for_target(target):
-        groups.setdefault(consequence.about_label, []).append(consequence.text)
+        if consequence.fact is not None:
+            groups.setdefault(consequence.about_label, []).append(consequence.text)
     return groups
 
 
@@ -50,7 +61,22 @@ def _impact_lines(report: ConsequenceReport, target: Target) -> list[str]:
     return [
         f"{c.about}: {c.text} ({DIRECTION.get(c.direction or '0', '')})"
         for c in report.for_target(target)
+        if c.fact is None
     ]
+
+
+def layer_extent(report: ConsequenceReport, target: Target) -> str | None:
+    """What a layer is for this action: the place, its city, its country, ..."""
+    if target == Target.ENVIRONMENT:
+        return ", ".join(report.places) or "no place stated"
+    if target in GEO_LAYERS:
+        names = report.scopes.get(target.value, [])
+        return ", ".join(names) or ("not known" if report.places else "no place stated")
+    return None
+
+
+def _empty_layer(report: ConsequenceReport) -> list[str]:
+    return [NO_IMPACT] if report.realized else ["nothing changes"]
 
 
 # -- Mermaid mind map -------------------------------------------------------
@@ -95,19 +121,16 @@ def to_mindmap(report: ConsequenceReport) -> str:
         for relation in others:
             node(3, relation_line(relation))
 
-    environment = _grouped(report, Target.ENVIRONMENT)
-    node(2, "Environment" + (f": {', '.join(report.places)}" if report.places else ""))
-    if environment:
-        for place, texts in environment.items():
-            for text in texts:
-                node(3, f"{place}: {text}" if len(environment) > 1 else text)
-    else:
-        node(3, "no place stated")
-
-    for target, heading in ((Target.SOCIETY, "Society"), (Target.EARTH, "Earth")):
-        node(2, heading)
-        impacts = _impact_lines(report, target)
-        for text in impacts or ([NO_IMPACT] if report.realized else ["nothing changes"]):
+    for target in LAYERS:
+        extent = layer_extent(report, target)
+        node(2, LAYER_TITLES[target] + (f": {extent}" if extent else ""))
+        changes = _grouped(report, target)
+        rows = [
+            f"{where}: {text}" if len(changes) > 1 else text
+            for where, texts in changes.items()
+            for text in texts
+        ]
+        for text in rows + _impact_lines(report, target) or _empty_layer(report):
             node(3, text)
     return "\n".join(lines)
 
@@ -172,12 +195,13 @@ def to_text(report: ConsequenceReport) -> str:
         [f"{who}: {'; '.join(texts)}" for who, texts in _grouped(report, Target.IMPACTED).items()],
     )
     section("OTHER ACTORS", [f"{relation_line(r)}  ({r.reason})" for r in report.other_relations()])
-    section(
-        f"ENVIRONMENT  {', '.join(report.places) or 'no place stated'}",
-        [f"{where}: {'; '.join(texts)}" for where, texts in _grouped(report, Target.ENVIRONMENT).items()],
-    )
-    section("SOCIETY", _impact_lines(report, Target.SOCIETY) or [NO_IMPACT])
-    section("EARTH", _impact_lines(report, Target.EARTH) or [NO_IMPACT])
+    for target in LAYERS:
+        extent = layer_extent(report, target)
+        rows = [f"{where}: {'; '.join(texts)}" for where, texts in _grouped(report, target).items()]
+        section(
+            LAYER_TITLES[target].upper() + (f"  {extent}" if extent else ""),
+            rows + _impact_lines(report, target) or _empty_layer(report),
+        )
     if report.notes:
         section("NOTES", report.notes)
     return "\n".join(out)

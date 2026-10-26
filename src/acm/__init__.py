@@ -8,8 +8,9 @@ circle by circle:
 * the **actor** (WHO) - the model itself when the actor is "I",
 * the **subjects impacted** (WHAT / TO WHOM),
 * **other actors** - their goals and their actions,
-* the **environment** acted upon (WHERE),
-* **society** and the **earth**.
+* then outwards, layer by layer: the **local environment** acted upon (WHERE),
+  its **neighbours**, the **connected** businesses, enterprises and systems, its
+  **city**, its **country**, **society** and the **earth**.
 
 The output is a structured report, a Mermaid mind map, and a vector graph that can
 be stored and searched.

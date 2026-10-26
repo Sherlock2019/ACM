@@ -82,7 +82,18 @@ def test_store_finds_the_closest_action(predict):
 
 def test_mindmap_has_every_circle(predict):
     mindmap = to_mindmap(predict("Mark wants to buy John's car.", SALE))
-    for heading in ("Actor: John", "Impacted", "Other actors", "Environment: Paris", "Society", "Earth"):
+    for heading in (
+        "Actor: John",
+        "Impacted",
+        "Other actors",
+        "Local environment: Paris",
+        "Neighbour environment: Boulogne-Billancourt",
+        "Connected environments: Île-de-France region",
+        "City: Paris",
+        "Country: France",
+        "Society",
+        "Earth",
+    ):
         assert heading in mindmap
     assert "BLOCKED" in mindmap
     body = mindmap.splitlines()[2:]

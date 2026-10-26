@@ -1,8 +1,10 @@
 """The consequence engine: Phrase DNA in, consequences and relations out.
 
     text -> MLM frames -> bind concept roles -> state changes
-         -> place each change: actor / impacted subjects / environment (WHERE)
-         -> wider impacts: society / earth
+         -> place each change: actor / impacted subjects / local environment (WHERE)
+         -> resolve WHERE in the gazetteer: neighbours / connected / city / country
+         -> layer impacts: environment / neighbour / connected / city / country /
+            society / earth
          -> compare with other actors' goals and actions
          -> action graph with a vector on every node
 
@@ -26,6 +28,7 @@ from acm.entities import EntityIndex, is_animate, is_place
 from acm.graph import Embedder, build_action_graph, default_embedder
 from acm.packs import Concept, ConsequencePacks, EffectSpec, get_packs
 from acm.schema import (
+    GEO_LAYERS,
     SELF,
     UNKNOWN,
     Consequence,
@@ -157,6 +160,7 @@ class ConsequenceEngine:
         bindings = self._bind(action, concept, position, index) if concept else {}
         places = self._places(action, position, index, bindings)
         report.places = [place.label for place in places.values()]
+        report.scopes = self._scopes(places, report.notes)
 
         is_state = action.predicate.type in STATE_PREDICATES and concept is None
         facts: list[_Fact] = []
@@ -313,6 +317,31 @@ class ConsequenceEngine:
                     places.setdefault(binding.key, binding)
         return places
 
+    def _scopes(self, places: dict[str, Binding], notes: list[str]) -> dict[str, list[str]]:
+        """Neighbours, connected environments, city and country of WHERE, from the gazetteer."""
+        scopes: dict[str, list[str]] = {layer.value: [] for layer in GEO_LAYERS}
+
+        def add(layer: Target, names: tuple[str, ...] | list[str]) -> None:
+            for name in names:
+                if name not in scopes[layer.value]:
+                    scopes[layer.value].append(name)
+
+        for place in places.values():
+            spec = self.packs.place(place.key) or self.packs.place(place.label)
+            if spec is None:
+                notes.append(
+                    f"'{place.label}' is not in the place gazetteer: its neighbours, connections, "
+                    "city and country are unknown."
+                )
+                continue
+            add(Target.NEIGHBOUR, spec.neighbours)
+            add(Target.CONNECTED, spec.connected)
+            city = self.packs.city_of(spec)
+            country = self.packs.country_of(spec)
+            add(Target.CITY, [city.name] if city else [])
+            add(Target.COUNTRY, [country.name] if country else [])
+        return scopes
+
     def _entities(
         self,
         frame: UniversalPhraseFrame,
@@ -441,7 +470,7 @@ class ConsequenceEngine:
         language: str,
         certainty: float,
     ) -> list[Consequence]:
-        """Society and earth impacts from the rules whose concept and categories match."""
+        """Layer impacts (environment ... earth) from the rules whose concept and categories match."""
         categories: set[str] = set()
         if frame.predicate is not None:
             categories |= self.packs.categories_for(frame.predicate.lemma, language)
@@ -455,10 +484,9 @@ class ConsequenceEngine:
 
         out: list[Consequence] = []
         for rule in self.packs.impacts_for(concept.name if concept else None, categories):
-            target = Target.SOCIETY if rule.scope == "society" else Target.EARTH
             out.append(
                 Consequence(
-                    target=target,
+                    target=Target(rule.scope),
                     about=rule.aspect,
                     about_label=rule.aspect,
                     text=rule.effect,

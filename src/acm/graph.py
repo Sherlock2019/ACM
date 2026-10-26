@@ -7,14 +7,16 @@ Nodes
     place       WHERE
     time        WHEN
     state       a state change the action causes: has(Sarah, car)
-    impact      a society or earth impact
-    scope       the society and earth circles themselves
+    impact      an impact on one layer (environment ... earth)
+    scope       a layer itself: neighbour, connected, city, country, society, earth
+                - labelled with what it is for this action ("city: Paris")
     intention   another actor's goal or action
 
 Edges
     action -[ROLE]-> entity          semantic roles from MLM (AGENT, PATIENT, ...)
     action -[causes]-> state -[changes:<target>]-> entity
     action -[impacts]-> impact -[within]-> scope
+    place -[next_to|connected_to|in_city|in_country]-> scope
     owner -[wants|did]-> intention,  action -[<status>]-> intention
 
 Every node has a vector, so graphs from many actions can be stored together and
@@ -33,7 +35,7 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Protocol, Sequence
 
-from acm.schema import SELF, Target
+from acm.schema import GEO_LAYERS, SELF, Target
 
 if TYPE_CHECKING:  # pragma: no cover
     from acm.engine import Binding
@@ -44,6 +46,12 @@ NODE_KINDS: tuple[str, ...] = (
 )
 TARGETS: tuple[str, ...] = tuple(t.value for t in Target)
 TENSES: tuple[str, ...] = ("past", "present", "future")
+GEO_EDGES = {
+    Target.NEIGHBOUR: "next_to",
+    Target.CONNECTED: "connected_to",
+    Target.CITY: "in_city",
+    Target.COUNTRY: "in_country",
+}
 
 
 class Embedder(Protocol):
@@ -181,12 +189,30 @@ def build_action_graph(
             vector=embedder.embed(kind=kind, role=role, entity_type=entity_type, lemma=key),
         )
 
+    def scope_node(target: Target) -> str:
+        names = report.scopes.get(target.value) or []
+        return graph.add_node(
+            f"scope:{target.value}",
+            kind="scope",
+            label=f"{target.value}: {', '.join(names)}" if names else target.value,
+            vector=embedder.embed(kind="scope", target=target.value),
+        )
+
+    places: list[str] = []
     for entity in entities:
         node = entity_node(
             entity.key, entity.label, role=entity.role, entity_type=entity.entity_type, place=entity.place
         )
         if entity.role:
             graph.add_edge(action, node, entity.role)
+        if entity.place:
+            places.append(node)
+
+    for layer in GEO_LAYERS:
+        if report.scopes.get(layer.value):
+            scope = scope_node(layer)
+            for place in places:
+                graph.add_edge(place, scope, GEO_EDGES[layer])
 
     for consequence in report.consequences:
         if consequence.fact is not None:
@@ -207,12 +233,7 @@ def build_action_graph(
             about = entity_node(consequence.about, consequence.about_label)
             graph.add_edge(state, about, f"changes:{consequence.target.value}")
         else:
-            scope = graph.add_node(
-                f"scope:{consequence.target.value}",
-                kind="scope",
-                label=consequence.target.value,
-                vector=embedder.embed(kind="scope", target=consequence.target.value),
-            )
+            scope = scope_node(consequence.target)
             polarity = {"+": 1.0, "-": -1.0}.get(consequence.direction or "0", 0.0)
             impact = graph.add_node(
                 f"impact:{consequence.target.value}:{consequence.about}",

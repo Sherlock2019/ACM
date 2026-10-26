@@ -1,0 +1,135 @@
+# Place gazetteer: how far an action reaches beyond the place it happens in.
+#
+# For every place an action happens at (WHERE), ACM looks it up here to fill the
+# geographic layers of the report:
+#
+#   neighbours  NEIGHBOUR layer  - the places next to it, where effects spill over
+#   connected   CONNECTED layer  - businesses, enterprises, systems and wider areas
+#                                  tied to it, which feel the action without being there
+#   city        CITY layer       - the city it is in (a city is its own city)
+#   country     COUNTRY layer    - the country it is in (taken from its city if not given)
+#
+# kind is one of: site, business, enterprise, system, city, region, country.
+# `city` and `country` are keys of other entries, checked when the packs load.
+# Keys and aliases are matched against ACM's entity keys: the full lower-cased text
+# for named places ("paris", "new york"), the head lemma for common nouns
+# ("production", "factory").
+#
+# A place that is not listed here still gets its local environment; its other
+# geographic layers are reported as unknown - never guessed.
+#
+# A seed list, not an atlas.
+
+version: 1
+
+places:
+  # -- countries -------------------------------------------------------------
+  france:
+    kind: country
+    name: France
+    neighbours: [Belgium, Germany, Switzerland, Italy, Spain]
+    connected: [European Union single market]
+  united kingdom:
+    kind: country
+    name: United Kingdom
+    aliases: [uk, britain, royaume-uni]
+    neighbours: [Ireland, France across the Channel]
+    connected: [Commonwealth trade partners]
+  united states:
+    kind: country
+    name: United States
+    aliases: [usa, us, états-unis]
+    neighbours: [Canada, Mexico]
+  vietnam:
+    kind: country
+    name: Vietnam
+    aliases: [viet nam, việt nam]
+    neighbours: [China, Laos, Cambodia]
+    connected: [ASEAN economic community]
+
+  # -- cities ------------------------------------------------------------------
+  paris:
+    kind: city
+    name: Paris
+    country: france
+    neighbours: [Boulogne-Billancourt, Saint-Denis, Montreuil]
+    connected: [Île-de-France region, Paris businesses and commuters]
+  lyon:
+    kind: city
+    name: Lyon
+    country: france
+    neighbours: [Villeurbanne, Vénissieux]
+    connected: [Auvergne-Rhône-Alpes region]
+  london:
+    kind: city
+    name: London
+    country: united kingdom
+    aliases: [londres]
+    neighbours: [Croydon, Watford, Slough]
+    connected: [Greater London region, the City of London financial district]
+  new york:
+    kind: city
+    name: New York
+    country: united states
+    aliases: [nyc, new york city]
+    neighbours: [Jersey City, Newark, Yonkers]
+    connected: [New York metropolitan area, Wall Street financial district]
+  hanoi:
+    kind: city
+    name: Hanoi
+    country: vietnam
+    aliases: [hà nội, ha noi]
+    neighbours: [Bắc Ninh, Hưng Yên]
+    connected: [Red River Delta region]
+  ho chi minh city:
+    kind: city
+    name: Ho Chi Minh City
+    country: vietnam
+    aliases: [saigon, sài gòn]
+    neighbours: [Bình Dương, Đồng Nai]
+    connected: [Southern Key Economic Zone]
+
+  # -- sites, businesses, enterprises, systems --------------------------------
+  # Common nouns: no fixed city or country, so those layers come from a named
+  # place in the same sentence, if any.
+  production:
+    kind: system
+    name: production
+    neighbours: [staging and test environments]
+    connected: [the enterprise that runs it, its customers and users, services that call it]
+  office:
+    kind: business
+    name: office
+    neighbours: [neighbouring offices and shops]
+    connected: [the company, its employees, its clients]
+  shop:
+    kind: business
+    name: shop
+    aliases: [store]
+    neighbours: [neighbouring shops and residents]
+    connected: [its suppliers, its customers]
+  factory:
+    kind: business
+    name: factory
+    neighbours: [residents near the site]
+    connected: [the enterprise that owns it, its suppliers, its customers]
+  company:
+    kind: enterprise
+    name: company
+    neighbours: [competitors in the same market]
+    connected: [its employees, its shareholders, its customers, its suppliers]
+  airport:
+    kind: site
+    name: airport
+    neighbours: [communities under the flight paths]
+    connected: [airlines, the city it serves]
+  hospital:
+    kind: site
+    name: hospital
+    neighbours: [residents and businesses nearby]
+    connected: [the regional health system, its patients]
+  school:
+    kind: site
+    name: school
+    neighbours: [families living nearby]
+    connected: [the education authority, its pupils and staff]
