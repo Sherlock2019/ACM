@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Freeze MLM parser output for CAM's tests, the same way MLM does for its own.
+"""Freeze MLM parser output for ACM's tests, the same way MLM does for its own.
 
     python scripts/make_fixtures.py
 
-CAM's tests then run without a parser model. Re-run after deliberately changing
+ACM's tests then run without a parser model. Re-run after deliberately changing
 the parser and review the diff: a changed tree changes the tests' premises.
 """
 
@@ -45,7 +45,7 @@ SENTENCES: dict[str, list[str]] = {
 }
 
 HEADER = """\
-# CAM test fixture - SILVER data (MLM parser output), not gold annotation.
+# ACM test fixture - SILVER data (MLM parser output), not gold annotation.
 # Produced by scripts/make_fixtures.py. Regenerate deliberately and review the diff.
 #
 # parser: {parser}

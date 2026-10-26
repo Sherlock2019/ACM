@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from cam.schema import ConsequenceReport, Relation, RelationStatus, Target
+from acm.schema import ConsequenceReport, Relation, RelationStatus, Target
 
 GOAL_WORDS = {
     RelationStatus.ADVANCED: "ADVANCED ✅",

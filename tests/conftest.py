@@ -1,4 +1,4 @@
-"""CAM test fixtures: MLM frames built from committed CoNLL-U, no parser model needed."""
+"""ACM test fixtures: MLM frames built from committed CoNLL-U, no parser model needed."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from splm.linguistic.semantic_roles import SemanticRoleEngine
 from splm.phrase.builder import PhraseFrameBuilder
 from splm.phrase.schema import UniversalPhraseFrame
 
-from cam.engine import ConsequenceEngine
-from cam.schema import ConsequenceReport
+from acm.engine import ConsequenceEngine
+from acm.schema import ConsequenceReport
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures"
 
@@ -40,12 +40,12 @@ def frame_for(builder: PhraseFrameBuilder) -> Callable[..., UniversalPhraseFrame
         if language not in cache:
             path = FIXTURE_DIR / f"{language}.conllu"
             if not path.is_file():
-                pytest.skip(f"no CAM fixture for {language}; run scripts/make_fixtures.py")
+                pytest.skip(f"no ACM fixture for {language}; run scripts/make_fixtures.py")
             document = parse_conllu(path.read_text(encoding="utf-8"), language)
             cache[language] = {s.text.strip(): s for s in document.sentences}
         sentence = cache[language].get(text.strip())
         if sentence is None:
-            pytest.skip(f"sentence not in the {language} CAM fixture: {text!r}")
+            pytest.skip(f"sentence not in the {language} ACM fixture: {text!r}")
         return builder.build(sentence)
 
     return build

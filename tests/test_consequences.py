@@ -1,6 +1,6 @@
 """What an action changes, and where each change is reported."""
 
-from cam.schema import SELF, Target
+from acm.schema import SELF, Target
 
 SALE = "John will sell his car to Sarah in Paris tomorrow to pay his debt."
 

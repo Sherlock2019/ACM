@@ -1,7 +1,7 @@
 """A small graph + vector database for action graphs.
 
 Every analysed action can be remembered: its nodes (with vectors) and edges go
-into SQLite, so CAM can later ask "which past actions looked like this one?" or
+into SQLite, so ACM can later ask "which past actions looked like this one?" or
 "what has ever happened to Sarah?" across everything it has seen.
 
 Search is exact cosine similarity over all stored vectors with numpy. That is fine
@@ -18,7 +18,7 @@ from typing import Any, Sequence
 
 import numpy as np
 
-from cam.schema import ConsequenceReport
+from acm.schema import ConsequenceReport
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS graphs (

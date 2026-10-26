@@ -1,4 +1,4 @@
-"""CAM's output: state changes, where they land, and how they relate to others."""
+"""ACM's output: state changes, where they land, and how they relate to others."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class RelationStatus(str, Enum):
     AT_RISK = "at_risk"  # blocked, unless an unnamed participant is the owner
     HINDERED = "hindered"  # removes something the goal or action needs
     UNAFFECTED = "unaffected"
-    NO_EVIDENCE = "no_evidence"  # CAM does not know what one side changes
+    NO_EVIDENCE = "no_evidence"  # ACM does not know what one side changes
 
 
 #: Kept for readability at call sites that only deal with goals.

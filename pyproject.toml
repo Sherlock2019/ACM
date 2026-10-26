@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cam"
+name = "acm"
 version = "0.1.0"
-description = "Consequence Action Model - what an action changes for the actor, others, the environment, society and the earth; built on the Meaning Language Model"
+description = "Actions Consequential Model - what an action changes for the actor, others, the environment, society and the earth; built on the Meaning Language Model"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
@@ -22,7 +22,7 @@ dependencies = [
 dev = ["pytest>=8.0"]
 
 [project.scripts]
-cam = "cam.cli:main"
+acm = "acm.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

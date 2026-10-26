@@ -1,4 +1,4 @@
-# CAM test fixture - SILVER data (MLM parser output), not gold annotation.
+# ACM test fixture - SILVER data (MLM parser output), not gold annotation.
 # Produced by scripts/make_fixtures.py. Regenerate deliberately and review the diff.
 #
 # parser: stanza

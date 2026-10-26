@@ -1,6 +1,6 @@
 # English verb lemmas -> universal action concepts (packs/universal/concepts.yaml).
 #
-# A lemma missing from this table is not an error: CAM falls back to generic,
+# A lemma missing from this table is not an error: ACM falls back to generic,
 # uninformative consequences ("John performs 'kick'") and says so.
 
 version: 1

@@ -11,7 +11,7 @@ buy John's car") and actions ("Mark bought a car"). The last sentence is the
 action being assessed. When its actor is "I", the report is the model's view of
 its own action.
 
-Same honesty rules as MLM: a verb CAM has no concept for gets generic, explicitly
+Same honesty rules as MLM: a verb ACM has no concept for gets generic, explicitly
 uninformative consequences, and never a verdict on anyone's goals.
 """
 
@@ -22,10 +22,10 @@ from typing import Any
 
 from splm.phrase.schema import FrameElement, PredicateType, UniversalPhraseFrame
 
-from cam.entities import EntityIndex, is_animate, is_place
-from cam.graph import Embedder, build_action_graph, default_embedder
-from cam.packs import Concept, ConsequencePacks, EffectSpec, get_packs
-from cam.schema import (
+from acm.entities import EntityIndex, is_animate, is_place
+from acm.graph import Embedder, build_action_graph, default_embedder
+from acm.packs import Concept, ConsequencePacks, EffectSpec, get_packs
+from acm.schema import (
     SELF,
     UNKNOWN,
     Consequence,
@@ -170,7 +170,7 @@ class ConsequenceEngine:
         else:
             facts.extend(self._generic(action, actor, position, index))
             report.notes.append(
-                f"CAM has no concept for '{lemma}': consequences are generic and say "
+                f"ACM has no concept for '{lemma}': consequences are generic and say "
                 "nothing about anyone's goals."
             )
         if not is_state:
@@ -599,7 +599,7 @@ class ConsequenceEngine:
         if not intention.outcome and not intention.requires:
             return relation(
                 RelationStatus.NO_EVIDENCE,
-                f"CAM has no concept for what '{intention.text}' changes",
+                f"ACM has no concept for what '{intention.text}' changes",
             )
         if not report.realized:
             return relation(RelationStatus.UNAFFECTED, "the action does not happen (negated)")
@@ -607,7 +607,7 @@ class ConsequenceEngine:
         if not known:
             return relation(
                 RelationStatus.NO_EVIDENCE,
-                f"CAM does not know what '{report.predicate}' changes",
+                f"ACM does not know what '{report.predicate}' changes",
             )
 
         for wanted in intention.outcome:

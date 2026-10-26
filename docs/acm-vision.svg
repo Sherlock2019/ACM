@@ -14,8 +14,8 @@
 <marker id="arrow-hindered" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fb923c"/></marker>
 <radialGradient id="glow"><stop offset="0%" stop-color="#f5b942" stop-opacity="0.35"/><stop offset="100%" stop-color="#f5b942" stop-opacity="0"/></radialGradient>
 </defs>
-<text x="40.0" y="52.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="26" fill="#e6edf3" text-anchor="start" font-weight="700">CAM · how the model sees its own action</text>
-<text x="40.0" y="80.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" fill="#8b949e" text-anchor="start" font-weight="400">Consequence Action Model, built on the Meaning Language Model. Generated from a real run - nothing hand-placed.</text>
+<text x="40.0" y="52.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="26" fill="#e6edf3" text-anchor="start" font-weight="700">ACM · how the model sees its own action</text>
+<text x="40.0" y="80.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" fill="#8b949e" text-anchor="start" font-weight="400">Actions Consequential Model, built on the Meaning Language Model. Generated from a real run - nothing hand-placed.</text>
 <rect x="40" y="100" width="65" height="28" rx="14" fill="#161b22" stroke="#30363d"/>
 <text x="72.6" y="119.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" fill="#e6edf3" text-anchor="middle" font-weight="400">phrase</text>
 <text x="118.2" y="119.0" font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif" font-size="14" fill="#8b949e" text-anchor="middle" font-weight="400">→</text>

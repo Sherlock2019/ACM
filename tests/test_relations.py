@@ -1,6 +1,6 @@
 """How the action bears on other actors' goals and actions, and on the actor's own goal."""
 
-from cam.schema import RelationStatus
+from acm.schema import RelationStatus
 
 GOAL = "Mark wants to buy John's car."
 SALE = "John will sell his car to Sarah in Paris tomorrow to pay his debt."

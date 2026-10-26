@@ -1,8 +1,8 @@
-# The state vocabulary CAM expresses consequences in.
+# The state vocabulary ACM expresses consequences in.
 #
 # A consequence is a change to one of these states: has(Sarah, car) becomes true,
 # exists(database) becomes false. Keeping the vocabulary small and explicit is what
-# lets CAM compare an action's outcome with someone's goal - both are written in
+# lets ACM compare an action's outcome with someone's goal - both are written in
 # the same terms.
 #
 #   args       argument names, in order. The first is the state's "owner": the
@@ -13,7 +13,7 @@
 #   phrases    English rendering, per perspective. `sentence` is the standalone
 #              form used for goals and for the environment branch.
 #
-# The phrases are English only: CAM reasons language-independently but, for now,
+# The phrases are English only: ACM reasons language-independently but, for now,
 # renders its explanations in English.
 
 version: 1
@@ -80,7 +80,7 @@ states:
       sentence:    { true: "{beneficiary} is helped", false: "{beneficiary} is not helped" }
 
   # -- generic states, used when no concept is known for the verb ------------
-  # They carry no goal-relevant meaning, so CAM marks them uninformative and never
+  # They carry no goal-relevant meaning, so ACM marks them uninformative and never
   # uses them to decide whether a goal is helped or blocked.
 
   performed:

@@ -1,11 +1,11 @@
-"""CAM command line.
+"""ACM command line.
 
-    python -m cam.cli predict "John will sell his car to Sarah in Paris tomorrow." \\
+    python -m acm.cli predict "John will sell his car to Sarah in Paris tomorrow." \\
         --context "Mark wants to buy John's car."
-    python -m cam.cli predict "..." --format mermaid      # mind map
-    python -m cam.cli graph   "..."                       # the vector graph, as Mermaid
-    python -m cam.cli remember "..."                      # store in the graph vector DB
-    python -m cam.cli similar  "..."                      # nearest stored actions
+    python -m acm.cli predict "..." --format mermaid      # mind map
+    python -m acm.cli graph   "..."                       # the vector graph, as Mermaid
+    python -m acm.cli remember "..."                      # store in the graph vector DB
+    python -m acm.cli similar  "..."                      # nearest stored actions
 """
 
 from __future__ import annotations
@@ -15,15 +15,15 @@ import json
 import sys
 from pathlib import Path
 
-from cam.engine import ConsequenceEngine
-from cam.render import to_flowchart, to_mindmap, to_text
+from acm.engine import ConsequenceEngine
+from acm.render import to_flowchart, to_mindmap, to_text
 
-DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "cam.db"
+DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "acm.db"
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="cam", description="Consequence Action Model - what an action changes, and for whom."
+        prog="acm", description="Actions Consequential Model - what an action changes, and for whom."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "graph":
         print(to_flowchart(report.graph))
     else:
-        from cam.store import GraphVectorStore
+        from acm.store import GraphVectorStore
 
         store = GraphVectorStore(args.db)
         if args.command == "remember":

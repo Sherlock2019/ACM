@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Draw how CAM sees an action: concentric circles of consequence + the vector DB.
+"""Draw how ACM sees an action: concentric circles of consequence + the vector DB.
 
-    python scripts/draw_vision.py            # writes docs/cam-vision.svg
+    python scripts/draw_vision.py            # writes docs/acm-vision.svg
 
 Nothing in the picture is hand-placed data. The scenario runs through the real
-MLM parser and CAM engine; each circle shows what the report put there, the
+MLM parser and ACM engine; each circle shows what the report put there, the
 heat strips are the actual node vectors, and the similarity scores come from a
 real search of a small GraphVectorStore.
 """
@@ -16,12 +16,12 @@ import sys
 from html import escape
 from pathlib import Path
 
-from cam.engine import ConsequenceEngine
-from cam.render import status_word
-from cam.schema import RelationStatus, Target
-from cam.store import GraphVectorStore
+from acm.engine import ConsequenceEngine
+from acm.render import status_word
+from acm.schema import RelationStatus, Target
+from acm.store import GraphVectorStore
 
-OUT = Path(__file__).resolve().parents[1] / "docs" / "cam-vision.svg"
+OUT = Path(__file__).resolve().parents[1] / "docs" / "acm-vision.svg"
 
 CONTEXT = ["Mark wants to buy my car.", "Sarah needs a car."]
 ACTION = "I will sell my car to Sarah in Paris tomorrow to pay my debt."
@@ -115,9 +115,9 @@ def main() -> int:
     svg.append("</defs>")
 
     # -- title and pipeline ---------------------------------------------------
-    svg.append(text(40, 52, "CAM · how the model sees its own action", size=26, anchor="start", weight=700))
+    svg.append(text(40, 52, "ACM · how the model sees its own action", size=26, anchor="start", weight=700))
     svg.append(
-        text(40, 80, "Consequence Action Model, built on the Meaning Language Model. Generated from a real run - nothing hand-placed.",
+        text(40, 80, "Actions Consequential Model, built on the Meaning Language Model. Generated from a real run - nothing hand-placed.",
              size=13, fill=MUTED, anchor="start")
     )
     steps = ["phrase", "MLM Phrase DNA", "action graph", "consequences per circle", "node vectors", "graph vector DB"]

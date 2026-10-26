@@ -2,11 +2,11 @@
 
 import pytest
 
-from cam.graph import cosine
-from cam.packs import ConsequencePacks
-from cam.render import NO_IMPACT, to_flowchart, to_mindmap, to_text
-from cam.schema import Target
-from cam.store import GraphVectorStore
+from acm.graph import cosine
+from acm.packs import ConsequencePacks
+from acm.render import NO_IMPACT, to_flowchart, to_mindmap, to_text
+from acm.schema import Target
+from acm.store import GraphVectorStore
 
 SALE = "John will sell his car to Sarah in Paris tomorrow to pay his debt."
 

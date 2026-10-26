@@ -18,7 +18,7 @@ Edges
     owner -[wants|did]-> intention,  action -[<status>]-> intention
 
 Every node has a vector, so graphs from many actions can be stored together and
-searched (:mod:`cam.store`). The default :class:`HashingEmbedder` is structural:
+searched (:mod:`acm.store`). The default :class:`HashingEmbedder` is structural:
 it encodes what part a node plays, plus a hashed identity of its lemma. Two nodes
 are close when they play the same part in similar actions; "car" and "vehicle"
 are as unrelated as "car" and "Paris". That is a baseline, not semantics - a
@@ -33,11 +33,11 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Protocol, Sequence
 
-from cam.schema import SELF, Target
+from acm.schema import SELF, Target
 
 if TYPE_CHECKING:  # pragma: no cover
-    from cam.engine import Binding
-    from cam.schema import ConsequenceReport
+    from acm.engine import Binding
+    from acm.schema import ConsequenceReport
 
 NODE_KINDS: tuple[str, ...] = (
     "action", "self", "entity", "place", "time", "state", "impact", "scope", "intention",

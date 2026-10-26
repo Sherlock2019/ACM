@@ -11,7 +11,7 @@
 #
 # direction: "+" helps, "-" harms, "0" changes without a clear sign.
 #
-# These rules are a seed, not an inventory. When none fires, CAM reports "no known
+# These rules are a seed, not an inventory. When none fires, ACM reports "no known
 # impact" - which means no evidence, never "no impact".
 
 version: 1

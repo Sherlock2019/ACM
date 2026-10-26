@@ -1,4 +1,4 @@
-# Numbers CAM uses when it scores how sure a consequence is.
+# Numbers ACM uses when it scores how sure a consequence is.
 
 version: 1
 
@@ -9,5 +9,5 @@ certainty:
   default: 0.8
   # "If the bank refuses, ..." - consequences hold only if the condition does.
   condition_factor: 0.6
-  # Generic consequences from a verb CAM has no concept for.
+  # Generic consequences from a verb ACM has no concept for.
   generic_factor: 0.5

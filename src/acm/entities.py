@@ -14,7 +14,7 @@ from __future__ import annotations
 from splm.graph.context_graph import ContextGraph
 from splm.phrase.schema import FrameElement, UniversalPhraseFrame
 
-from cam.schema import SELF
+from acm.schema import SELF
 
 NAMED = frozenset({"PERSON", "ORG", "LOCATION", "FACILITY"})
 PLACE_TYPES = frozenset({"LOCATION", "FACILITY"})
@@ -37,7 +37,7 @@ class EntityIndex:
         """``(key, label)`` for an element in the given sentence."""
         text = element.text.strip()
         if is_first_person(element):
-            # "I", "me", "we": the speaker. When CAM is given its own planned action,
+            # "I", "me", "we": the speaker. When ACM is given its own planned action,
             # this is the model itself - never resolved to some earlier third party.
             return SELF, "self"
         resolved = self._resolved.get((sentence_index, text.lower()))
