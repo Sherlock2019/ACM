@@ -160,6 +160,23 @@ def test_demo_bundle_and_visual_report():
     assert "<script" not in html
 
 
+def test_phrase_examples_cover_the_whole_blast_radius():
+    from acm.demo import RINGS, phrase_examples
+
+    phrases = {p["text"]: p for p in phrase_examples()}
+    assert len(phrases) == 9
+    for p in phrases.values():
+        assert [r["key"] for r in p["rings"]] == [t.value for t, _, _ in RINGS]
+    sale = {r["key"]: r for r in phrases["I will sell my car to Sarah to pay my debt."]["rings"]}
+    assert any("blocked" in row["text"] for row in sale["other_actors"]["rows"])
+    flight = {r["key"]: r for r in phrases["John flew to London."]["rings"]}
+    assert flight["country"]["extent"] == "United Kingdom" and flight["neighbour"]["rows"]
+    negated = phrases["John did not sell his car to Sarah."]["rings"]
+    assert all(not r["rows"] and r["empty"] == "nothing changes" for r in negated)
+    kick = {r["key"]: r for r in phrases["John kicked the ball."]["rings"]}
+    assert {row["basis"] for row in kick["actor"]["rows"]} == {"generic"}  # no verdict for an unknown verb
+
+
 def test_world_destination_must_be_calibrated(image_doc):
     move = ProposedAction(id="m", predicate="move", target="blue_cup_01",
                           destination=Point(frame=CoordinateFrame.WORLD, unit="m", x=0.8, y=0.4, calibration_id="other"))

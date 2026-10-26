@@ -175,13 +175,29 @@ git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
 python -m venv .venv && source .venv/bin/activate
 pip install -e ../SLM -e ".[dev]"
-pytest                                   # 53 tests, no parser model needed
+pytest                                   # 54 tests, no parser model needed
 ```
 
 Or let the launcher do it. **`./start.sh` starts the whole POC.** It creates `.venv`
 and installs MLM from `../SLM` (or `$SLM_DIR`) and ACM. It then refreshes the demo
-results and starts MLM's API and dashboard in the background, and prints the URLs:
-`http://127.0.0.1:3010/multimodal` and, on EC2, the public-IP address.
+results and starts the API and dashboard in the background **as the ACM app**:
+`http://127.0.0.1:3010/` opens the **ACM demo**, and on EC2 the launcher also prints
+the public-IP address.
+
+The ACM demo page shows the tool as intended. It starts with a phrase and its whole
+blast radius, as in this README. One **▶ Run Demo** button then runs three inputs, each
+predicting the consequences of an action:
+
+1. **A phrase.** Nine action sentences: the sale, a flight, a database deletion, a
+   destroyed forest, a theft, a train trip, the Paris sale, a negated sale, and an
+   unknown verb. Each is shown ring by ring, from the actor to the earth. Your own
+   sentence works in Live mode (MLM parser + ACM).
+2. **An image** plus a proposed action. MLM reads the scene; the tabletop simulator and
+   ACM predict what the action would do.
+3. **A video.** The prediction is made at T = 2 s from earlier frames only. Then the
+   video plays on and the prediction is compared with what happened.
+
+The MLM Playground stays at `/mlm`.
 `./start.sh cli` opens the interactive prompt, `./start.sh predict "..."` runs any
 `acm` command, `./start.sh test` runs the tests and `./start.sh stop` stops it all.
 
@@ -771,7 +787,7 @@ consequences in `consequences` (with `target` set to `environment`, `neighbour`,
 The launcher wraps the same commands:
 
 ```bash
-./start.sh                              # the whole POC: API + dashboard (MLM repo, ../SLM), URLs printed
+./start.sh                              # the whole POC as the ACM app: http://127.0.0.1:3010/ → ACM demo
 ./start.sh stop | status | restart
 ./start.sh cli                          # interactive: type an action; '+...' adds a context line
 ./start.sh predict "..." --format mermaid
@@ -880,7 +896,7 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 ## Tests and scripts
 
 ```bash
-pytest                              # 53 tests: CoNLL-U fixtures + multimodal fixtures, no GPU, no network
+pytest                              # 54 tests: CoNLL-U fixtures + multimodal fixtures, no GPU, no network
 python -m acm.cli demo              # multimodal demo, self-contained HTML report
 python scripts/make_fixtures.py     # regenerate fixtures (needs MLM's parser); review the diff
 python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real run
@@ -899,7 +915,7 @@ ACM/
                      multimodal (MLM meaning → ACM), demo, evaluation, visual_report
   src/acm/world/     transition interface, tabletop simulator, PyBullet / V-JEPA stubs
   scripts/           make_fixtures.py, draw_vision.py
-  tests/             53 tests over committed fixtures
+  tests/             54 tests over committed fixtures
   docs/              multimodal.md, world_model_feasibility.md, demo/tabletop_report.html,
                      acm-vision.svg / .png
 ```

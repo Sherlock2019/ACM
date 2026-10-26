@@ -54,7 +54,7 @@ def circles(report: ConsequenceReport) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
         for c in report.for_target(target):
             rows.append({
-                "about": c.about_label, "text": c.text, "basis": c.basis,
+                "about": c.about_label, "text": c.text, "basis": c.basis if c.informative else "generic",
                 "source": c.source, "direction": c.direction, "evidence": c.evidence[:3],
             })
         if target == Target.ACTOR:
@@ -75,6 +75,124 @@ def circles(report: ConsequenceReport) -> list[dict[str, Any]]:
                 "rows": [{"about": c.about_label, "text": c.text, "basis": c.basis} for c in wider],
                 "empty": NO_EVIDENCE if not wider else None})
     return out
+
+
+# -- the full blast radius: every circle and layer ------------------------------------------
+
+RINGS = [
+    (Target.ACTOR, "Actor", "who acts"),
+    (Target.IMPACTED, "Impacted", "what · to whom"),
+    (Target.OTHER_ACTORS, "Other actors", "their goals and actions"),
+    (Target.ENVIRONMENT, "Local environment", "where it happens"),
+    (Target.NEIGHBOUR, "Neighbours", "places next to it"),
+    (Target.ORGANIZATION, "Organization", "business · enterprise · institution"),
+    (Target.CITY, "City", ""),
+    (Target.COUNTRY, "Country", ""),
+    (Target.SOCIETY, "Society", "economy · law · trust"),
+    (Target.EARTH, "Earth", "emissions · biodiversity · resources"),
+]
+
+
+def blast_radius(report: ConsequenceReport) -> list[dict[str, Any]]:
+    """Every ring from the actor out to the earth, with its extent and its consequences."""
+    from acm.render import layer_extent
+
+    by_key = {c["key"]: c for c in circles(report)}
+    out = []
+    for target, title, question in RINGS:
+        if target in {Target.ACTOR, Target.IMPACTED, Target.OTHER_ACTORS}:
+            rows = by_key[target.value]["rows"]
+        else:
+            rows = [{"about": c.about_label, "text": c.text, "basis": c.basis, "direction": c.direction}
+                    for c in report.for_target(target)]
+        extent = None if target in {Target.ACTOR, Target.IMPACTED, Target.OTHER_ACTORS} else layer_extent(report, target)
+        if target == Target.ACTOR:
+            extent = ("self (I)" if report.self_view else report.actor_label) or None
+        out.append({"key": target.value, "title": title, "question": question, "extent": extent,
+                    "rows": rows, "empty": (NO_EVIDENCE if report.realized else "nothing changes") if not rows else None})
+    return out
+
+
+def report_summary(report: ConsequenceReport) -> dict[str, Any]:
+    return {
+        "action": report.action_text, "predicate": report.predicate, "concept": report.concept,
+        "actor": report.actor_label, "self_view": report.self_view, "tense": report.tense,
+        "certainty": report.certainty, "realized": report.realized, "condition": report.condition,
+        "places": report.places, "notes": report.notes,
+    }
+
+
+#: Action sentences for the phrase demo: (context, action, what it shows).
+PHRASES = [
+    (["Mark wants to buy my car.", "Sarah needs a car."], "I will sell my car to Sarah to pay my debt.",
+     "a self-view plan: ownership, payment, other people's goals (blocked / advanced)"),
+    ([], "John flew to London.", "travel: neighbours, country and earth layers"),
+    ([], "The engineer deleted the database in production.", "a system: organization and data-protection layers"),
+    ([], "The company destroyed the forest.", "nature: local, neighbour, country and earth impacts with no place named"),
+    ([], "John stole the car.", "crime: safety, insurance, city crime, national law, society"),
+    ([], "John traveled to Paris by train.", "low-carbon travel: city and earth benefit"),
+    (["Mark wants to buy John's car."], "John will sell his car to Sarah in Paris tomorrow to pay his debt.",
+     "a full blast radius: Paris's neighbours, organizations, city and country"),
+    ([], "John did not sell his car to Sarah.", "negation: nothing changes"),
+    ([], "John kicked the ball.", "an unknown verb: generic, no verdict, no invented impact"),
+]
+
+
+def _fixture_frames() -> dict[str, Any]:
+    """Frames for the phrase examples from committed parses: ACM's test fixtures + MLM's demo trees."""
+    from pathlib import Path
+
+    from splm.config import Config
+    from splm.language.packs import LanguagePackRegistry
+    from splm.linguistic.conllu import parse_conllu
+    from splm.linguistic.morphology import MorphologyEngine
+    from splm.linguistic.semantic_roles import SemanticRoleEngine
+    from splm.phrase.builder import PhraseFrameBuilder
+
+    config = Config.load(apply_env=False, overrides={"app.lexicon.auto_download": False})
+    registry = LanguagePackRegistry(config.language_packs_dir)
+    builder = PhraseFrameBuilder(registry, morphology=MorphologyEngine(registry),
+                                 semantic_roles=SemanticRoleEngine(registry))
+    frames: dict[str, Any] = {}
+    sources = [Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "en.conllu", material.TEXT_CONLLU]
+    for path in sources:
+        if path.is_file():
+            for sentence in parse_conllu(path.read_text(encoding="utf-8"), "en").sentences:
+                frames.setdefault(sentence.text.strip(), builder.build(sentence))
+    return frames
+
+
+def phrase_result(report: ConsequenceReport, context: list[str], note: str = "") -> dict[str, Any]:
+    return {
+        "context": context,
+        "summary": report_summary(report),
+        "rings": blast_radius(report),
+        "report_text": to_text(report),
+        "mindmap": to_mindmap(report),
+        "acm_json": report.model_dump(mode="json", exclude={"graph"}),
+        "shows": note,
+    }
+
+
+def phrase_examples() -> list[dict[str, Any]]:
+    frames = _fixture_frames()
+    engine = ConsequenceEngine()
+    out = []
+    for context, action, note in PHRASES:
+        texts = [*context, action]
+        if not all(t in frames for t in texts):
+            continue
+        report = engine.predict([frames[t] for t in texts], language="en")
+        out.append({"id": f"phrase_{len(out) + 1:02d}", "text": action, **phrase_result(report, context, note)})
+    return out
+
+
+def live_phrase_result(text: str, context: list[str], pipeline: Any) -> dict[str, Any]:
+    """Live: MLM parses context + action, ACM predicts the blast radius."""
+    report = ConsequenceEngine(pipeline=pipeline).analyze(text, context=context)
+    if report.predicate is None:
+        raise ValueError("; ".join(report.notes) or "MLM found no action in the text")
+    return {"id": "live", "text": text, **phrase_result(report, context, "live parse")}
 
 
 def scenario_json(result: ScenarioResult, label: str) -> dict[str, Any]:
@@ -99,6 +217,8 @@ def scenario_json(result: ScenarioResult, label: str) -> dict[str, Any]:
         "uncertainty": outcome.uncertainty.model_dump(mode="json"),
         "backend": outcome.backend.model_dump(mode="json"),
         "circles": circles(result.report),
+        "rings": blast_radius(result.report) if result.action else None,
+        "summary": report_summary(result.report),
         "report_text": to_text(result.report) if result.action else result.report.notes[0],
         "mindmap": to_mindmap(result.report) if result.action else None,
         "acm_json": result.report.model_dump(mode="json", exclude={"graph"}),
@@ -365,4 +485,5 @@ def run_demo() -> dict[str, Any]:
         "note": "Ownership and payment changes are rule-derived consequences (packs/universal/concepts.yaml: SALE).",
     }
     out["episode"] = episode.model_dump(mode="json")
+    out["phrases"] = phrase_examples()
     return out

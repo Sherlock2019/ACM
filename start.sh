@@ -59,6 +59,14 @@ public_ip() {
     [[ "$ip" =~ ^[0-9.]+$ ]] && echo "$ip"
 }
 
+wait_ports_free() {
+    for _ in $(seq 1 20); do  # let stopped servers release their ports
+        curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$WEB_PORT/" \
+            || curl -s -o /dev/null --max-time 1 "http://127.0.0.1:8001/health" || return 0
+        sleep 1
+    done
+}
+
 start_poc() {
     echo "== 1/4 ACM environment: ready ($VENV)"
 
@@ -81,15 +89,29 @@ start_poc() {
         echo "   warning: could not refresh; the dashboard uses the bundled results" >&2
     fi
 
-    echo "== 4/4 MLM API + dashboard"
-    SPLM_NO_OPEN="${SPLM_NO_OPEN:-1}" "$MLM/start.sh" start
+    echo "== 4/4 MLM API + dashboard (ACM mode: / opens the ACM demo)"
+    # The mode is fixed when the dashboard starts, so a running one is restarted in ACM mode.
+    if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$WEB_PORT/"; then
+        "$MLM/start.sh" stop > /dev/null
+        wait_ports_free
+    fi
+    # Let the dev server serve its client code to this machine's public IP and LAN address too.
+    local origins
+    origins="$(public_ip || true),$(hostname -I 2>/dev/null | tr ' ' ',')"
+    SPLM_ALLOWED_DEV_ORIGINS="${SPLM_ALLOWED_DEV_ORIGINS:-$origins}" \
+        NEXT_PUBLIC_APP_MODE=acm SPLM_NO_OPEN="${SPLM_NO_OPEN:-1}" "$MLM/start.sh" start
+    # MLM's launcher moves to the next free port when the default is taken; report the real one.
+    local actual
+    actual="$(grep -Eo 'Local: +http://localhost:[0-9]+' "$MLM/logs/web.log" 2>/dev/null | tail -1 | grep -Eo '[0-9]+$' || true)"
+    [[ -n "$actual" ]] && WEB_PORT="$actual"
 
     echo
     echo "POC is running:"
+    echo "  ACM demo             http://127.0.0.1:$WEB_PORT/acm        (phrase · image · video, one Run Demo button)"
+    echo "  Multimodal details   http://127.0.0.1:$WEB_PORT/multimodal"
     echo "  Dashboard            http://127.0.0.1:$WEB_PORT"
-    echo "  Multimodal demo      http://127.0.0.1:$WEB_PORT/multimodal"
     if ip="$(public_ip)"; then
-        echo "  From elsewhere       http://$ip:$WEB_PORT/multimodal   (needs inbound TCP $WEB_PORT open)"
+        echo "  From elsewhere       http://$ip:$WEB_PORT/acm   (needs inbound TCP $WEB_PORT open)"
     fi
     echo "  Static report        $ROOT/docs/demo/tabletop_report.html"
     echo "  ACM prompt           ./start.sh cli"
@@ -121,7 +143,7 @@ case "${1:-start}" in
         ;;
     restart)
         "$MLM/start.sh" stop
-        sleep 1
+        wait_ports_free
         start_poc
         ;;
     setup)
