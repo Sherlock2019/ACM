@@ -1,0 +1,24 @@
+# Vietnamese verb lemmas -> universal action concepts. A starting set, not tuned.
+
+version: 1
+
+actions:
+  bán: SALE
+  mua: PURCHASE
+  tặng: GIFT
+  cho: GIFT
+  trả: PAYMENT
+  đi: MOVE
+  chuyển: MOVE
+  rời: DEPART
+  gặp: MEET
+  xóa: DESTROY
+  phá: DESTROY
+  tạo: CREATE
+  xây: CREATE
+  triển khai: DEPLOY
+  báo: INFORM
+  thắng: WIN
+  giúp: HELP
+
+goal_markers: [muốn, cần, hy vọng, định, mong]

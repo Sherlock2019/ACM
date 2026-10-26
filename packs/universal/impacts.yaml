@@ -1,0 +1,87 @@
+# Wider impacts: what an action does beyond the people and place it touches.
+#
+# Two scopes:
+#   society  shared human systems - economy, law, trust, public services, safety
+#   earth    the planet - emissions, biodiversity, resources, waste
+#
+# A rule fires when the action's concept is listed (if `concepts` is given) AND
+# something involved in the action - an argument, an instrument, a means of
+# transport - belongs to a listed category (if `categories` is given). Categories
+# are language-specific word lists in packs/<lang>/categories.yaml.
+#
+# direction: "+" helps, "-" harms, "0" changes without a clear sign.
+#
+# These rules are a seed, not an inventory. When none fires, CAM reports "no known
+# impact" - which means no evidence, never "no impact".
+
+version: 1
+
+rules:
+  # -- society -------------------------------------------------------------
+  - concepts: [SALE, PURCHASE, PAYMENT]
+    impact: { scope: society, aspect: economy, direction: "0", effect: "money circulates through the economy" }
+
+  - concepts: [PAYMENT]
+    impact: { scope: society, aspect: trust, direction: "+", effect: "a debt is honoured, keeping trust in agreements" }
+
+  - concepts: [THEFT]
+    impact: { scope: society, aspect: law, direction: "-", effect: "breaks the law and erodes trust in property" }
+
+  - concepts: [HELP]
+    impact: { scope: society, aspect: cohesion, direction: "+", effect: "strengthens cooperation between people" }
+
+  - concepts: [INFORM]
+    impact: { scope: society, aspect: information, direction: "+", effect: "information spreads to more people" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [public_service]
+    impact: { scope: society, aspect: public services, direction: "-", effect: "a service people rely on is lost or degraded" }
+
+  - concepts: [CREATE]
+    categories: [public_service]
+    impact: { scope: society, aspect: public services, direction: "+", effect: "a new service becomes available to people" }
+
+  - concepts: [DESTROY]
+    categories: [data]
+    impact: { scope: society, aspect: data, direction: "-", effect: "information others may depend on is lost" }
+
+  - concepts: [DEPLOY]
+    categories: [software]
+    impact: { scope: society, aspect: technology, direction: "0", effect: "users of the system now run on the new version" }
+
+  # -- earth ---------------------------------------------------------------
+  - concepts: [MOVE]
+    categories: [fossil_vehicle]
+    impact: { scope: earth, aspect: emissions, direction: "-", effect: "burns fossil fuel and emits CO2" }
+
+  - concepts: [MOVE]
+    categories: [aircraft]
+    impact: { scope: earth, aspect: emissions, direction: "-", effect: "flying emits a large amount of CO2 per person" }
+
+  - concepts: [MOVE]
+    categories: [low_carbon_transport]
+    impact: { scope: earth, aspect: emissions, direction: "+", effect: "travels with low emissions compared with driving or flying" }
+
+  - concepts: [DESTROY, DAMAGE]
+    categories: [ecosystem]
+    impact: { scope: earth, aspect: biodiversity, direction: "-", effect: "habitat is lost and biodiversity declines" }
+
+  - concepts: [CREATE]
+    categories: [ecosystem]
+    impact: { scope: earth, aspect: biodiversity, direction: "+", effect: "new habitat supports biodiversity" }
+
+  - concepts: [CREATE]
+    categories: [building]
+    impact: { scope: earth, aspect: resources, direction: "-", effect: "construction consumes land, materials and energy" }
+
+  - concepts: [DESTROY]
+    categories: [building, vehicle, fossil_vehicle]
+    impact: { scope: earth, aspect: waste, direction: "-", effect: "produces material waste" }
+
+  - concepts: [PURCHASE, CREATE]
+    categories: [fossil_fuel]
+    impact: { scope: earth, aspect: emissions, direction: "-", effect: "more fossil fuel will be burned" }
+
+  - concepts: [SALE, GIFT]
+    categories: [vehicle, fossil_vehicle]
+    impact: { scope: earth, aspect: resources, direction: "+", effect: "an existing object is reused instead of a new one being made" }

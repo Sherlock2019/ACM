@@ -1,0 +1,20 @@
+# French lemmas -> impact categories. A seed list.
+
+version: 1
+
+categories:
+  voiture: [fossil_vehicle, vehicle]
+  camion: [fossil_vehicle, vehicle]
+  avion: [aircraft, vehicle]
+  train: [low_carbon_transport, vehicle]
+  vélo: [low_carbon_transport, vehicle]
+  forêt: [ecosystem]
+  arbre: [ecosystem]
+  rivière: [ecosystem]
+  hôpital: [public_service, building]
+  école: [public_service, building]
+  maison: [building]
+  usine: [building]
+  base: [data]
+  charbon: [fossil_fuel]
+  pétrole: [fossil_fuel]

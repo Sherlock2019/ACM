@@ -1,0 +1,102 @@
+# The state vocabulary CAM expresses consequences in.
+#
+# A consequence is a change to one of these states: has(Sarah, car) becomes true,
+# exists(database) becomes false. Keeping the vocabulary small and explicit is what
+# lets CAM compare an action's outcome with someone's goal - both are written in
+# the same terms.
+#
+#   args       argument names, in order. The first is the state's "owner": the
+#              entity a consequence is reported under.
+#   exclusive  an argument that only one holder can have at a time. has(X, car)
+#              and has(Y, car) cannot both be true, so when an action gives the car
+#              to Sarah, Mark's goal of having it is blocked.
+#   phrases    English rendering, per perspective. `sentence` is the standalone
+#              form used for goals and for the environment branch.
+#
+# The phrases are English only: CAM reasons language-independently but, for now,
+# renders its explanations in English.
+
+version: 1
+
+states:
+  has:
+    args: [owner, thing]
+    exclusive: thing
+    phrases:
+      owner:    { true: "gains {thing}",          false: "loses {thing}" }
+      thing:    { true: "now belongs to {owner}", false: "no longer belongs to {owner}" }
+      sentence: { true: "{owner} has {thing}",    false: "{owner} no longer has {thing}" }
+
+  at:
+    args: [entity, place]
+    exclusive: entity
+    phrases:
+      entity:   { true: "is now in {place}",       false: "is no longer in {place}" }
+      place:    { true: "{entity} arrives",        false: "{entity} leaves" }
+      sentence: { true: "{entity} is in {place}",  false: "{entity} is not in {place}" }
+
+  exists:
+    args: [thing]
+    phrases:
+      thing:    { true: "now exists",        false: "no longer exists" }
+      sentence: { true: "{thing} exists",    false: "{thing} no longer exists" }
+
+  owes:
+    args: [debtor, debt]
+    phrases:
+      debtor:   { true: "now owes {debt}",          false: "no longer owes {debt}" }
+      sentence: { true: "{debtor} owes {debt}",     false: "{debtor} no longer owes {debt}" }
+
+  knows:
+    args: [knower, content]
+    phrases:
+      knower:   { true: "now knows {content}",      false: "no longer knows {content}" }
+      sentence: { true: "{knower} knows {content}", false: "{knower} does not know {content}" }
+
+  met:
+    args: [person, other]
+    phrases:
+      person:   { true: "has met {other}",          false: "has not met {other}" }
+      other:    { true: "has met {person}",         false: "has not met {person}" }
+      sentence: { true: "{person} has met {other}", false: "{person} has not met {other}" }
+
+  won:
+    args: [winner, contest]
+    exclusive: contest
+    phrases:
+      winner:   { true: "wins {contest}",          false: "does not win {contest}" }
+      sentence: { true: "{winner} wins {contest}", false: "{winner} does not win {contest}" }
+
+  damaged:
+    args: [thing]
+    phrases:
+      thing:    { true: "is damaged",          false: "is repaired" }
+      sentence: { true: "{thing} is damaged",  false: "{thing} is repaired" }
+
+  helped:
+    args: [beneficiary]
+    phrases:
+      beneficiary: { true: "receives help",           false: "loses help" }
+      sentence:    { true: "{beneficiary} is helped", false: "{beneficiary} is not helped" }
+
+  # -- generic states, used when no concept is known for the verb ------------
+  # They carry no goal-relevant meaning, so CAM marks them uninformative and never
+  # uses them to decide whether a goal is helped or blocked.
+
+  performed:
+    args: [actor, action]
+    phrases:
+      actor:    { true: "performs '{action}'",          false: "does not perform '{action}'" }
+      sentence: { true: "{actor} performs '{action}'",  false: "{actor} does not perform '{action}'" }
+
+  affected:
+    args: [thing, action]
+    phrases:
+      thing:    { true: "is affected by '{action}'",          false: "is not affected by '{action}'" }
+      sentence: { true: "{thing} is affected by '{action}'",  false: "{thing} is not affected by '{action}'" }
+
+  occurs_at:
+    args: [action, place]
+    phrases:
+      place:    { true: "'{action}' takes place here",      false: "'{action}' does not take place here" }
+      sentence: { true: "'{action}' takes place in {place}", false: "'{action}' does not take place in {place}" }

@@ -1,0 +1,50 @@
+# English verb lemmas -> universal action concepts (packs/universal/concepts.yaml).
+#
+# A lemma missing from this table is not an error: CAM falls back to generic,
+# uninformative consequences ("John performs 'kick'") and says so.
+
+version: 1
+
+actions:
+  sell: SALE
+  buy: PURCHASE
+  purchase: PURCHASE
+  give: GIFT
+  donate: GIFT
+  hand: GIFT
+  steal: THEFT
+  pay: PAYMENT
+  repay: PAYMENT
+  move: MOVE
+  travel: MOVE
+  go: MOVE
+  drive: MOVE
+  fly: MOVE
+  relocate: MOVE
+  leave: DEPART
+  depart: DEPART
+  meet: MEET
+  delete: DESTROY
+  destroy: DESTROY
+  demolish: DESTROY
+  remove: DESTROY
+  create: CREATE
+  build: CREATE
+  found: CREATE
+  deploy: DEPLOY
+  install: DEPLOY
+  tell: INFORM
+  inform: INFORM
+  notify: INFORM
+  win: WIN
+  damage: DAMAGE
+  break: DAMAGE
+  crash: DAMAGE
+  help: HELP
+  assist: HELP
+  support: HELP
+
+# Predicates that state a goal: "Mark wants to buy John's car", "Sarah needs a car".
+# The subject owns the goal; the goal itself is the nested PURPOSE frame, or, with a
+# plain object ("needs a car"), having that object.
+goal_markers: [want, need, hope, plan, intend, wish, try, aim, desire, seek]

@@ -1,0 +1,203 @@
+# CAM test fixture - SILVER data (MLM parser output), not gold annotation.
+# Produced by scripts/make_fixtures.py. Regenerate deliberately and review the diff.
+#
+# parser: stanza
+# language: en
+
+# input = Mark wants to buy John's car.
+# text = Mark wants to buy John's car.
+1	Mark	Mark	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	wants	want	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	to	to	PART	TO	_	4	mark	_	_
+4	buy	buy	VERB	VB	VerbForm=Inf	2	xcomp	_	_
+5	John	John	PROPN	NNP	Number=Sing	7	nmod:poss	_	Ner=ORG
+6	's	's	PART	POS	_	5	case	_	Ner=ORG
+7	car	car	NOUN	NN	Number=Sing	4	obj	_	_
+8	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John will sell his car to Sarah in Paris tomorrow to pay his debt.
+# text = John will sell his car to Sarah in Paris tomorrow to pay his debt.
+1	John	John	PROPN	NNP	Number=Sing	3	nsubj	_	Ner=PERSON
+2	will	will	AUX	MD	VerbForm=Fin	3	aux	_	_
+3	sell	sell	VERB	VB	VerbForm=Inf	0	root	_	_
+4	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	5	nmod:poss	_	_
+5	car	car	NOUN	NN	Number=Sing	3	obj	_	_
+6	to	to	ADP	IN	_	7	case	_	_
+7	Sarah	Sarah	PROPN	NNP	Number=Sing	3	obl	_	Ner=PERSON
+8	in	in	ADP	IN	_	9	case	_	_
+9	Paris	Paris	PROPN	NNP	Number=Sing	3	obl	_	Ner=GPE
+10	tomorrow	tomorrow	NOUN	NN	Number=Sing	3	obl:unmarked	_	Ner=DATE
+11	to	to	PART	TO	_	12	mark	_	_
+12	pay	pay	VERB	VB	VerbForm=Inf	3	advcl	_	_
+13	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	14	nmod:poss	_	_
+14	debt	debt	NOUN	NN	Number=Sing	12	obj	_	_
+15	.	.	PUNCT	.	_	3	punct	_	_
+
+# input = John sold his car to Sarah.
+# text = John sold his car to Sarah.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	sold	sell	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	4	nmod:poss	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	to	to	ADP	IN	_	6	case	_	_
+6	Sarah	Sarah	PROPN	NNP	Number=Sing	2	obl	_	Ner=PERSON
+7	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John sold his car.
+# text = John sold his car.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	sold	sell	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	4	nmod:poss	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John did not sell his car to Sarah.
+# text = John did not sell his car to Sarah.
+1	John	John	PROPN	NNP	Number=Sing	4	nsubj	_	Ner=PERSON
+2	did	do	AUX	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	4	aux	_	_
+3	not	not	PART	RB	Polarity=Neg	4	advmod	_	_
+4	sell	sell	VERB	VB	VerbForm=Inf	0	root	_	_
+5	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	6	nmod:poss	_	_
+6	car	car	NOUN	NN	Number=Sing	4	obj	_	_
+7	to	to	ADP	IN	_	8	case	_	_
+8	Sarah	Sarah	PROPN	NNP	Number=Sing	4	obl	_	Ner=PERSON
+9	.	.	PUNCT	.	_	4	punct	_	_
+
+# input = If the bank refuses, John will sell his car to Sarah.
+# text = If the bank refuses, John will sell his car to Sarah.
+1	If	if	SCONJ	IN	_	4	mark	_	_
+2	the	the	DET	DT	Definite=Def|PronType=Art	3	det	_	_
+3	bank	bank	NOUN	NN	Number=Sing	4	nsubj	_	_
+4	refuses	refuse	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	8	advcl	_	_
+5	,	,	PUNCT	,	_	4	punct	_	_
+6	John	John	PROPN	NNP	Number=Sing	8	nsubj	_	Ner=PERSON
+7	will	will	AUX	MD	VerbForm=Fin	8	aux	_	_
+8	sell	sell	VERB	VB	VerbForm=Inf	0	root	_	_
+9	his	his	PRON	PRP$	Case=Gen|Gender=Masc|Number=Sing|Person=3|Poss=Yes|PronType=Prs	10	nmod:poss	_	_
+10	car	car	NOUN	NN	Number=Sing	8	obj	_	_
+11	to	to	ADP	IN	_	12	case	_	_
+12	Sarah	Sarah	PROPN	NNP	Number=Sing	8	obl	_	Ner=PERSON
+13	.	.	PUNCT	.	_	8	punct	_	_
+
+# input = Sarah needs a car.
+# text = Sarah needs a car.
+1	Sarah	Sarah	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	needs	need	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	a	a	DET	DT	Definite=Ind|PronType=Art	4	det	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John owns a car.
+# text = John owns a car.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	owns	own	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	a	a	DET	DT	Definite=Ind|PronType=Art	4	det	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = He sold it to Sarah.
+# text = He sold it to Sarah.
+1	He	he	PRON	PRP	Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Prs	2	nsubj	_	_
+2	sold	sell	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	it	it	PRON	PRP	Case=Acc|Gender=Neut|Number=Sing|Person=3|PronType=Prs	2	obj	_	_
+4	to	to	ADP	IN	_	5	case	_	_
+5	Sarah	Sarah	PROPN	NNP	Number=Sing	2	obl	_	Ner=PERSON
+6	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = Mark bought a car.
+# text = Mark bought a car.
+1	Mark	Mark	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	bought	buy	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	a	a	DET	DT	Definite=Ind|PronType=Art	4	det	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John stole the car.
+# text = John stole the car.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	stole	steal	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	car	car	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = The engineer deleted the database in production.
+# text = The engineer deleted the database in production.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	engineer	engineer	NOUN	NN	Number=Sing	3	nsubj	_	_
+3	deleted	delete	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	database	database	NOUN	NN	Number=Sing	3	obj	_	_
+6	in	in	ADP	IN	_	7	case	_	_
+7	production	production	NOUN	NN	Number=Sing	3	obl	_	_
+8	.	.	PUNCT	.	_	3	punct	_	_
+
+# input = The company destroyed the forest.
+# text = The company destroyed the forest.
+1	The	the	DET	DT	Definite=Def|PronType=Art	2	det	_	_
+2	company	company	NOUN	NN	Number=Sing	3	nsubj	_	_
+3	destroyed	destroy	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+4	the	the	DET	DT	Definite=Def|PronType=Art	5	det	_	_
+5	forest	forest	NOUN	NN	Number=Sing	3	obj	_	_
+6	.	.	PUNCT	.	_	3	punct	_	_
+
+# input = John flew to London.
+# text = John flew to London.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	flew	fly	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	to	to	ADP	IN	_	4	case	_	_
+4	London	London	PROPN	NNP	Number=Sing	2	obl	_	Ner=GPE
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John traveled to Paris by train.
+# text = John traveled to Paris by train.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	traveled	travel	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	to	to	ADP	IN	_	4	case	_	_
+4	Paris	Paris	PROPN	NNP	Number=Sing	2	obl	_	Ner=GPE
+5	by	by	ADP	IN	_	6	case	_	_
+6	train	train	NOUN	NN	Number=Sing	2	obl	_	_
+7	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John kicked the ball.
+# text = John kicked the ball.
+1	John	John	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	kicked	kick	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	ball	ball	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = I will give my car to Sarah.
+# text = I will give my car to Sarah.
+1	I	I	PRON	PRP	Case=Nom|Number=Sing|Person=1|PronType=Prs	3	nsubj	_	_
+2	will	will	AUX	MD	VerbForm=Fin	3	aux	_	_
+3	give	give	VERB	VB	VerbForm=Inf	0	root	_	_
+4	my	my	PRON	PRP$	Case=Gen|Number=Sing|Person=1|Poss=Yes|PronType=Prs	5	nmod:poss	_	_
+5	car	car	NOUN	NN	Number=Sing	3	obj	_	_
+6	to	to	ADP	IN	_	7	case	_	_
+7	Sarah	Sarah	PROPN	NNP	Number=Sing	3	obl	_	Ner=PERSON
+8	.	.	PUNCT	.	_	3	punct	_	_
+
+# input = Mark hopes to win the race.
+# text = Mark hopes to win the race.
+1	Mark	Mark	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	hopes	hope	VERB	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+3	to	to	PART	TO	_	4	mark	_	_
+4	win	win	VERB	VB	VerbForm=Inf	2	xcomp	_	_
+5	the	the	DET	DT	Definite=Def|PronType=Art	6	det	_	_
+6	race	race	NOUN	NN	Number=Sing	4	obj	_	_
+7	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = Sarah won the race.
+# text = Sarah won the race.
+1	Sarah	Sarah	PROPN	NNP	Number=Sing	2	nsubj	_	Ner=PERSON
+2	won	win	VERB	VBD	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	0	root	_	_
+3	the	the	DET	DT	Definite=Def|PronType=Art	4	det	_	_
+4	race	race	NOUN	NN	Number=Sing	2	obj	_	_
+5	.	.	PUNCT	.	_	2	punct	_	_
+
+# input = John is tired.
+# text = John is tired.
+1	John	John	PROPN	NNP	Number=Sing	3	nsubj	_	Ner=PERSON
+2	is	be	AUX	VBZ	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	3	cop	_	_
+3	tired	tired	ADJ	JJ	Degree=Pos	0	root	_	_
+4	.	.	PUNCT	.	_	3	punct	_	_

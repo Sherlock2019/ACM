@@ -1,0 +1,34 @@
+# French verb lemmas -> universal action concepts.
+#
+# `voler` is deliberately absent: it means both "to steal" and "to fly", and a
+# lemma table cannot tell them apart. Generic consequences are the honest answer.
+
+version: 1
+
+actions:
+  vendre: SALE
+  acheter: PURCHASE
+  donner: GIFT
+  offrir: GIFT
+  payer: PAYMENT
+  rembourser: PAYMENT
+  aller: MOVE
+  voyager: MOVE
+  déménager: MOVE
+  partir: DEPART
+  quitter: DEPART
+  rencontrer: MEET
+  supprimer: DESTROY
+  détruire: DESTROY
+  créer: CREATE
+  construire: CREATE
+  déployer: DEPLOY
+  installer: DEPLOY
+  informer: INFORM
+  dire: INFORM
+  gagner: WIN
+  endommager: DAMAGE
+  casser: DAMAGE
+  aider: HELP
+
+goal_markers: [vouloir, espérer, souhaiter, essayer, prévoir, chercher]

@@ -1,0 +1,13 @@
+# Numbers CAM uses when it scores how sure a consequence is.
+
+version: 1
+
+certainty:
+  # Used when MLM gives the frame no certainty of its own. A past action has
+  # happened; a planned one may not.
+  by_tense: { past: 1.0, present: 0.9, future: 0.8 }
+  default: 0.8
+  # "If the bank refuses, ..." - consequences hold only if the condition does.
+  condition_factor: 0.6
+  # Generic consequences from a verb CAM has no concept for.
+  generic_factor: 0.5

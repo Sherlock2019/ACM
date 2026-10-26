@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cam"
+version = "0.1.0"
+description = "Consequence Action Model - what an action changes for the actor, others, the environment, society and the earth; built on the Meaning Language Model"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = [
+    # The Meaning Language Model (package name splm). Not on PyPI: install it first
+    # from a local checkout (pip install -e ../SLM) or from its Git repository.
+    "splm",
+    "numpy>=1.26",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+cam = "cam.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]

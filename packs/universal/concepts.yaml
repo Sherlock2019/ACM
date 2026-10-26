@@ -1,0 +1,155 @@
+# Action concepts: what an action changes, independent of language.
+#
+# Each language maps its verb lemmas onto these concepts (packs/<lang>/actions.yaml),
+# so "sell", "vendre" and "bán" all reach SALE and predict the same consequences.
+#
+#   roles     concept role -> MLM semantic roles that can fill it, in priority
+#             order. ROLE@TYPE only matches an element of that entity type; for
+#             @PERSON an animate pronoun also counts. Each frame element fills at
+#             most one concept role.
+#   effects   state changes the action causes. `value` defaults to true. An
+#             argument written `=word` is a literal, not a role (=money).
+#             `primary: true` marks the intended outcome - what someone who has
+#             this action as a *goal* actually wants. The rest are side effects.
+#   requires  states that must hold for the action to be possible. When another
+#             action makes one of them true, it enables a goal built on this
+#             concept; when it makes one false, it hinders that goal.
+
+version: 1
+
+concepts:
+  SALE:
+    roles:
+      seller: [AGENT]
+      buyer: [RECIPIENT, BENEFICIARY, DESTINATION@PERSON, DESTINATION@ORG]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: has, args: [buyer, thing], primary: true }
+      - { state: has, args: [seller, thing], value: false }
+      - { state: has, args: [seller, =money] }
+      - { state: has, args: [buyer, =money], value: false }
+    requires:
+      - { state: has, args: [seller, thing] }
+
+  PURCHASE:
+    roles:
+      buyer: [AGENT]
+      seller: [SOURCE, PARTICIPANT]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: has, args: [buyer, thing], primary: true }
+      - { state: has, args: [seller, thing], value: false }
+      - { state: has, args: [buyer, =money], value: false }
+      - { state: has, args: [seller, =money] }
+    requires:
+      - { state: has, args: [buyer, =money] }
+
+  GIFT:
+    roles:
+      giver: [AGENT]
+      receiver: [RECIPIENT, BENEFICIARY, DESTINATION@PERSON, DESTINATION@ORG]
+      thing: [THEME, PATIENT, OBJECT]
+    effects:
+      - { state: has, args: [receiver, thing], primary: true }
+      - { state: has, args: [giver, thing], value: false }
+    requires:
+      - { state: has, args: [giver, thing] }
+
+  THEFT:
+    roles:
+      thief: [AGENT]
+      victim: [SOURCE, BENEFICIARY]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: has, args: [thief, thing], primary: true }
+      - { state: has, args: [victim, thing], value: false }
+
+  PAYMENT:
+    roles:
+      payer: [AGENT]
+      payee: [RECIPIENT, BENEFICIARY, DESTINATION@PERSON, DESTINATION@ORG]
+      debt: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: owes, args: [payer, debt], value: false, primary: true }
+      - { state: has, args: [payer, =money], value: false }
+      - { state: has, args: [payee, =money] }
+    requires:
+      - { state: has, args: [payer, =money] }
+
+  MOVE:
+    roles:
+      mover: [AGENT, THEME]
+      destination: [DESTINATION, LOCATION]
+      origin: [SOURCE]
+    effects:
+      - { state: at, args: [mover, destination], primary: true }
+      - { state: at, args: [mover, origin], value: false }
+
+  DEPART:
+    roles:
+      leaver: [AGENT, THEME]
+      place: [SOURCE, PATIENT, LOCATION]
+    effects:
+      - { state: at, args: [leaver, place], value: false, primary: true }
+
+  MEET:
+    roles:
+      person: [AGENT]
+      other: [PARTICIPANT, PATIENT, THEME]
+      place: [LOCATION]
+    effects:
+      - { state: met, args: [person, other], primary: true }
+      - { state: at, args: [person, place] }
+      - { state: at, args: [other, place] }
+
+  DESTROY:
+    roles:
+      destroyer: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: exists, args: [thing], value: false, primary: true }
+
+  CREATE:
+    roles:
+      creator: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: exists, args: [thing], primary: true }
+      - { state: has, args: [creator, thing] }
+
+  DEPLOY:
+    roles:
+      deployer: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+      place: [DESTINATION, LOCATION]
+    effects:
+      - { state: at, args: [thing, place], primary: true }
+
+  INFORM:
+    roles:
+      speaker: [AGENT]
+      listener: [RECIPIENT, DESTINATION@PERSON, PATIENT@PERSON]
+      content: [THEME, PATIENT, OBJECT]
+    effects:
+      - { state: knows, args: [listener, content], primary: true }
+
+  WIN:
+    roles:
+      winner: [AGENT]
+      contest: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: won, args: [winner, contest], primary: true }
+
+  DAMAGE:
+    roles:
+      agent: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: damaged, args: [thing], primary: true }
+
+  HELP:
+    roles:
+      helper: [AGENT]
+      beneficiary: [PATIENT, THEME, BENEFICIARY, RECIPIENT]
+    effects:
+      - { state: helped, args: [beneficiary], primary: true }
