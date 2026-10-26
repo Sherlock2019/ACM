@@ -2,9 +2,9 @@
 
     text -> MLM frames -> bind concept roles -> state changes
          -> place each change: actor / impacted subjects / local environment (WHERE)
-         -> resolve WHERE in the gazetteer: neighbours / connected / city / country
-         -> layer impacts: environment / neighbour / connected / city / country /
-            society / earth
+         -> resolve WHERE in the gazetteer: neighbours / organization / city / country
+         -> blast radius, layer by layer: environment / neighbour / organization /
+            city / country / society / earth
          -> compare with other actors' goals and actions
          -> action graph with a vector on every node
 
@@ -318,7 +318,7 @@ class ConsequenceEngine:
         return places
 
     def _scopes(self, places: dict[str, Binding], notes: list[str]) -> dict[str, list[str]]:
-        """Neighbours, connected environments, city and country of WHERE, from the gazetteer."""
+        """Neighbours, organization, city and country of WHERE, from the gazetteer."""
         scopes: dict[str, list[str]] = {layer.value: [] for layer in GEO_LAYERS}
 
         def add(layer: Target, names: tuple[str, ...] | list[str]) -> None:
@@ -335,7 +335,7 @@ class ConsequenceEngine:
                 )
                 continue
             add(Target.NEIGHBOUR, spec.neighbours)
-            add(Target.CONNECTED, spec.connected)
+            add(Target.ORGANIZATION, spec.organization)
             city = self.packs.city_of(spec)
             country = self.packs.country_of(spec)
             add(Target.CITY, [city.name] if city else [])

@@ -1,4 +1,4 @@
-"""The environment layers: local, neighbour, connected, city, country, society, earth."""
+"""The blast radius: local, neighbour, organization, city, country, society, earth."""
 
 import pytest
 
@@ -19,12 +19,12 @@ def test_paris_resolves_to_its_neighbours_city_and_country(predict):
     assert report.scopes["city"] == ["Paris"]
     assert report.scopes["country"] == ["France"]
     assert "Saint-Denis" in report.scopes["neighbour"]
-    assert "Île-de-France region" in report.scopes["connected"]
+    assert "Paris city council" in report.scopes["organization"]
 
 
-def test_sale_reaches_connected_businesses_and_the_country(predict):
+def test_sale_reaches_the_organizations_and_the_country(predict):
     report = predict(SALE)
-    assert ("registration", "0") in aspects(report, Target.CONNECTED)
+    assert ("registration", "0") in aspects(report, Target.ORGANIZATION)
     assert ("national economy", "0") in aspects(report, Target.COUNTRY)
     assert report.for_target(Target.CITY) == []  # no rule: reported as no known impact
 
@@ -40,11 +40,11 @@ def test_train_helps_the_city(predict):
     assert ("traffic", "+") in aspects(predict("John traveled to Paris by train."), Target.CITY)
 
 
-def test_production_is_connected_to_its_enterprise(predict):
+def test_production_belongs_to_its_enterprise(predict):
     report = predict("The engineer deleted the database in production.")
-    assert "the enterprise that runs it" in report.scopes["connected"]
+    assert "the enterprise that runs it" in report.scopes["organization"]
     assert report.scopes["city"] == []  # a system has no city of its own
-    assert ("dependent systems", "-") in aspects(report, Target.CONNECTED)
+    assert ("dependent systems", "-") in aspects(report, Target.ORGANIZATION)
     assert "CITY  not known" in to_text(report)
 
 
@@ -75,6 +75,7 @@ def test_graph_links_place_to_its_layers(predict):
     edges = {(e["source"], e["relation"], e["target"]) for e in report.graph["edges"]}
     assert ("e:paris", "in_country", "scope:country") in edges
     assert ("e:paris", "next_to", "scope:neighbour") in edges
+    assert ("e:paris", "in_organization", "scope:organization") in edges
     assert nodes["scope:country"]["label"] == "country: France"
     assert ("impact:country:national economy", "within", "scope:country") in edges
 

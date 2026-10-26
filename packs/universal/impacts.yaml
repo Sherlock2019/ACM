@@ -1,15 +1,15 @@
-# Wider impacts: what an action does beyond the people it touches, layer by layer.
+# The blast radius: what an action does beyond the people it touches, layer by layer.
 #
 # Scopes, from the place itself outwards (each is a layer of the report):
-#   environment  the local environment WHERE it happens - the site itself
-#   neighbour    the places next to it - noise, pollution, safety spill over
-#   connected    businesses, enterprises and systems tied to the place
-#   city         the city it is in - traffic, air, services, crime
-#   country      the country it is in - national law, economy, inventories
-#   society      shared human systems - economy, law, trust, public services, safety
-#   earth        the planet - emissions, biodiversity, resources, waste
+#   environment   the local environment WHERE it happens - the site itself
+#   neighbour     the places next to it - noise, pollution, safety spill over
+#   organization  the business, enterprise, institution or system it belongs to
+#   city          the city it is in - traffic, air, services, crime
+#   country       the country it is in - national law, economy, inventories
+#   society       shared human systems - economy, law, trust, public services, safety
+#   earth         the planet - emissions, biodiversity, resources, waste
 #
-# Which neighbours, connections, city and country a place has comes from
+# Which neighbours, organizations, city and country a place has comes from
 # places.yaml. A rule fires whether or not they are known: it states the
 # mechanism, and the report names the layer's extent when the gazetteer knows it.
 #
@@ -59,25 +59,25 @@ rules:
   - concepts: [THEFT]
     impact: { scope: neighbour, aspect: safety, direction: "-", effect: "people nearby feel less safe" }
 
-  # -- connected environments (business, enterprise, systems) --------------
+  # -- organization (business, enterprise, institution, system) ------------
   - concepts: [SALE, GIFT]
     categories: [vehicle, fossil_vehicle]
-    impact: { scope: connected, aspect: registration, direction: "0", effect: "insurers and the vehicle registry must record the new owner" }
+    impact: { scope: organization, aspect: registration, direction: "0", effect: "insurers and the vehicle registry must record the new owner" }
 
   - concepts: [DESTROY]
     categories: [data]
-    impact: { scope: connected, aspect: dependent systems, direction: "-", effect: "services and teams that rely on this data stop working" }
+    impact: { scope: organization, aspect: dependent systems, direction: "-", effect: "services and teams that rely on this data stop working" }
 
   - concepts: [DEPLOY]
     categories: [software]
-    impact: { scope: connected, aspect: integrations, direction: "0", effect: "connected services must work with the new version" }
+    impact: { scope: organization, aspect: integrations, direction: "0", effect: "connected services must work with the new version" }
 
   - concepts: [THEFT]
-    impact: { scope: connected, aspect: insurance, direction: "-", effect: "insurers and the police are drawn in" }
+    impact: { scope: organization, aspect: insurance, direction: "-", effect: "insurers and the police are drawn in" }
 
   - concepts: [DESTROY, DAMAGE]
     categories: [public_service]
-    impact: { scope: connected, aspect: dependants, direction: "-", effect: "organisations relying on the service must find a replacement" }
+    impact: { scope: organization, aspect: dependants, direction: "-", effect: "organisations relying on the service must find a replacement" }
 
   # -- city ----------------------------------------------------------------
   - concepts: [MOVE]

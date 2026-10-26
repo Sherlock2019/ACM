@@ -30,7 +30,7 @@ NO_IMPACT = "no known impact - no rule matched, which is not evidence of none"
 LAYER_TITLES = {
     Target.ENVIRONMENT: "Local environment",
     Target.NEIGHBOUR: "Neighbour environment",
-    Target.CONNECTED: "Connected environments",
+    Target.ORGANIZATION: "Organization",
     Target.CITY: "City",
     Target.COUNTRY: "Country",
     Target.SOCIETY: "Society",

@@ -8,7 +8,7 @@ Nodes
     time        WHEN
     state       a state change the action causes: has(Sarah, car)
     impact      an impact on one layer (environment ... earth)
-    scope       a layer itself: neighbour, connected, city, country, society, earth
+    scope       a layer itself: neighbour, organization, city, country, society, earth
                 - labelled with what it is for this action ("city: Paris")
     intention   another actor's goal or action
 
@@ -16,7 +16,7 @@ Edges
     action -[ROLE]-> entity          semantic roles from MLM (AGENT, PATIENT, ...)
     action -[causes]-> state -[changes:<target>]-> entity
     action -[impacts]-> impact -[within]-> scope
-    place -[next_to|connected_to|in_city|in_country]-> scope
+    place -[next_to|in_organization|in_city|in_country]-> scope
     owner -[wants|did]-> intention,  action -[<status>]-> intention
 
 Every node has a vector, so graphs from many actions can be stored together and
@@ -48,7 +48,7 @@ TARGETS: tuple[str, ...] = tuple(t.value for t in Target)
 TENSES: tuple[str, ...] = ("past", "present", "future")
 GEO_EDGES = {
     Target.NEIGHBOUR: "next_to",
-    Target.CONNECTED: "connected_to",
+    Target.ORGANIZATION: "in_organization",
     Target.CITY: "in_city",
     Target.COUNTRY: "in_country",
 }

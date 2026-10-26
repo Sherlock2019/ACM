@@ -5,17 +5,18 @@
 > A language model predicts the next word. MLM first works out what a sentence means.
 > **ACM goes one step further: it predicts what an action *does*. It traces the
 > consequences for the one acting, for those it lands on, for other actors' goals,
-> and then outwards, layer by layer: the place it happens, its neighbours, the
-> businesses and systems connected to it, its city, its country, society, and the
-> earth.**
+> and then across its whole blast radius, layer by layer: the place it happens,
+> its neighbours, the organization it belongs to, its city, its country, society,
+> and the earth.**
 
 ACM is built on the [Meaning Language Model (MLM)](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-),
 which turns a phrase into *Universal Phrase DNA*: who does what, to whom, where,
 when, how and why. ACM turns that structure into a graph of the full action in its
-context. It predicts the consequences circle by circle (who is affected) and layer
-by layer (where the effects reach, from the site of the action out to the earth).
-It stores every node as a vector so it can be compared with past actions. When the actor is **"I"**, the
-report is the model's view of its **own** planned action.
+context. It predicts the consequences circle by circle (who is affected) and
+across the **blast radius**, layer by layer (where the effects reach, from the site
+of the action out to the earth). It stores every node as a vector so it can be
+compared with past actions. When the actor is **"I"**, the report is the model's
+view of its **own** planned action.
 
 ![How ACM sees an action](docs/acm-vision.png)
 
@@ -23,21 +24,22 @@ report is the model's view of its **own** planned action.
 the MLM parser plus the ACM engine. Nothing is placed by hand. Each ring shows what
 ACM's report put there. The coloured strips are the actual node vectors, and the
 scores on the right come from a real search of the graph vector store.*
-*The image predates the neighbour, connected, city and country layers and still
-shows the original six circles; regenerating it needs MLM's parser.*
+*The image predates the blast-radius layers (neighbour, organization, city and
+country) and still shows the original six circles. Regenerating it needs MLM's
+parser. The [blast radius diagram](#the-blast-radius) below shows every layer.*
 
 ---
 
 ## Contents
 
-- [The circles and layers](#the-circles-and-layers)
+- [The blast radius](#the-blast-radius)
 - [Quick start](#quick-start)
 - [Architecture](#architecture)
 - [Step 1 - Phrase DNA from MLM](#step-1---phrase-dna-from-mlm)
 - [Step 2 - Concepts and state changes](#step-2---concepts-and-state-changes)
 - [Step 3 - Placing each consequence](#step-3---placing-each-consequence)
 - [Step 4 - Other actors: goals and actions](#step-4---other-actors-goals-and-actions)
-- [Step 5 - The environment layers: local to earth](#step-5---the-environment-layers-local-to-earth)
+- [Step 5 - The blast radius: local to earth](#step-5---the-blast-radius-local-to-earth)
 - [Step 6 - The action graph and its vectors](#step-6---the-action-graph-and-its-vectors)
 - [Step 7 - The graph vector database](#step-7---the-graph-vector-database)
 - [Command line](#command-line)
@@ -48,25 +50,32 @@ shows the original six circles; regenerating it needs MLM's parser.*
 
 ---
 
-## The circles and layers
+## The blast radius
 
-Three circles are about **who**: the actor, the ones impacted, and other actors.
-Seven layers are about **where**, from the place itself outwards:
+### Start with a phrase
 
-| | Circle / layer | Question | Example |
-|---|---|---|---|
-| who | **Self / Actor** | What happens to the one acting? | loses the car, gains money |
-| who | **Impacted** | What happens to WHAT / TO WHOM? | Sarah gains the car |
-| who | **Other actors** | Does it help or block their goals and actions? | Mark's goal "buy the car" is blocked |
-| where | **Local environment** | What changes WHERE it happens? | the database no longer exists in production |
-| where | **Neighbour environment** | What spills over to the places next to it? | aircraft noise for people living near the airports |
-| where | **Connected environments** | Which businesses, enterprises and systems tied to the place feel it? | services that rely on the deleted data stop working |
-| where | **City** | What changes for the city it is in? | a train trip uses public transport instead of road space |
-| where | **Country** | What changes at national level? | a flight counts in the UK's transport emissions |
-| where | **Society** | Economy, law, trust, public services | money circulates through the economy |
-| where | **Earth** | Emissions, biodiversity, resources, waste | flying emits CO2 |
+> **"I will sell my car to Sarah in Paris tomorrow to pay my debt."**
+>
+> Context: *"Mark wants to buy my car." "Sarah needs a car."*
 
-The layers nest. Each one contains the one before it:
+ACM reads that one sentence and traces its consequences outwards, ring by ring,
+from the people involved out to the whole planet:
+
+| | Ring | What ACM finds for this phrase |
+|---|---|---|
+| who | **Self** (I) | loses my car · gains money · own goal *pay my debt*: **ENABLED ➕** |
+| who | **Impacted** (Sarah) | gains my car · loses money |
+| who | **Other actors** | Mark wants to buy my car: **BLOCKED ❌** · Sarah wants a car: **ADVANCED ✅** |
+| where | **Local environment** (Paris) | the sale takes place here |
+| where | **Neighbours** (Boulogne-Billancourt, Saint-Denis, Montreuil) | no known impact |
+| where | **Organization** (Paris city council, Île-de-France regional council, Paris businesses and employers) | insurers and the vehicle registry must record the new owner ● |
+| where | **City** (Paris) | no known impact |
+| where | **Country** (France) | a taxable transaction counts in national economic activity ● |
+| where | **Society** | money circulates through the economy ● |
+| where | **Earth** | an existing car is reused instead of a new one being made ▲ |
+
+That whole spread is the action's **blast radius**. The rings nest, each one
+containing the one before it:
 
 ```mermaid
 flowchart TB
@@ -74,7 +83,7 @@ flowchart TB
     subgraph SOCIETY["Society - economy · law · trust · public services"]
       subgraph COUNTRY["Country - France"]
         subgraph CITY["City - Paris"]
-          subgraph CONNECTED["Connected - Île-de-France region · Paris businesses and commuters"]
+          subgraph ORGANIZATION["Organization - Paris city council · Île-de-France regional council · Paris businesses and employers"]
             subgraph NEIGHBOUR["Neighbour - Boulogne-Billancourt · Saint-Denis · Montreuil"]
               subgraph LOCAL["Local environment - Paris"]
                 A(["self sells my car to Sarah"])
@@ -87,15 +96,41 @@ flowchart TB
   end
 ```
 
-Each layer is a module of the same kind. Its **extent**, meaning which places it
-covers for this action, comes from the place gazetteer
-([`places.yaml`](packs/universal/places.yaml)). Its **content**, meaning what the
-action does there, comes from impact rules that name the layer as their `scope`
-([`impacts.yaml`](packs/universal/impacts.yaml)). Adding knowledge to a layer is
-a YAML edit, with no Python changes.
+### What each ring means
 
-The same report as a mind map, in the shape `acm predict --format mermaid` prints it
-for the scenario in the image:
+The blast radius has two parts. Three circles cover **who** is affected. Seven
+environment layers cover **where** the effects land, from the place itself
+outwards:
+
+**local → neighbours → organization → city → country → society → earth**
+
+| | Circle / layer | Question it answers | Example from other phrases |
+|---|---|---|---|
+| who | **Self / Actor** | What happens to the one acting? | *John flew to London.* → John is now in London |
+| who | **Impacted** | What happens to WHAT / TO WHOM? | *John sold his car to Sarah.* → Sarah gains the car |
+| who | **Other actors** | Does it help or block their goals and actions? | *Sarah won the race.* → Mark's goal to win is blocked |
+| where | **Local environment** | What changes WHERE it happens? | *The engineer deleted the database in production.* → production no longer has the database |
+| where | **Neighbours** | What spills over to the places next to it? | *John flew to London.* → aircraft noise for people near the airports |
+| where | **Organization** | Which business, enterprise, institution or system does the place belong to, and what happens to it? | *... deleted the database in production.* → services that rely on the data stop working |
+| where | **City** | What changes for the city it is in? | *John traveled to Paris by train.* → uses public transport instead of road space |
+| where | **Country** | What changes at national level? | *John flew to London.* → counts in the UK's transport emissions |
+| where | **Society** | Economy, law, trust, public services | *John stole the car.* → breaks the law and erodes trust |
+| where | **Earth** | Emissions, biodiversity, resources, waste | *The company destroyed the forest.* → biodiversity declines |
+
+Each layer is a module of the same kind:
+
+- Its **extent** says which places the layer covers for this action: Paris's
+  neighbours, the organizations it belongs to, its city, its country. This comes
+  from the place gazetteer, [`places.yaml`](packs/universal/places.yaml).
+- Its **content** says what the action does there. This comes from impact rules
+  that name the layer as their `scope`, in
+  [`impacts.yaml`](packs/universal/impacts.yaml).
+
+Adding knowledge to a layer is a YAML edit, with no Python changes. "No known
+impact" means that no rule matched, never that there is no impact.
+
+The same report as a mind map, in the shape `acm predict --format mermaid` prints
+it:
 
 ```mermaid
 mindmap
@@ -115,7 +150,7 @@ mindmap
       'sell' takes place here
     Neighbour environment: Boulogne-Billancourt, Saint-Denis, Montreuil
       no known impact - no rule matched, which is not evidence of none
-    Connected environments: Île-de-France region, Paris businesses and commuters
+    Organization: Paris city council, Île-de-France regional council, Paris businesses and employers
       registration: insurers and the vehicle registry must record the new owner ● changes
     City: Paris
       no known impact - no rule matched, which is not evidence of none
@@ -180,7 +215,7 @@ LOCAL ENVIRONMENT  Paris
 NEIGHBOUR ENVIRONMENT  Boulogne-Billancourt, Saint-Denis, Montreuil
   no known impact - no rule matched, which is not evidence of none
 
-CONNECTED ENVIRONMENTS  Île-de-France region, Paris businesses and commuters
+ORGANIZATION  Paris city council, Île-de-France regional council, Paris businesses and employers
   registration: insurers and the vehicle registry must record the new owner (● changes)
 
 CITY  Paris
@@ -217,9 +252,9 @@ flowchart TD
   ENT --> BIND[Bind concept roles<br/>sell → SALE: seller · buyer · thing]
   BIND --> FACTS[State changes<br/>has·Sarah, car· = true]
   FACTS --> PLACE[Place each change<br/>actor · impacted · local environment]
-  ENT --> GEO[Gazetteer<br/>neighbours · connected · city · country]
+  ENT --> GEO[Gazetteer<br/>neighbours · organization · city · country]
   GEO --> IMP
-  DNA --> IMP[Layer impact rules<br/>environment · neighbour · connected ·<br/>city · country · society · earth]
+  DNA --> IMP[Layer impact rules<br/>environment · neighbour · organization ·<br/>city · country · society · earth]
   ENT --> INT[Other actors' goals and actions<br/>as wanted states]
   FACTS --> REL[Relate<br/>advanced · enabled · blocked · at risk · hindered]
   INT --> REL
@@ -278,8 +313,8 @@ actor's own.
 
 WHERE (the LOCATION, DESTINATION and SOURCE roles) is the starting point for all
 the environment layers. *Paris* becomes the local environment, and the gazetteer
-expands it to its neighbours, connected environments, city and country
-([Step 5](#step-5---the-environment-layers-local-to-earth)).
+expands it to its neighbours, organization, city and country
+([Step 5](#step-5---the-blast-radius-local-to-earth)).
 
 ---
 
@@ -412,14 +447,17 @@ flowchart TD
 
 ---
 
-## Step 5 - The environment layers: local to earth
+## Step 5 - The blast radius: local to earth
 
-Beyond the people involved, an action ripples outwards through seven layers:
+Start with a phrase: **"John flew to London."** Beyond John himself, the flight
+reaches people living near the airports (neighbours), the UK's emissions inventory
+(country) and the climate (earth). That outward spread is the action's **blast
+radius**, and ACM traces it through seven layers:
 
 ```mermaid
 flowchart LR
   L[Local environment<br/>WHERE it happens] --> N[Neighbour<br/>the places next to it]
-  N --> C[Connected<br/>business · enterprise ·<br/>systems · region]
+  N --> C[Organization<br/>business · enterprise ·<br/>institution · system]
   C --> CI[City]
   CI --> CO[Country]
   CO --> S[Society]
@@ -438,21 +476,21 @@ paris:
   name: Paris
   country: france
   neighbours: [Boulogne-Billancourt, Saint-Denis, Montreuil]
-  connected: [Île-de-France region, Paris businesses and commuters]
+  organization: [Paris city council, Île-de-France regional council, Paris businesses and employers]
 production:
   kind: system          # site · business · enterprise · system · city · region · country
   neighbours: [staging and test environments]
-  connected: [the enterprise that runs it, its customers and users, services that call it]
+  organization: [the enterprise that runs it, its customers and users, services that call it]
 ```
 
 A city is its own city, and a country is taken from the city when it is not given.
 A place that is not in the gazetteer keeps its local environment, but its other
 layers are reported as *not known*, with a note. They are never guessed.
 
-| Place | Neighbour | Connected | City | Country |
+| Place | Neighbour | Organization | City | Country |
 |---|---|---|---|---|
-| Paris | Boulogne-Billancourt, Saint-Denis, Montreuil | Île-de-France region, Paris businesses and commuters | Paris | France |
-| London | Croydon, Watford, Slough | Greater London region, the City of London financial district | London | United Kingdom |
+| Paris | Boulogne-Billancourt, Saint-Denis, Montreuil | Paris city council, Île-de-France regional council, Paris businesses and employers | Paris | France |
+| London | Croydon, Watford, Slough | Greater London Authority, City of London financial firms | London | United Kingdom |
 | production | staging and test environments | the enterprise that runs it, its customers and users, services that call it | not known | not known |
 
 **2. Its content: what the action does to the layer.** This comes from rules in
@@ -489,7 +527,7 @@ gazetteer names where it lands. *The company destroyed the forest* names no plac
 so its neighbour layer still says that nearby communities lose shade and flood
 protection, under the heading "no place stated".
 
-| Action | Local | Neighbour | Connected | City | Country | Society | Earth |
+| Action | Local | Neighbour | Organization | City | Country | Society | Earth |
 |---|---|---|---|---|---|---|---|
 | *John flew to London.* | John arrives | noise ▼ | - | - | emissions inventory ▼ | - | emissions ▼ |
 | *John traveled to Paris by train.* | John arrives | - | - | traffic ▲ | - | - | emissions ▲ |
@@ -522,7 +560,7 @@ flowchart LR
   n4["Sarah"]
   n5["tomorrow"]
   n6(("neighbour: Boulogne-Billancourt, Saint-Denis, Montreuil"))
-  n7(("connected: Île-de-France region, Paris businesses and commuters"))
+  n7(("organization: Paris city council, Île-de-France regional council, Paris businesses and employers"))
   n8(("city: Paris"))
   n9(("country: France"))
   n10{{"has(Sarah, his car)"}}
@@ -546,7 +584,7 @@ flowchart LR
   n0 -->|"DESTINATION"| n4
   n0 -->|"TIME"| n5
   n3 -->|"next_to"| n6
-  n3 -->|"connected_to"| n7
+  n3 -->|"in_organization"| n7
   n3 -->|"in_city"| n8
   n3 -->|"in_country"| n9
   n0 -->|"causes"| n10
@@ -578,7 +616,7 @@ flowchart LR
 | Shape | Node kind |
 |---|---|
 | `([ ])` stadium | action |
-| `(( ))` circle | self; a layer: neighbour, connected, city, country, society, earth |
+| `(( ))` circle | self; a layer: neighbour, organization, city, country, society, earth |
 | `[ ]` rectangle | entity, time |
 | `[/ /]` parallelogram | place |
 | `{{ }}` hexagon | state change |
@@ -657,7 +695,7 @@ sequenceDiagram
 Queries available: `search(vector, kind=...)`, `similar_actions(report)`,
 `history(entity)` (everything that ever happened to Sarah) and `stats()`.
 Layers are stored like any other part of the graph. `history("paris")` therefore
-also returns the place's `next_to`, `connected_to`, `in_city` and `in_country`
+also returns the place's `next_to`, `in_organization`, `in_city` and `in_country`
 links, and `search(vector, kind="impact")` finds past impacts that look alike on
 any layer. Search
 is exact numpy cosine, which is fine for thousands of nodes. FAISS or pgvector is
@@ -677,7 +715,7 @@ acm similar  "..." [--db data/acm.db]   # nearest stored actions
 (`acm` is installed as a script; `python -m acm.cli` works too.) All three output
 formats include every circle and layer. `--format json` puts each layer's
 consequences in `consequences` (with `target` set to `environment`, `neighbour`,
-`connected`, `city`, `country`, `society` or `earth`) and the layer extents in
+`organization`, `city`, `country`, `society` or `earth`) and the layer extents in
 `scopes`.
 
 The launcher wraps the same commands:
@@ -737,12 +775,12 @@ These carry over from MLM and are enforced in code and tests:
 argument counts and unknown roles.
 
 **An impact:** add a rule to `packs/universal/impacts.yaml` with the layer as its
-`scope` (`environment`, `neighbour`, `connected`, `city`, `country`, `society`
+`scope` (`environment`, `neighbour`, `organization`, `city`, `country`, `society`
 or `earth`) and, if needed, words to `packs/<lang>/categories.yaml`. The loader
 rejects unknown scopes.
 
 **A place:** add an entry to `packs/universal/places.yaml` with its `kind`,
-`neighbours`, `connected` environments, and the `city` and `country` it belongs to.
+`neighbours`, `organization`, and the `city` and `country` it belongs to.
 Those two are keys of other entries, and the loader checks that they are a city
 and a country.
 

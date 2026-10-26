@@ -22,19 +22,19 @@ class Target(str, Enum):
     OTHER_ACTORS = "other_actors"  # other actors' goals and actions
     ENVIRONMENT = "environment"  # WHERE - the local environment acted upon
     NEIGHBOUR = "neighbour"  # the places next to it
-    CONNECTED = "connected"  # businesses, enterprises and systems tied to it
+    ORGANIZATION = "organization"  # businesses, enterprises, institutions and systems it belongs to
     CITY = "city"  # the city it is in
     COUNTRY = "country"  # the country it is in
     SOCIETY = "society"  # shared human systems
     EARTH = "earth"  # the planet
 
 
-#: The environment layers, from the place itself outwards. Each one can carry
-#: impact rules (packs/universal/impacts.yaml).
+#: The blast radius: environment layers from the place itself outwards. Each one
+#: can carry impact rules (packs/universal/impacts.yaml).
 LAYERS: tuple[Target, ...] = (
     Target.ENVIRONMENT,
     Target.NEIGHBOUR,
-    Target.CONNECTED,
+    Target.ORGANIZATION,
     Target.CITY,
     Target.COUNTRY,
     Target.SOCIETY,
@@ -42,7 +42,7 @@ LAYERS: tuple[Target, ...] = (
 )
 
 #: Layers whose extent is resolved from the place gazetteer (packs/universal/places.yaml).
-GEO_LAYERS: tuple[Target, ...] = (Target.NEIGHBOUR, Target.CONNECTED, Target.CITY, Target.COUNTRY)
+GEO_LAYERS: tuple[Target, ...] = (Target.NEIGHBOUR, Target.ORGANIZATION, Target.CITY, Target.COUNTRY)
 
 
 class RelationStatus(str, Enum):
@@ -140,7 +140,7 @@ class ConsequenceReport(BaseModel):
     places: list[str] = Field(default_factory=list)
     scopes: dict[str, list[str]] = Field(
         default_factory=dict,
-        description="What each geographic layer is for this action: neighbour/connected/city/country -> names",
+        description="What each geographic layer is for this action: neighbour/organization/city/country -> names",
     )
     tense: str | None = None
     modality: str | None = None

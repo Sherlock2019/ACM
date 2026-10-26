@@ -88,7 +88,7 @@ def test_mindmap_has_every_circle(predict):
         "Other actors",
         "Local environment: Paris",
         "Neighbour environment: Boulogne-Billancourt",
-        "Connected environments: Île-de-France region",
+        "Organization: Paris city council",
         "City: Paris",
         "Country: France",
         "Society",

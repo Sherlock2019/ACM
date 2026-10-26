@@ -109,7 +109,7 @@ class PlaceSpec:
     city: str | None = None  # gazetteer key of the city it is in
     country: str | None = None  # gazetteer key of the country it is in
     neighbours: tuple[str, ...] = ()
-    connected: tuple[str, ...] = ()
+    organization: tuple[str, ...] = ()
     aliases: tuple[str, ...] = ()
 
 
@@ -216,7 +216,7 @@ class ConsequencePacks:
                 city=spec.get("city"),
                 country=spec.get("country"),
                 neighbours=tuple(spec.get("neighbours", [])),
-                connected=tuple(spec.get("connected", [])),
+                organization=tuple(spec.get("organization", [])),
                 aliases=tuple(alias.lower() for alias in spec.get("aliases", [])),
             )
             for key, spec in places.items()
