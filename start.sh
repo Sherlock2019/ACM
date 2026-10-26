@@ -48,6 +48,7 @@ case "${1:-}" in
         ;;
     "")
         echo "ACM interactive. Enter an action; prefix context lines with '+'. Empty line or Ctrl-D to quit."
+        echo "(For the visual dashboard and the multimodal demo, run ./dash.sh instead.)"
         context=()
         while IFS= read -r -p "acm> " line; do
             [[ -z "$line" ]] && break
