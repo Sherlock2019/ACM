@@ -63,9 +63,17 @@ def main(argv: list[str] | None = None) -> int:
             args.json.parent.mkdir(parents=True, exist_ok=True)
             args.json.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
             print(f"json:   {args.json}")
+            suite_data = run_suite()
             suite = args.json.parent / "inference_suite.json"
-            suite.write_text(json.dumps(run_suite(), ensure_ascii=False), encoding="utf-8")
+            suite.write_text(json.dumps(suite_data, ensure_ascii=False), encoding="utf-8")
             print(f"suite:  {suite}")
+            from acm.inference import EXAMPLES, pair_llm
+
+            baseline_file = EXAMPLES / "llm_baseline.json"
+            if baseline_file.is_file():  # recorded real LLM answers (scripts/make_llm_baseline.py)
+                paired = pair_llm(suite_data, json.loads(baseline_file.read_text(encoding="utf-8")))
+                (args.json.parent / "llm_vs_acm.json").write_text(json.dumps(paired, ensure_ascii=False, indent=1), encoding="utf-8")
+                print(f"llm:    {args.json.parent / 'llm_vs_acm.json'}")
         print(result["badge"])
         return 0
 

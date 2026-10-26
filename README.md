@@ -175,14 +175,37 @@ git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
 python -m venv .venv && source .venv/bin/activate
 pip install -e ../SLM -e ".[dev]"
-pytest                                   # 54 tests, no parser model needed
+pytest                                   # 61 tests, no parser model needed
 ```
 
 Or let the launcher do it. **`./start.sh` starts the whole POC.** It creates `.venv`
 and installs MLM from `../SLM` (or `$SLM_DIR`) and ACM. It then refreshes the demo
 results and starts the API and dashboard in the background **as the ACM app**:
-`http://127.0.0.1:3010/` opens the **ACM demo**, and on EC2 the launcher also prints
-the public-IP address.
+`http://127.0.0.1:3010/` opens the **tour**, and on EC2 the launcher also prints the
+public-IP address.
+
+**The tour** (the home page, `/`) explains ACM in four chapters, using real outputs
+only:
+
+1. **How ACM thinks.** One sentence goes through eight explicit steps: meaning, concept,
+   roles, state changes, who they land on, other people's goals, layer rules, certainty.
+   Then the answers appear, each with its reason.
+2. **ACM vs a language model.** A real local language model (MLM's base model,
+   SmolLM2-135M) is asked the same questions; its greedy and sampled answers are
+   recorded by `scripts/make_llm_baseline.py`. They sit next to ACM's answer and its why.
+   The table only counts what is on screen. The section also says plainly where an LLM
+   is better: breadth, fluency, unseen verbs.
+3. **One meaning, three senses.** A sentence, a picture and a video of the same scene
+   reach the same MLM meaning and the same predicted fall, while keeping their
+   different evidence.
+4. **Checked against reality.** The video prediction is scored against what happened.
+
+**What happens next?** (`/acm/inference`) lists 53 actions and 283 questions: "what
+happens next to Sarah, to Mark's plan, to Paris, to the earth…". Each answer comes
+from ACM's recorded trace, with a reasoning chain, a who-is-affected graph and the blast
+radius. **▶ Play all** walks through them. The scenarios are in
+`examples/inference_suite.yaml`, parsed once by MLM's real parser
+(`scripts/make_inference_suite.py`) and frozen in `examples/inference_suite.conllu`.
 
 The ACM demo page shows the tool as intended. It starts with a phrase and its whole
 blast radius, as in this README. One **▶ Run Demo** button then runs three inputs, each
@@ -787,7 +810,7 @@ consequences in `consequences` (with `target` set to `environment`, `neighbour`,
 The launcher wraps the same commands:
 
 ```bash
-./start.sh                              # the whole POC as the ACM app: http://127.0.0.1:3010/ → ACM demo
+./start.sh                              # the whole POC as the ACM app: http://127.0.0.1:3010/ → tour
 ./start.sh stop | status | restart
 ./start.sh cli                          # interactive: type an action; '+...' adds a context line
 ./start.sh predict "..." --format mermaid
@@ -896,7 +919,7 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 ## Tests and scripts
 
 ```bash
-pytest                              # 54 tests: CoNLL-U fixtures + multimodal fixtures, no GPU, no network
+pytest                              # 61 tests: CoNLL-U fixtures + multimodal fixtures, no GPU, no network
 python -m acm.cli demo              # multimodal demo, self-contained HTML report
 python scripts/make_fixtures.py     # regenerate fixtures (needs MLM's parser); review the diff
 python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real run
@@ -914,8 +937,9 @@ ACM/
   src/acm/           engine, entities, graph (vectors), store, render, cli
                      multimodal (MLM meaning → ACM), demo, evaluation, visual_report
   src/acm/world/     transition interface, tabletop simulator, PyBullet / V-JEPA stubs
-  scripts/           make_fixtures.py, draw_vision.py
-  tests/             54 tests over committed fixtures
+  scripts/           make_fixtures.py, draw_vision.py, make_inference_suite.py, make_llm_baseline.py
+  examples/          inference_suite.yaml (+ frozen .conllu), llm_baseline.json (recorded LLM answers)
+  tests/             61 tests over committed fixtures
   docs/              multimodal.md, world_model_feasibility.md, demo/tabletop_report.html,
                      acm-vision.svg / .png
 ```

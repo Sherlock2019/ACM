@@ -392,6 +392,38 @@ def run_suite(frames: dict[str, Any] | None = None) -> dict[str, Any]:
             "parse": "frozen MLM (Stanza) parses in examples/inference_suite.conllu; frames rebuilt by MLM's builder"}
 
 
+#: Which ACM answer answers the same question the language model was asked.
+LLM_TO_ACM = {
+    "Mark": "What happens to Mark's plan",
+    "Sarah": "What happens next to Sarah?",
+    "John": "What happens next to John?",
+    "the people living near the airport": "What happens to the neighbours",
+    "the earth": "What happens to the earth?",
+    "the company's customers": "What happens to the organization",
+    "the database": "What happens next to the database?",
+    "the forest": "What happens next to the forest?",
+    "Tom's plan to buy a bike": "What happens next to Tom?",
+    "the ball": "What happens next to the ball?",
+}
+
+
+def pair_llm(suite: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
+    """Each recorded LLM answer next to ACM's answer to the same question."""
+    items = {i["action"]: i for i in suite["items"]}
+    pairs = []
+    for rec in baseline["records"]:
+        item = items.get(rec["action"])
+        if item is None:
+            continue
+        wanted = LLM_TO_ACM.get(rec["subject"], "")
+        acm = next((a for a in item["answers"] if a["question"].startswith(wanted)), None)
+        if acm is None or item["answers"][0]["kind"] == "negated":
+            acm = item["answers"][0]
+        distinct = len({s.strip().lower() for s in [rec["greedy"], *rec["samples"]]})
+        pairs.append({**rec, "scenario": item["id"], "acm": acm, "llm_distinct_answers": distinct})
+    return {k: v for k, v in baseline.items() if k != "records"} | {"pairs": pairs}
+
+
 def _count(values) -> dict[str, int]:
     out: dict[str, int] = {}
     for v in values:
