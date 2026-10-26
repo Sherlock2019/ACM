@@ -58,9 +58,14 @@ def main(argv: list[str] | None = None) -> int:
         args.report.write_text(render_report(result), encoding="utf-8")
         print(f"report: {args.report}")
         if args.json is not None:
+            from acm.inference import run_suite
+
             args.json.parent.mkdir(parents=True, exist_ok=True)
             args.json.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
             print(f"json:   {args.json}")
+            suite = args.json.parent / "inference_suite.json"
+            suite.write_text(json.dumps(run_suite(), ensure_ascii=False), encoding="utf-8")
+            print(f"suite:  {suite}")
         print(result["badge"])
         return 0
 

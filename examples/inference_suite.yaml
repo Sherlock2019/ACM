@@ -1,0 +1,242 @@
+# The ACM inference suite: "what will happen next to ...?"
+#
+# Each scenario is context (earlier sentences: other people's goals and actions)
+# plus one action. ACM answers, for every subject the action touches - the actor,
+# the people and things it lands on, other people's goals, the place, the wider
+# layers - what happens next, and shows the reasoning it used.
+#
+# scripts/make_inference_suite.py parses these sentences once with MLM's real
+# parser and freezes the parses in inference_suite.conllu; everything else (the
+# demo, the tests) rebuilds the frames from that file without a parser.
+#
+#   theme      grouping in the demo
+#   shows      what the scenario is meant to demonstrate
+
+version: 1
+
+scenarios:
+  # -- who gets what: ownership and money -------------------------------------
+  - theme: Ownership & money
+    context: ["Mark wants to buy John's car.", "Sarah needs a car."]
+    action: "John sold his car to Sarah."
+    shows: "one car, one owner: Sarah's goal advances, Mark's is blocked"
+  - theme: Ownership & money
+    context: ["Mark wants to buy John's car."]
+    action: "John sold his car."
+    shows: "buyer unnamed: Mark's goal is only at risk, never assumed blocked"
+  - theme: Ownership & money
+    context: ["Mark wants to buy John's car."]
+    action: "John did not sell his car to Sarah."
+    shows: "negation: nothing changes for anyone"
+  - theme: Ownership & money
+    context: ["Lena wants to buy a bike."]
+    action: "Lena bought a bike in Paris."
+    shows: "the actor's own goal advances; the purchase reaches France's economy"
+  - theme: Ownership & money
+    context: ["Tom needs money."]
+    action: "Maria gave her bike to Tom."
+    shows: "a gift of the wrong thing: Tom gains a bike, his need for money is unaffected"
+  - theme: Ownership & money
+    context: []
+    action: "I will pay the bank my debt."
+    shows: "self-view: the model's own plan; trust in agreements"
+  - theme: Ownership & money
+    context: ["Mark bought a car."]
+    action: "John stole the car."
+    shows: "another actor's past action is undone"
+  - theme: Ownership & money
+    context: ["The museum needs the painting."]
+    action: "A thief stole the painting from the museum."
+    shows: "the victim's need is blocked; crime across city, country and society"
+  - theme: Ownership & money
+    context: ["Lena needs a laptop."]
+    action: "I will give my laptop to Lena."
+    shows: "self-view gift that advances someone else's goal"
+  - theme: Ownership & money
+    context: []
+    action: "The company bought coal."
+    shows: "a purchase with an earth impact: more fossil fuel will be burned"
+  - theme: Ownership & money
+    context: ["Mark wants to buy a house."]
+    action: "Sarah bought the house."
+    shows: "a competing buyer: Mark's goal is blocked"
+  - theme: Ownership & money
+    context: ["Maria needs money."]
+    action: "Tom paid Maria the rent."
+    shows: "payment supplies what someone needs"
+  - theme: Ownership & money
+    context: ["Paul needs flour."]
+    action: "The supplier sold flour to Paul."
+    shows: "a need met by a sale"
+  - theme: Ownership & money
+    context: ["Sarah plans to sell her car."]
+    action: "Mark stole Sarah's car."
+    shows: "hindered: the theft removes what Sarah's plan requires"
+  - theme: Ownership & money
+    context: ["Tom wants to buy a bike."]
+    action: "Tom gave all his money to Maria."
+    shows: "hindered by your own action: Tom can no longer pay"
+  - theme: Ownership & money
+    context: ["Mark wants to buy John's car."]
+    action: "John will sell his car to Sarah in Paris tomorrow to pay his debt."
+    shows: "the full blast radius of one planned sale"
+  - theme: Ownership & money
+    context: ["Lucy needs a computer."]
+    action: "The company gave Lucy a new computer."
+    shows: "a need advanced by a donation"
+
+  # -- where people go: travel ------------------------------------------------
+  - theme: Travel
+    context: []
+    action: "John flew to London."
+    shows: "a flight: aircraft noise next door, the UK's emissions, the climate"
+  - theme: Travel
+    context: []
+    action: "Sarah flew to New York."
+    shows: "same rule, different place: New York's neighbours and the United States"
+  - theme: Travel
+    context: []
+    action: "Maria drove to Lyon by car."
+    shows: "driving: exhaust along the route, city traffic, CO2"
+  - theme: Travel
+    context: []
+    action: "Tom traveled to Hanoi by bus."
+    shows: "a bus trip into Vietnam's capital"
+  - theme: Travel
+    context: []
+    action: "Lena went to Paris by train."
+    shows: "low-carbon travel helps the city and the earth"
+  - theme: Travel
+    context: []
+    action: "Sarah left London."
+    shows: "departure: the place loses someone"
+  - theme: Travel
+    context: []
+    action: "I will move to Ho Chi Minh City."
+    shows: "self-view relocation into a city the gazetteer knows"
+  - theme: Travel
+    context: []
+    action: "John went to the office by bike."
+    shows: "a business place: the office's organization layer"
+  - theme: Travel
+    context: ["John wants to leave London."]
+    action: "John flew from London to Paris."
+    shows: "a goal of leaving, advanced by a flight that starts there"
+  - theme: Travel
+    context: []
+    action: "The family flew to Hanoi."
+    shows: "a group trip: neighbours of Hanoi, Vietnam's emissions"
+
+  # -- what gets built or destroyed --------------------------------------------
+  - theme: Build & destroy
+    context: []
+    action: "The company destroyed the forest."
+    shows: "no place named, yet local, neighbour, national and planetary layers"
+  - theme: Build & destroy
+    context: []
+    action: "The engineer deleted the database in production."
+    shows: "a system's blast radius: the enterprise, its users, data-protection law"
+  - theme: Build & destroy
+    context: []
+    action: "The storm damaged the hospital in Lyon."
+    shows: "damage to a public service: Lyon's residents and the health system"
+  - theme: Build & destroy
+    context: []
+    action: "The city built a school in Hanoi."
+    shows: "a new public service: good for residents, costly for resources"
+  - theme: Build & destroy
+    context: []
+    action: "The workers demolished the old factory."
+    shows: "demolition: a cleared site, noisy neighbours, waste"
+  - theme: Build & destroy
+    context: []
+    action: "The volunteers planted trees in the park."
+    shows: "creation in nature: new habitat"
+  - theme: Build & destroy
+    context: []
+    action: "The company built a factory in Lyon."
+    shows: "construction: land use, nuisance, urban growth, resources"
+  - theme: Build & destroy
+    context: []
+    action: "The flood destroyed the bridge."
+    shows: "a lost public service and its dependants"
+  - theme: Build & destroy
+    context: []
+    action: "A hacker deleted the backup."
+    shows: "lost data: dependent systems, data protection, society"
+  - theme: Build & destroy
+    context: []
+    action: "Mark broke the window."
+    shows: "damage with no wider rule: no evidence beyond the window, not 'no impact'"
+
+  # -- information, meeting, helping, winning -----------------------------------
+  - theme: People & information
+    context: []
+    action: "Sarah told Mark the news."
+    shows: "information moves: Mark now knows"
+  - theme: People & information
+    context: []
+    action: "The doctor told the patient the diagnosis."
+    shows: "news passes to someone: they now know it"
+  - theme: People & information
+    context: ["Lena wants to meet Tom."]
+    action: "Lena met Tom in London."
+    shows: "a meeting goal achieved, in a known city"
+  - theme: People & information
+    context: []
+    action: "The volunteers helped the refugees."
+    shows: "help strengthens cooperation"
+  - theme: People & information
+    context: []
+    action: "I will help my neighbour."
+    shows: "self-view help"
+  - theme: People & information
+    context: ["Sarah wants to win the race."]
+    action: "Mark won the race."
+    shows: "one winner per contest: Sarah's goal is blocked"
+  - theme: People & information
+    context: ["Mark hopes to win the election."]
+    action: "Maria won the election in Hanoi."
+    shows: "a rival's win, placed in Hanoi"
+
+  # -- software ------------------------------------------------------------------
+  - theme: Technology
+    context: []
+    action: "The team deployed the app to production."
+    shows: "a deployment: connected services must cope with the new version"
+  - theme: Technology
+    context: []
+    action: "The engineer installed the update on the website."
+    shows: "installing onto a website"
+
+  # -- physical objects ------------------------------------------------------------
+  - theme: Physical objects
+    context: []
+    action: "The child pushed the cup."
+    shows: "text alone: the cup moves; whether it falls needs geometry (see the image/video demo)"
+  - theme: Physical objects
+    context: []
+    action: "The cup fell off the table."
+    shows: "a fall: the table no longer supports the cup"
+  - theme: Physical objects
+    context: []
+    action: "I dropped the glass."
+    shows: "dropping: letting go; breaking is not assumed"
+
+  # -- what ACM refuses to guess ----------------------------------------------------
+  - theme: Honesty
+    context: ["Mark wants to buy John's car."]
+    action: "If the bank refuses, John will sell his car to Sarah."
+    shows: "a conditional: consequences hold only if the condition does, at lower certainty"
+  - theme: Honesty
+    context: []
+    action: "John kicked the ball."
+    shows: "an unknown verb: generic consequences, no verdict, no invented impact"
+  - theme: Honesty
+    context: []
+    action: "John is tired."
+    shows: "a state, not an action: nothing changes"
+  - theme: Honesty
+    context: ["Mark wants to buy John's car."]
+    action: "John will sell his car."
+    shows: "a future plan with an unnamed buyer: at risk, not blocked"

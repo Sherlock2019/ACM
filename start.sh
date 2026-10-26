@@ -84,7 +84,7 @@ start_poc() {
 
     echo "== 3/4 Demo results from the current ACM code"
     if python -m acm.cli demo --json "$MLM/web/public/demo/demo_results.json" > /dev/null; then
-        echo "   refreshed web/public/demo/demo_results.json and docs/demo/tabletop_report.html"
+        echo "   refreshed web/public/demo/demo_results.json, inference_suite.json and docs/demo/tabletop_report.html"
     else
         echo "   warning: could not refresh; the dashboard uses the bundled results" >&2
     fi
@@ -108,6 +108,7 @@ start_poc() {
     echo
     echo "POC is running:"
     echo "  ACM demo             http://127.0.0.1:$WEB_PORT/acm        (phrase · image · video, one Run Demo button)"
+    echo "  What happens next?   http://127.0.0.1:$WEB_PORT/acm/inference   (53 actions, 280+ answers with reasoning)"
     echo "  Multimodal details   http://127.0.0.1:$WEB_PORT/multimodal"
     echo "  Dashboard            http://127.0.0.1:$WEB_PORT"
     if ip="$(public_ip)"; then

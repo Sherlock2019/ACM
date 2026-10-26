@@ -21,6 +21,10 @@ actions:
   drive: MOVE
   fly: MOVE
   relocate: MOVE
+  cycle: MOVE
+  walk: MOVE
+  ride: MOVE
+  sail: MOVE
   leave: DEPART
   depart: DEPART
   meet: MEET
@@ -30,6 +34,7 @@ actions:
   remove: DESTROY
   create: CREATE
   build: CREATE
+  plant: CREATE
   found: CREATE
   deploy: DEPLOY
   install: DEPLOY

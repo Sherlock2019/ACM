@@ -195,6 +195,10 @@ class ConsequenceReport(BaseModel):
     consequences: list[Consequence] = Field(default_factory=list)
     relations: list[Relation] = Field(default_factory=list)
     unknowns: list[UnknownConsequence] = Field(default_factory=list)
+    trace: dict[str, Any] = Field(
+        default_factory=dict,
+        description="What ACM used: MLM frame, concept, role bindings, state facts, categories, rules fired",
+    )
     graph: dict[str, Any] = Field(default_factory=dict)
     notes: list[str] = Field(default_factory=list)
 

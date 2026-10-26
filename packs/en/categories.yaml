@@ -17,6 +17,8 @@ categories:
   train: [low_carbon_transport, vehicle]
   bike: [low_carbon_transport, vehicle]
   bicycle: [low_carbon_transport, vehicle]
+  cycle: [low_carbon_transport]
+  walk: [low_carbon_transport]
   forest: [ecosystem]
   tree: [ecosystem]
   river: [ecosystem]

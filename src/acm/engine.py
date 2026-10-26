@@ -91,6 +91,7 @@ class ConsequenceEngine:
         self.packs = packs or get_packs()
         self._pipeline = pipeline
         self._embedder = embedder
+        self._last_trace: dict[str, Any] = {}
 
     @property
     def pipeline(self) -> Any:
@@ -211,6 +212,23 @@ class ConsequenceEngine:
                 _Fact(external.fact, False, external.source, True, external.basis, tuple(external.evidence))
             )
 
+        # The reasoning trace: what ACM actually used, recorded as it happens.
+        report.trace = {
+            "frame": action.to_compact_dict(),
+            "concept": concept.name if concept else None,
+            "bindings": [
+                {"concept_role": role, "entity": b.label, "key": b.key, "mlm_role": b.role}
+                for role, b in bindings.items()
+            ],
+            "unfilled_roles": [role for role in (concept.roles if concept else {}) if role not in bindings],
+            "facts": [
+                {"fact": str(item.fact), "state": item.fact.state, "primary": item.primary,
+                 "source": item.source, "basis": item.basis, "informative": item.informative}
+                for item in facts
+            ],
+            "negated": bool(action.negation),
+        }
+
         if action.negation:
             report.notes.append("The action is negated: none of its consequences follow.")
             facts = []
@@ -232,6 +250,7 @@ class ConsequenceEngine:
         )
         if report.realized and not is_state:
             report.consequences += self._impacts(action, concept, language, report.certainty)
+            report.trace.update(self._last_trace)
 
         intentions += list(goals)
         if actor is not None:
@@ -526,7 +545,16 @@ class ConsequenceEngine:
                     categories |= self.packs.categories_for(value, language)
 
         out: list[Consequence] = []
-        for rule in self.packs.impacts_for(concept.name if concept else None, categories):
+        fired = self.packs.impacts_for(concept.name if concept else None, categories)
+        self._last_trace = {
+            "categories": sorted(categories),
+            "rules": [
+                {"scope": r.scope, "aspect": r.aspect, "direction": r.direction, "effect": r.effect,
+                 "when_concepts": sorted(r.concepts), "when_categories": sorted(r.categories & categories)}
+                for r in fired
+            ],
+        }
+        for rule in fired:
             out.append(
                 Consequence(
                     target=Target(rule.scope),
