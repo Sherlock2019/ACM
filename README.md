@@ -178,9 +178,12 @@ pip install -e ../SLM -e ".[dev]"
 pytest                                   # 53 tests, no parser model needed
 ```
 
-Or let the launcher do it: `./start.sh` creates `.venv`, installs MLM from `../SLM`
-(or `$SLM_DIR`) and ACM, then opens an interactive prompt. `./start.sh predict "..."`
-runs any `acm` command, and `./start.sh test` runs the tests.
+Or let the launcher do it. **`./start.sh` starts the whole POC.** It creates `.venv`
+and installs MLM from `../SLM` (or `$SLM_DIR`) and ACM. It then refreshes the demo
+results and starts MLM's API and dashboard in the background, and prints the URLs:
+`http://127.0.0.1:3010/multimodal` and, on EC2, the public-IP address.
+`./start.sh cli` opens the interactive prompt, `./start.sh predict "..."` runs any
+`acm` command, `./start.sh test` runs the tests and `./start.sh stop` stops it all.
 
 To analyse new text, also install MLM's parser:
 
@@ -743,7 +746,7 @@ python -m acm.cli demo              # runs all flows, writes docs/demo/tabletop_
 The interactive version (three tabs with Run buttons, the video checkpoint, and
 Demo/Live modes) is the `/multimodal` page of the
 [MLM dashboard](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-).
-With MLM cloned next to ACM (`../SLM`), `./dash.sh` starts it. It prints
+With MLM cloned next to ACM (`../SLM`), `./start.sh` starts it. It prints
 `http://127.0.0.1:3010/multimodal` and, on EC2, `http://PUBLIC-IP:3010/multimodal`;
 open inbound TCP 3010 in the security group and keep 8001 closed.
 
@@ -768,13 +771,14 @@ consequences in `consequences` (with `target` set to `environment`, `neighbour`,
 The launcher wraps the same commands:
 
 ```bash
-./start.sh                              # interactive: type an action; '+...' adds a context line
+./start.sh                              # the whole POC: API + dashboard (MLM repo, ../SLM), URLs printed
+./start.sh stop | status | restart
+./start.sh cli                          # interactive: type an action; '+...' adds a context line
 ./start.sh predict "..." --format mermaid
 ./start.sh demo                         # multimodal demo + docs/demo/tabletop_report.html
-./dash.sh                               # start the visual dashboard (MLM repo, ../SLM) and print its URLs
-./dash.sh stop | status
 ./start.sh test                         # pytest
 ./start.sh setup                        # (re)install MLM and ACM into .venv
+./dash.sh                               # alias for ./start.sh
 ```
 
 Python:
@@ -886,8 +890,8 @@ python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real
 
 ```
 ACM/
-  start.sh           launcher: setup, interactive prompt, any acm command, tests
-  dash.sh            starts the visual dashboard from the MLM repo and prints its URLs
+  start.sh           launcher: starts the whole POC (API + dashboard); also cli, any acm command, tests
+  dash.sh            alias for start.sh
   packs/universal/   states, concepts, impacts (per layer), places (gazetteer),
                      simulation (predicted change → state), settings
   packs/<lang>/      actions (verb → concept, goal markers), categories
