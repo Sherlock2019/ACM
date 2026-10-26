@@ -95,9 +95,52 @@ class Consequence(BaseModel):
     text: str
     primary: bool = False
     direction: str | None = Field(default=None, description="'+', '-' or '0' for impacts")
-    certainty: float = Field(ge=0.0, le=1.0)
-    source: str = Field(description="'rule:<CONCEPT>', 'impact:<aspect>', 'frame' or 'generic'")
+    certainty: float = Field(
+        ge=0.0, le=1.0,
+        description="ACM's rule certainty (tense, modality, conditions). Not a calibrated probability.",
+    )
+    source: str = Field(
+        description="'rule:<CONCEPT>', 'impact:<aspect>', 'frame', 'generic', or the backend for external facts"
+    )
     informative: bool = True
+    basis: str = Field(
+        default="rule",
+        description="'rule' (concept/impact pack), 'simulation' (named predictor) or 'observation' (evidence)",
+    )
+    evidence: list[str] = Field(default_factory=list, description="Evidence or assumption references")
+
+
+class ExternalFact(BaseModel):
+    """A state change ACM did not derive from its own rules.
+
+    It was observed (image/video evidence) or predicted by a named backend (a
+    simulator). ACM places it in the circles like any other fact, but keeps its
+    basis and evidence so the two are never confused.
+    """
+
+    fact: StateFact
+    basis: str = Field(description="'simulation' or 'observation'")
+    source: str = Field(description="Backend and version, e.g. 'simulator:tabletop-kinematic@1'")
+    evidence: list[str] = Field(default_factory=list)
+
+
+class Participant(BaseModel):
+    """A scene entity that may not appear in the action frame (the floor, the table)."""
+
+    key: str
+    label: str
+    place: bool = False
+    animate: bool = False
+
+
+class UnknownConsequence(BaseModel):
+    """Something ACM cannot say, and what it would need to say it."""
+
+    about: str
+    about_label: str
+    aspect: str
+    text: str
+    needs: list[str] = Field(default_factory=list)
 
 
 class Intention(BaseModel):
@@ -151,6 +194,7 @@ class ConsequenceReport(BaseModel):
     condition: str | None = None
     consequences: list[Consequence] = Field(default_factory=list)
     relations: list[Relation] = Field(default_factory=list)
+    unknowns: list[UnknownConsequence] = Field(default_factory=list)
     graph: dict[str, Any] = Field(default_factory=dict)
     notes: list[str] = Field(default_factory=list)
 

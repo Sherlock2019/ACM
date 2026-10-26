@@ -42,6 +42,7 @@ parser. The [blast radius diagram](#the-blast-radius) below shows every layer.*
 - [Step 5 - The blast radius: local to earth](#step-5---the-blast-radius-local-to-earth)
 - [Step 6 - The action graph and its vectors](#step-6---the-action-graph-and-its-vectors)
 - [Step 7 - The graph vector database](#step-7---the-graph-vector-database)
+- [Step 8 - Multimodal: text, image and video](#step-8---multimodal-text-image-and-video)
 - [Command line](#command-line)
 - [Honesty rules](#honesty-rules)
 - [Extending ACM](#extending-acm)
@@ -174,7 +175,7 @@ git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
 python -m venv .venv && source .venv/bin/activate
 pip install -e ../SLM -e ".[dev]"
-pytest                                   # 40 tests, no parser model needed
+pytest                                   # 53 tests, no parser model needed
 ```
 
 Or let the launcher do it: `./start.sh` creates `.venv`, installs MLM from `../SLM`
@@ -703,6 +704,48 @@ the upgrade path behind the same methods.
 
 ---
 
+## Step 8 - Multimodal: text, image and video
+
+Start with one scene: *a blue cup near the right edge of a table, a red cup farther
+from the edge, and a proposal to push the blue cup toward the edge.* ACM can now
+receive that scene from three kinds of evidence, each converted into the **shared MLM
+meaning layer** first:
+
+```mermaid
+flowchart LR
+  T[TEXT<br/>states a plan] -->|MLM parser| M[(MLM meaning<br/>entities · states · events ·<br/>proposed action · goals)]
+  I[IMAGE<br/>shows a scene] -->|VLM / fixture replay| M
+  V[VIDEO<br/>shows events] -->|track + segment / fixture replay| M
+  M -->|state at T| S[tabletop simulator]
+  S -->|predicted changes| A[ACM circles]
+  M --> A
+  A --> R[visual report · prediction vs outcome]
+```
+
+| | Text | Image | Video |
+|---|---|---|---|
+| What the evidence supports | a stated plan; positions are **assumed** | the scene: cup **near the edge** | events: `pusher_01` **pushes** at 2–3 s, the cup **falls** at 3–4 s |
+| What it cannot support | geometry | that anyone pushed it, intends to, or owns it (rejected, with reasons) | why: the fall's cause stays **uncertain** |
+| ACM, push toward the edge | moved (rule) · loses the table's support, falls (**simulated**) · damage and spill **unknown** · Society and Earth: **no supporting evidence** | same | same, predicted from frames ≤ 2.0 s only, then compared with the scripted outcome |
+
+The image and video extractions in the demo are hand-authored **replays** matched to
+synthetic media. They are labelled as replays everywhere, never as live model output.
+The simulator is a constrained rule set, not physics. Full details: schemas,
+coordinate frames, leakage rules, uncertainty, backends (Qwen3-VL, YOLO, PyBullet,
+V-JEPA 2-AC), evaluation and limitations are in
+**[docs/multimodal.md](docs/multimodal.md)** and
+[docs/world_model_feasibility.md](docs/world_model_feasibility.md).
+
+```bash
+python -m acm.cli demo              # runs all flows, writes docs/demo/tabletop_report.html
+```
+
+The interactive version (three tabs with Run buttons, the video checkpoint, and
+Demo/Live modes) is the `/multimodal` page of the
+[MLM dashboard](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-).
+
+---
+
 ## Command line
 
 ```bash
@@ -710,6 +753,7 @@ acm predict  "..." [--context "..."]... [--format text|mermaid|json]
 acm graph    "..."                      # the vector graph as a Mermaid flowchart
 acm remember "..." [--db data/acm.db]   # store the graph
 acm similar  "..." [--db data/acm.db]   # nearest stored actions
+acm demo     [--report FILE] [--json FILE]  # multimodal tabletop demo + HTML report
 ```
 
 (`acm` is installed as a script; `python -m acm.cli` works too.) All three output
@@ -723,6 +767,7 @@ The launcher wraps the same commands:
 ```bash
 ./start.sh                              # interactive: type an action; '+...' adds a context line
 ./start.sh predict "..." --format mermaid
+./start.sh demo                         # multimodal demo + docs/demo/tabletop_report.html
 ./start.sh test                         # pytest
 ./start.sh setup                        # (re)install MLM and ACM into .venv
 ```
@@ -763,6 +808,11 @@ These carry over from MLM and are enforced in code and tests:
 - **An unnamed participant is never assumed.** "John sold his car" puts Mark's goal
   *at risk*, not *blocked*.
 - **Vectors are described as what they are:** structural, not semantic.
+- **Observed, proposed and predicted never merge.** Every consequence carries its
+  basis: `rule`, `simulation` or `observation`. Damage, spills and ownership are
+  reported as *unknown* unless a rule or model has what it needs to say more.
+- **No future leakage.** A prediction for time T only sees states and events known
+  by T. Later video frames are used for evaluation, never as input.
 
 ---
 
@@ -794,14 +844,19 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 
 ## Limitations
 
-- **Seed knowledge.** There are 15 concepts, about 40 English verbs (fewer in French
+- **Seed knowledge.** There are 18 concepts, about 50 English verbs (fewer in French
   and Vietnamese), about 40 impact rules and about 20 gazetteer places. Anything
   outside them falls back to generic consequences or to "not known".
 - **Layers come from a gazetteer, not a map.** The neighbours and connections of a
   place are a hand-written list, and a common-noun place such as *production* or
   *factory* has no city or country of its own.
-- **Entity identity is coarse.** Common nouns are keyed by head lemma, so "John's
-  car" and "his car" match, but two different cars would also match.
+- **Entity identity is coarse for text.** Common nouns are keyed by head lemma, so
+  "John's car" and "his car" match, but two different cars would also match. Frames
+  from images and video carry explicit ids (`cup_01`, `cup_02`), which always win.
+- **The tabletop simulator is narrow.** It handles rigid discs on one rectangular
+  table: no friction, force, tipping or bouncing. The multimodal demo replays
+  hand-authored extractions; no vision model has been run (see
+  [docs/multimodal.md](docs/multimodal.md)).
 - **Layer impacts are rules, not models.** From the neighbour layer to the earth
   they show the mechanism, not a measured footprint.
 - **MLM's parse errors propagate.** For example, French *à Sarah* is read as a
@@ -816,7 +871,8 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 ## Tests and scripts
 
 ```bash
-pytest                              # 40 tests over committed CoNLL-U fixtures
+pytest                              # 53 tests: CoNLL-U fixtures + multimodal fixtures, no GPU, no network
+python -m acm.cli demo              # multimodal demo, self-contained HTML report
 python scripts/make_fixtures.py     # regenerate fixtures (needs MLM's parser); review the diff
 python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real run
 ```
@@ -826,12 +882,16 @@ python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real
 ```
 ACM/
   start.sh           launcher: setup, interactive prompt, any acm command, tests
-  packs/universal/   states, concepts, impacts (per layer), places (gazetteer), settings
+  packs/universal/   states, concepts, impacts (per layer), places (gazetteer),
+                     simulation (predicted change → state), settings
   packs/<lang>/      actions (verb → concept, goal markers), categories
   src/acm/           engine, entities, graph (vectors), store, render, cli
+                     multimodal (MLM meaning → ACM), demo, evaluation, visual_report
+  src/acm/world/     transition interface, tabletop simulator, PyBullet / V-JEPA stubs
   scripts/           make_fixtures.py, draw_vision.py
-  tests/             40 tests over committed fixtures
-  docs/              acm-vision.svg / .png
+  tests/             53 tests over committed fixtures
+  docs/              multimodal.md, world_model_feasibility.md, demo/tabletop_report.html,
+                     acm-vision.svg / .png
 ```
 
 ## Licence

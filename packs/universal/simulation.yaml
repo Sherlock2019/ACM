@@ -1,0 +1,42 @@
+# How predicted (or observed) scene changes become ACM state facts.
+#
+# A transition predictor (src/acm/world/) reports changes as
+# (entity, property, before -> after) and outcome events. This file says which ACM
+# state each one is, so the mapping is data, like the rest of ACM's knowledge.
+#
+#   properties  property name -> state. `entity` is the changed entity, `value`
+#               the property value. A change from A to B yields state(entity, A) = false
+#               and state(entity, B) = true; a missing side (None) yields nothing.
+#   events      outcome event kind -> state facts (true). `other` is the second entity.
+#   unknown     aspects ACM must report as UNKNOWN when an event happens, with the
+#               information that would be needed to say more. They are never
+#               turned into consequences.
+
+version: 1
+
+properties:
+  supported_by: { state: supported, args: [entity, value] }
+  region: { state: at, args: [entity, value] }
+
+events:
+  falls: [{ state: fallen, args: [entity] }]
+  collides: [{ state: collided, args: [entity, other] }]
+  # remains_supported and crosses_edge change no state by themselves.
+
+# Classes that are places (environment), and classes that are animate actors.
+scene:
+  place_classes: [table, floor, shelf, counter, desk]
+  animate_classes: [person, pusher, robot, hand]
+
+unknown:
+  falls:
+    - aspect: damage
+      needs: [material, fall height, impact surface]
+      text: "whether it breaks or is damaged is unknown"
+    - aspect: spill
+      needs: [contents]
+      text: "whether anything spills is unknown: its contents are unspecified"
+  collides:
+    - aspect: response of the other object
+      needs: [mass, friction, impact speed]
+      text: "how the hit object moves is not modelled"

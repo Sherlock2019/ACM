@@ -79,6 +79,43 @@ states:
       beneficiary: { true: "receives help",           false: "loses help" }
       sentence:    { true: "{beneficiary} is helped", false: "{beneficiary} is not helped" }
 
+  # -- physical states for the tabletop domain --------------------------------
+  # Supported by observation (image/video) or by a named simulator. Breakage,
+  # spills and injury are deliberately absent: nothing here can establish them.
+
+  supported:
+    args: [thing, support]
+    phrases:
+      thing:    { true: "is supported by {support}",     false: "loses the support of {support}" }
+      support:  { true: "now supports {thing}",          false: "no longer supports {thing}" }
+      sentence: { true: "{thing} is supported by {support}", false: "{thing} is no longer supported by {support}" }
+
+  fallen:
+    args: [thing]
+    phrases:
+      thing:    { true: "falls",               false: "does not fall" }
+      sentence: { true: "{thing} falls",       false: "{thing} does not fall" }
+
+  displaced:
+    args: [thing]
+    phrases:
+      thing:    { true: "is moved from where it was",        false: "stays where it was" }
+      sentence: { true: "{thing} is moved from where it was", false: "{thing} stays where it was" }
+
+  collided:
+    args: [thing, other]
+    phrases:
+      thing:    { true: "collides with {other}",          false: "does not collide with {other}" }
+      other:    { true: "is hit by {thing}",              false: "is not hit by {thing}" }
+      sentence: { true: "{thing} collides with {other}",  false: "{thing} does not collide with {other}" }
+
+  held:
+    args: [holder, thing]
+    exclusive: thing
+    phrases:
+      holder:   { true: "holds {thing}",           false: "lets go of {thing}" }
+      sentence: { true: "{holder} holds {thing}",  false: "{holder} no longer holds {thing}" }
+
   # -- generic states, used when no concept is known for the verb ------------
   # They carry no goal-relevant meaning, so ACM marks them uninformative and never
   # uses them to decide whether a goal is helped or blocked.

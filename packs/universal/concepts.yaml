@@ -78,7 +78,8 @@ concepts:
 
   MOVE:
     roles:
-      mover: [AGENT, THEME]
+      # The moved thing first: "I move the cup" moves the cup; "John flew" moves John.
+      mover: [PATIENT, THEME, AGENT]
       destination: [DESTINATION, LOCATION]
       origin: [SOURCE]
     effects:
@@ -153,3 +154,34 @@ concepts:
       beneficiary: [PATIENT, THEME, BENEFICIARY, RECIPIENT]
     effects:
       - { state: helped, args: [beneficiary], primary: true }
+
+  # -- tabletop domain ---------------------------------------------------------
+  # A push only says the thing moves. WHETHER it then leaves its support or falls
+  # depends on where it ends up - geometry the rule does not have. Those changes
+  # come from a named simulator (packs/universal/simulation.yaml), never from here.
+
+  PUSH:
+    roles:
+      pusher: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+      toward: [DESTINATION]
+    effects:
+      - { state: displaced, args: [thing], primary: true }
+
+  FALL:
+    roles:
+      thing: [THEME, PATIENT, EXPERIENCER, AGENT]
+      support: [SOURCE]
+      landing: [DESTINATION]
+    effects:
+      - { state: fallen, args: [thing], primary: true }
+      - { state: supported, args: [thing, support], value: false }
+
+  DROP:
+    roles:
+      dropper: [AGENT]
+      thing: [PATIENT, THEME, OBJECT]
+    effects:
+      - { state: held, args: [dropper, thing], value: false, primary: true }
+    requires:
+      - { state: held, args: [dropper, thing] }

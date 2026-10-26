@@ -43,6 +43,13 @@ actions:
   help: HELP
   assist: HELP
   support: HELP
+  push: PUSH
+  shove: PUSH
+  nudge: PUSH
+  knock: PUSH
+  fall: FALL
+  topple: FALL
+  drop: DROP
 
 # Predicates that state a goal: "Mark wants to buy John's car", "Sarah needs a car".
 # The subject owns the goal; the goal itself is the nested PURPOSE frame, or, with a

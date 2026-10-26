@@ -6,7 +6,9 @@ resolved by MLM's context graph; everything else is keyed on its head lemma, or 
 the full text for named entities, whose head lemma would lose words ("New York").
 
 Keying on the head lemma is coarse - two different cars share the key "car" - and
-is recorded as a limitation in the README rather than hidden.
+is recorded as a limitation in the README rather than hidden. Frames built from
+images or video (splm.meaning) carry an explicit ``entity_id`` annotation (cup_01,
+cup_02); when present it always wins, so two objects of one class never merge.
 """
 
 from __future__ import annotations
@@ -36,6 +38,9 @@ class EntityIndex:
     def resolve(self, element: FrameElement, sentence_index: int) -> tuple[str, str]:
         """``(key, label)`` for an element in the given sentence."""
         text = element.text.strip()
+        entity_id = element.annotations.get("entity_id")
+        if entity_id:
+            return entity_id, SELF if entity_id == SELF else text
         if is_first_person(element):
             # "I", "me", "we": the speaker. When ACM is given its own planned action,
             # this is the model itself - never resolved to some earlier third party.
@@ -52,6 +57,8 @@ def is_place(element: FrameElement) -> bool:
     # "to Sarah" is a DESTINATION, but Sarah is a recipient, not somewhere.
     if is_animate(element) or element.entity_type == "ORG":
         return False
+    if element.annotations.get("class") is not None and element.entity_type is None:
+        return False  # a scene object (a cup) pushed toward somewhere is not itself a place
     return element.entity_type in PLACE_TYPES or element.semantic_role in PLACE_ROLES
 
 

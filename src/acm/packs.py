@@ -224,6 +224,7 @@ class ConsequencePacks:
         self._place_index = {
             name: place for place in self.places.values() for name in (place.key, *place.aliases)
         }
+        self.simulation: dict[str, Any] = _load_yaml(universal / "simulation.yaml")
         self._validate()
         self._languages: dict[str, dict[str, Any]] = {}
 
@@ -248,6 +249,14 @@ class ConsequencePacks:
                 raise ValueError(f"impact rule {rule.effect!r}: unknown concepts {sorted(unknown)}")
             if rule.scope not in {layer.value for layer in LAYERS}:
                 raise ValueError(f"impact rule {rule.effect!r}: unknown scope {rule.scope!r}")
+        mapped = [
+            *(self.simulation.get("properties") or {}).values(),
+            *(spec for specs in (self.simulation.get("events") or {}).values() for spec in specs),
+        ]
+        for spec in mapped:
+            state = self.states.get(spec["state"])
+            if state is None or len(spec["args"]) != len(state.args):
+                raise ValueError(f"simulation.yaml: {spec} does not match a known state")
         for place in self.places.values():
             if place.kind not in PLACE_KINDS:
                 raise ValueError(f"place {place.key!r}: unknown kind {place.kind!r}")

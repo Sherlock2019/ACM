@@ -20,7 +20,7 @@ uninformative consequences, and never a verdict on anyone's goals.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 
 from splm.phrase.schema import FrameElement, PredicateType, UniversalPhraseFrame
 
@@ -33,11 +33,14 @@ from acm.schema import (
     UNKNOWN,
     Consequence,
     ConsequenceReport,
+    ExternalFact,
     Intention,
+    Participant,
     Relation,
     RelationStatus,
     StateFact,
     Target,
+    UnknownConsequence,
 )
 
 #: Predicates that describe how things are rather than something being done.
@@ -71,6 +74,8 @@ class _Fact:
     primary: bool
     source: str
     informative: bool
+    basis: str = "rule"
+    evidence: tuple[str, ...] = ()
 
 
 class ConsequenceEngine:
@@ -120,9 +125,23 @@ class ConsequenceEngine:
         return report
 
     def predict(
-        self, frames: list[UniversalPhraseFrame], *, language: str | None = None
+        self,
+        frames: list[UniversalPhraseFrame],
+        *,
+        language: str | None = None,
+        external_facts: Sequence[ExternalFact] = (),
+        participants: Sequence[Participant] = (),
+        goals: Sequence[Intention] = (),
+        unknowns: Sequence[UnknownConsequence] = (),
     ) -> ConsequenceReport:
-        """Consequences of the last frame, read against the frames before it."""
+        """Consequences of the last frame, read against the frames before it.
+
+        The keyword arguments let structured scene context in without turning it
+        into text: ``external_facts`` are changes observed or predicted by a named
+        backend, ``participants`` are scene entities outside the frame (the floor),
+        ``goals`` are supplied intentions, ``unknowns`` are aspects to report as
+        unknown. All of them are optional; text-only callers pass none.
+        """
         if not frames:
             raise ValueError("predict() needs at least one frame")
         action = frames[-1]
@@ -187,16 +206,34 @@ class ConsequenceEngine:
                         True,
                     )
                 )
+        for external in external_facts:
+            facts.append(
+                _Fact(external.fact, False, external.source, True, external.basis, tuple(external.evidence))
+            )
 
         if action.negation:
             report.notes.append("The action is negated: none of its consequences follow.")
             facts = []
 
         entities = self._entities(action, position, index, actor, bindings, places)
-        report.consequences = self._place_facts(facts, actor, places, entities, report.certainty)
+        stated_places = dict(places)
+        for participant in participants:
+            binding = Binding(
+                key=participant.key, label=participant.label, place=participant.place, animate=participant.animate
+            )
+            entities.setdefault(participant.key, binding)
+            if participant.place and participant.key not in places:
+                places[participant.key] = binding
+                report.places.append(participant.label)
+        if report.realized and not is_state:
+            report.unknowns = list(unknowns)
+        report.consequences = self._place_facts(
+            facts, actor, places, entities, report.certainty, stated_places
+        )
         if report.realized and not is_state:
             report.consequences += self._impacts(action, concept, language, report.certainty)
 
+        intentions += list(goals)
         if actor is not None:
             intentions += self._purpose_goals(action, actor, position, index, language)
             # Only *other* actors' past actions are relations; the actor's own goals stay.
@@ -406,6 +443,7 @@ class ConsequenceEngine:
         places: dict[str, Binding],
         entities: dict[str, Binding],
         certainty: float,
+        stated_places: dict[str, Binding] | None = None,
     ) -> list[Consequence]:
         """Report each state change under the actor, an impacted subject or a place."""
         generic_factor = float(self.packs.settings.get("certainty", {}).get("generic_factor", 0.5))
@@ -429,6 +467,8 @@ class ConsequenceEngine:
                     certainty=round(certainty * (1.0 if item.informative else generic_factor), 3),
                     source=item.source,
                     informative=item.informative,
+                    basis=item.basis,
+                    evidence=list(item.evidence),
                 )
             )
 
@@ -450,16 +490,19 @@ class ConsequenceEngine:
                 add(target, entity, state.phrase(name, item.fact.value, labels), item)
 
             # An object that changes somewhere changes that place too: a database
-            # deleted in production leaves production without it.
+            # deleted in production leaves production without it. Only for places the
+            # action frame states, and only for rule facts: an external fact already
+            # names the places it is about.
             first = entities.get(item.fact.args[0])
             if (
                 first is not None
                 and not first.animate
                 and not first.place
                 and first.key != actor_key
+                and item.basis == "rule"
             ):
                 sentence = state.phrase("sentence", item.fact.value, labels)
-                for place in places.values():
+                for place in (stated_places if stated_places is not None else places).values():
                     add(Target.ENVIRONMENT, place, sentence, item)
         return out
 

@@ -20,6 +20,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# Planned physics backend (acm.world.PyBulletSimulator raises BackendUnavailable until integrated).
+physics = ["pybullet>=3.2"]
+# Live image/video extraction comes from MLM: pip install "splm[vision]".
 
 [project.scripts]
 acm = "acm.cli:main"

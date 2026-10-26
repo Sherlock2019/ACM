@@ -40,10 +40,29 @@ def main(argv: list[str] | None = None) -> int:
     for name, help_text in (("remember", "store the action graph"), ("similar", "find similar stored actions")):
         p = command(name, help_text)
         p.add_argument("--db", type=Path, default=DEFAULT_DB)
+    demo = sub.add_parser("demo", help="run the multimodal tabletop demo (fixture replay + simulator)")
+    demo.add_argument("--report", type=Path, default=Path("docs/demo/tabletop_report.html"),
+                      help="where to write the self-contained HTML report")
+    demo.add_argument("--json", type=Path, default=None, help="also write the full demo result as JSON")
     args = parser.parse_args(argv)
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
+
+    if args.command == "demo":
+        from acm.demo import run_demo
+        from acm.visual_report import render_report
+
+        result = run_demo()
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(render_report(result), encoding="utf-8")
+        print(f"report: {args.report}")
+        if args.json is not None:
+            args.json.parent.mkdir(parents=True, exist_ok=True)
+            args.json.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
+            print(f"json:   {args.json}")
+        print(result["badge"])
+        return 0
 
     engine = ConsequenceEngine()
     report = engine.analyze(args.text, context=args.context, language=args.language)
