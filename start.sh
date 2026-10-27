@@ -121,6 +121,7 @@ start_poc() {
     echo "  Tour (start here)    http://127.0.0.1:$WEB_PORT/            (how ACM works · vs an LLM · text/image/video)"
     echo "  ACM demo             http://127.0.0.1:$WEB_PORT/acm        (phrase · image · video, one Run Demo button)"
     echo "  What happens next?   http://127.0.0.1:$WEB_PORT/acm/inference   (53 actions, 280+ answers with reasoning)"
+    echo "  Image / Video Chat   http://127.0.0.1:$WEB_PORT/acm/scene  (recognise objects, simulate, ask about any object)"
     echo "  Multimodal details   http://127.0.0.1:$WEB_PORT/multimodal"
     echo "  Dashboard            http://127.0.0.1:$WEB_PORT"
     if ip="$(public_ip)"; then
