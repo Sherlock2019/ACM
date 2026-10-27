@@ -18,6 +18,7 @@ from typing import Any
 from splm.meaning import MeaningDocument, ProposedAction, SceneState, Status
 from splm.meaning import demo as material
 
+from acm.ask import suggestions
 from acm.engine import ConsequenceEngine
 from acm.evaluation import Episode, compare_outcome
 from acm.multimodal import MultimodalBridge, ScenarioResult
@@ -171,6 +172,7 @@ def phrase_result(report: ConsequenceReport, context: list[str], note: str = "")
         "mindmap": to_mindmap(report),
         "acm_json": report.model_dump(mode="json", exclude={"graph"}),
         "shows": note,
+        "suggestions": suggestions(report),
     }
 
 

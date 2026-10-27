@@ -789,6 +789,23 @@ With MLM cloned next to ACM (`../SLM`), `./start.sh` starts it. It prints
 `http://127.0.0.1:3010/multimodal` and, on EC2, `http://PUBLIC-IP:3010/multimodal`;
 open inbound TCP 3010 in the security group and keep 8001 closed.
 
+### Asking questions on the ACM demo page
+
+`/acm` has a chat box under each input:
+
+- **Phrase (live).** MLM parses your question, and ACM answers from its report on the
+  action ([`src/acm/ask.py`](src/acm/ask.py), `POST /api/acm/ask`). Each answer row is a
+  consequence written in Phrase DNA and chained to the action that causes it:
+  *original action → WHO · DOES · WHAT · WHERE · WHEN · WITH WHOM · WHY*, with its ring,
+  basis and rule. "What if …?" re-runs ACM on the new clause with the same context and
+  lists what is new, what no longer follows and what stays.
+- **Image and video (mockup).** The flow is: detect objects (mock YOLO-style detector, plus a
+  tracker for video) → look each class up in an object behaviour library (material,
+  mass, friction, fragility, rules) → simulate the proposed action with a matter.js
+  rigid-body engine, standing in for a game engine such as Unreal → ask about any
+  object. The detector and question parser are simulated. Object properties are
+  library assumptions, and the page labels them that way.
+
 ---
 
 ## Command line
@@ -935,7 +952,8 @@ ACM/
                      simulation (predicted change → state), settings
   packs/<lang>/      actions (verb → concept, goal markers), categories
   src/acm/           engine, entities, graph (vectors), store, render, cli
-                     multimodal (MLM meaning → ACM), demo, evaluation, visual_report
+                     multimodal (MLM meaning → ACM), demo, evaluation, visual_report,
+                     inference (Q&A suite), ask (questions about an action, in Phrase DNA)
   src/acm/world/     transition interface, tabletop simulator, PyBullet / V-JEPA stubs
   scripts/           make_fixtures.py, draw_vision.py, make_inference_suite.py, make_llm_baseline.py
   examples/          inference_suite.yaml (+ frozen .conllu), llm_baseline.json (recorded LLM answers)
