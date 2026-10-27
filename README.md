@@ -799,9 +799,11 @@ open inbound TCP 3010 in the security group and keep 8001 closed.
   *original action → WHO · DOES · WHAT · WHERE · WHEN · WITH WHOM · WHY*, with its ring,
   basis and rule. "What if …?" re-runs ACM on the new clause with the same context and
   lists what is new, what no longer follows and what stays.
-- **Image and video (mockup).** The flow is: detect objects (mock YOLO-style detector, plus a
-  tracker for video) → look each class up in an object behaviour library (material,
-  mass, friction, fragility, rules) → simulate the proposed action with a matter.js
+- **Image and video (mockup).** The flow starts with recognition: an AI vision model
+  recognises each object on screen (plus a tracker for video) and classifies it with a
+  **library of objects per environment** (kitchen, house, garden, street, mountain). Each
+  library object has its properties: mass, shape, texture and material. The flow then
+  adds each class's behaviour profile (friction, fragility, physics rules) → simulate the proposed action with a matter.js
   rigid-body engine, standing in for a game engine such as Unreal → ask about any
   object. The detector is simulated. Object properties are library assumptions, and
   the page labels them that way.
