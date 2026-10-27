@@ -803,8 +803,15 @@ open inbound TCP 3010 in the security group and keep 8001 closed.
   tracker for video) → look each class up in an object behaviour library (material,
   mass, friction, fragility, rules) → simulate the proposed action with a matter.js
   rigid-body engine, standing in for a game engine such as Unreal → ask about any
-  object. The detector and question parser are simulated. Object properties are
-  library assumptions, and the page labels them that way.
+  object. The detector is simulated. Object properties are library assumptions, and
+  the page labels them that way.
+- **The LLM** ([`src/acm/llm.py`](src/acm/llm.py)). A local model, qwen2.5:7b on
+  Ollama by default (set `ACM_LLM_URL` / `ACM_LLM_MODEL` to change it), writes each
+  answer as plain sentences plus Phrase DNA phrases. It may use **only** the facts ACM or
+  the simulator computed. It also reads free-form physics questions into a plan (object,
+  intent, action, distance), which the simulator then runs. It never decides a
+  consequence, and MLM's meaning step does not use it. When the model is down, the chats
+  fall back to ACM's own sentences and the keyword parser.
 
 ---
 
