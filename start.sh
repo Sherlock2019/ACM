@@ -118,7 +118,8 @@ start_poc() {
 
     echo
     echo "POC is running:"
-    echo "  Tour (start here)    http://127.0.0.1:$WEB_PORT/            (how ACM works · vs an LLM · text/image/video)"
+    echo "  Home (start here)    http://127.0.0.1:$WEB_PORT/            (every action has consequences: choose what to explore)"
+    echo "  Tour                 http://127.0.0.1:$WEB_PORT/acm/tour    (how ACM works · vs an LLM · text/image/video)"
     echo "  ACM demo             http://127.0.0.1:$WEB_PORT/acm        (phrase · image · video, one Run Demo button)"
     echo "  What happens next?   http://127.0.0.1:$WEB_PORT/acm/inference   (53 actions, 280+ answers with reasoning)"
     echo "  Image / Video Chat   http://127.0.0.1:$WEB_PORT/acm/scene  (recognise objects, simulate, ask about any object)"
