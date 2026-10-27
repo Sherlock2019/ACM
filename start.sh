@@ -22,6 +22,8 @@ VENV="$ROOT/.venv"
 PYTHON="${PYTHON:-python3}"
 WEB_PORT="${SPLM_WEB_PORT:-3010}"
 
+MLM_REPO="${MLM_REPO:-https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-.git}"
+
 find_mlm() {
     for dir in "${SLM_DIR:-}" "$ROOT/../SLM" "$ROOT/../NPLM-Next-Phrase-language-model-"; do
         if [[ -n "$dir" && -f "$dir/pyproject.toml" && -d "$dir/web" ]]; then
@@ -29,8 +31,17 @@ find_mlm() {
             return 0
         fi
     done
+    # A fresh machine (e.g. EC2): MLM is public, so clone it over HTTPS (no SSH key needed).
+    local target="${SLM_DIR:-$ROOT/../SLM}"
+    if [[ ! -e "$target" ]] && command -v git > /dev/null; then
+        echo "MLM (the meaning layer and the dashboard) was not found; cloning it into $target" >&2
+        if git clone --quiet "$MLM_REPO" "$target" >&2; then
+            (cd "$target" && pwd)
+            return 0
+        fi
+    fi
     echo "MLM (the meaning layer and the dashboard) was not found next to ACM." >&2
-    echo "Clone it with: git clone git@github.com:Sherlock2019/NPLM-Next-Phrase-language-model-.git \"$ROOT/../SLM\"" >&2
+    echo "Clone it with: git clone $MLM_REPO \"$target\"" >&2
     echo "or set SLM_DIR to an existing checkout." >&2
     return 1
 }
