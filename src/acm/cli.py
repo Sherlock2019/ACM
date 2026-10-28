@@ -1,4 +1,4 @@
-"""ACM command line.
+"""ARM command line.
 
     python -m acm.cli predict "John will sell his car to Sarah in Paris tomorrow." \\
         --context "Mark wants to buy John's car."
@@ -23,7 +23,7 @@ DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "acm.db"
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="acm", description="Actions Consequential Model - what an action changes, and for whom."
+        prog="acm", description="Action Reaction Model - what an action changes, and for whom."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

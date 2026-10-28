@@ -13,7 +13,7 @@ buy John's car") and actions ("Mark bought a car"). The last sentence is the
 action being assessed. When its actor is "I", the report is the model's view of
 its own action.
 
-Same honesty rules as MLM: a verb ACM has no concept for gets generic, explicitly
+Same honesty rules as MLM: a verb ARM has no concept for gets generic, explicitly
 uninformative consequences, and never a verdict on anyone's goals.
 """
 
@@ -194,7 +194,7 @@ class ConsequenceEngine:
         else:
             facts.extend(self._generic(action, actor, position, index))
             report.notes.append(
-                f"ACM has no concept for '{lemma}': consequences are generic and say "
+                f"ARM has no concept for '{lemma}': consequences are generic and say "
                 "nothing about anyone's goals."
             )
         if not is_state:
@@ -212,7 +212,7 @@ class ConsequenceEngine:
                 _Fact(external.fact, False, external.source, True, external.basis, tuple(external.evidence))
             )
 
-        # The reasoning trace: what ACM actually used, recorded as it happens.
+        # The reasoning trace: what ARM actually used, recorded as it happens.
         report.trace = {
             "frame": action.to_compact_dict(),
             "concept": concept.name if concept else None,
@@ -698,7 +698,7 @@ class ConsequenceEngine:
         if not intention.outcome and not intention.requires:
             return relation(
                 RelationStatus.NO_EVIDENCE,
-                f"ACM has no concept for what '{intention.text}' changes",
+                f"ARM has no concept for what '{intention.text}' changes",
             )
         if not report.realized:
             return relation(RelationStatus.UNAFFECTED, "the action does not happen (negated)")
@@ -706,7 +706,7 @@ class ConsequenceEngine:
         if not known:
             return relation(
                 RelationStatus.NO_EVIDENCE,
-                f"ACM does not know what '{report.predicate}' changes",
+                f"ARM does not know what '{report.predicate}' changes",
             )
 
         for wanted in intention.outcome:

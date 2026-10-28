@@ -1,10 +1,10 @@
-"""The inference suite: "what will happen next to ...?", answered by ACM with its reasoning.
+"""The inference suite: "what will happen next to ...?", answered by ARM with its reasoning.
 
-For each scenario (context + action) ACM's report is turned into questions and
+For each scenario (context + action) ARM's report is turned into questions and
 answers, one per subject the action touches:
 
     the actor  ·  each impacted person or thing  ·  each other person's goal or action
-    ·  each place  ·  each wider layer (neighbours ... earth)  ·  what ACM cannot say
+    ·  each place  ·  each wider layer (neighbours ... earth)  ·  what ARM cannot say
 
 Every answer sentence carries its *why*, built only from what the engine recorded
 in ``report.trace`` and the consequence's own source: the concept rule and the role
@@ -83,7 +83,7 @@ def frames_from_conllu(path: Path = SUITE_CONLLU) -> dict[str, Any]:
 # -- answers ------------------------------------------------------------------------------------
 
 DETERMINERS = {"the", "a", "an", "my", "his", "her", "their", "our", "your", "its", "this", "that", "all"}
-#: First-word verb forms in ACM's state phrases, singular -> plural/first person.
+#: First-word verb forms in ARM's state phrases, singular -> plural/first person.
 AGREE = {"is": "are", "has": "have", "gains": "gain", "loses": "lose", "now": "now", "acts": "act",
          "receives": "receive", "wins": "win", "falls": "fall", "lets": "let", "performs": "perform",
          "collides": "collide", "holds": "hold", "owes": "owe", "knows": "know", "arrives": "arrive",
@@ -191,7 +191,7 @@ def _why(c: Consequence, report: ConsequenceReport) -> str:
     if c.source == "frame":
         return "MLM placed the action here (WHERE)"
     if c.source == "generic":
-        return f"ACM has no concept for '{report.predicate}': generic, no verdict"
+        return f"ARM has no concept for '{report.predicate}': generic, no verdict"
     return c.source
 
 
@@ -216,7 +216,7 @@ def answers(report: ConsequenceReport) -> list[dict[str, Any]]:
 
     if report.predicate is None:
         return [{"subject": "-", "kind": "none", "question": "What happens next?",
-                 "answer": "ACM found no action to evaluate.", "why": report.notes}]
+                 "answer": "ARM found no action to evaluate.", "why": report.notes}]
     if not report.realized:
         return [{"subject": report.actor_label or "-", "kind": "negated", "question": "What happens next?",
                  "answer": f"Nothing. The sentence says {report.actor_label} does not {report.predicate}, so none of the "
@@ -243,7 +243,7 @@ def answers(report: ConsequenceReport) -> list[dict[str, Any]]:
         if actor_rows:
             text = _cap(f"{lead}{_say(actor, key, [c.text for c in actor_rows])}.")
         else:
-            text = f"{_cap(_name(actor))} {'act' if _plural(actor, key) else 'acts'}; ACM's rules record no change to " \
+            text = f"{_cap(_name(actor))} {'act' if _plural(actor, key) else 'acts'}; ARM's rules record no change to " \
                    f"{'me' if report.self_view else _name(actor)} as a result."
         why = [_why(c, report) for c in actor_rows]
         for r in own:
@@ -255,7 +255,7 @@ def answers(report: ConsequenceReport) -> list[dict[str, Any]]:
         generic = all(not c.informative for c in rows)
         text = _cap(f"{lead}{_say(who, rows[0].about, [c.text for c in rows])}.")
         if generic:
-            text += " (Generic: ACM knows no concept for this verb, so it gives no verdict.)"
+            text += " (Generic: ARM knows no concept for this verb, so it gives no verdict.)"
         out.append({"subject": _name(who), "kind": "impacted", "question": f"What happens next to {_name(who)}?",
                     "answer": text, "why": [_why(c, report) for c in rows]})
 
@@ -286,13 +286,13 @@ def answers(report: ConsequenceReport) -> list[dict[str, Any]]:
         if silent:
             text_parts.append(f"No rule speaks about {_join(silent)} — that is no evidence, not 'no impact'")
         text_parts += unknown_bits
-        out.append({"subject": "limits", "kind": "limits", "question": "What can't ACM tell here?",
+        out.append({"subject": "limits", "kind": "limits", "question": "What can't ARM tell here?",
                     "answer": ". ".join(text_parts) + ".", "why": report.notes})
     return out
 
 
 def reasoning(report: ConsequenceReport) -> list[dict[str, Any]]:
-    """The chain ACM followed, step by step, for the visual trace."""
+    """The chain ARM followed, step by step, for the visual trace."""
     t = report.trace
     frame = t.get("frame", {})
     roles = []
@@ -392,7 +392,7 @@ def run_suite(frames: dict[str, Any] | None = None) -> dict[str, Any]:
             "parse": "frozen MLM (Stanza) parses in examples/inference_suite.conllu; frames rebuilt by MLM's builder"}
 
 
-#: Which ACM answer answers the same question the language model was asked.
+#: Which ARM answer answers the same question the language model was asked.
 LLM_TO_ACM = {
     "Mark": "What happens to Mark's plan",
     "Sarah": "What happens next to Sarah?",
@@ -408,7 +408,7 @@ LLM_TO_ACM = {
 
 
 def pair_llm(suite: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
-    """Each recorded LLM answer next to ACM's answer to the same question."""
+    """Each recorded LLM answer next to ARM's answer to the same question."""
     items = {i["action"]: i for i in suite["items"]}
     pairs = []
     for rec in baseline["records"]:

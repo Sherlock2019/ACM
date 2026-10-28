@@ -1,13 +1,13 @@
 """The bundled multimodal demo, end to end, as one JSON-ready result.
 
-    text  (stated plan)  -> MLM frames -> ACM  - geometry ASSUMED (text has none)
-    image (shows scene)  -> fixture replay -> MLM scene -> ACM
-    video (shows events) -> fixture replay -> MLM timeline -> cut at T -> ACM
+    text  (stated plan)  -> MLM frames -> ARM  - geometry ASSUMED (text has none)
+    image (shows scene)  -> fixture replay -> MLM scene -> ARM
+    video (shows events) -> fixture replay -> MLM timeline -> cut at T -> ARM
                             -> scripted outcome after T -> comparison
-    sale  (text)         -> ACM's rule-derived ownership/payment consequences
+    sale  (text)         -> ARM's rule-derived ownership/payment consequences
 
 Every flow runs the real pipeline: MLM schemas and adapters, the tabletop
-simulator, ACM's engine. Only the *extraction* is replayed from fixtures - and
+simulator, ARM's engine. Only the *extraction* is replayed from fixtures - and
 every result says so.
 """
 
@@ -140,7 +140,7 @@ PHRASES = [
 
 
 def _fixture_frames() -> dict[str, Any]:
-    """Frames for the phrase examples from committed parses: ACM's test fixtures + MLM's demo trees."""
+    """Frames for the phrase examples from committed parses: ARM's test fixtures + MLM's demo trees."""
     from pathlib import Path
 
     from splm.config import Config
@@ -190,7 +190,7 @@ def phrase_examples() -> list[dict[str, Any]]:
 
 
 def live_phrase_result(text: str, context: list[str], pipeline: Any) -> dict[str, Any]:
-    """Live: MLM parses context + action, ACM predicts the blast radius."""
+    """Live: MLM parses context + action, ARM predicts the blast radius."""
     report = ConsequenceEngine(pipeline=pipeline).analyze(text, context=context)
     if report.predicate is None:
         raise ValueError("; ".join(report.notes) or "MLM found no action in the text")
@@ -380,7 +380,7 @@ def generic_text_meaning(doc: MeaningDocument) -> dict[str, Any]:
 
 
 def live_text_result(text: str, action_key: str, pipeline: Any) -> dict[str, Any]:
-    """Live: parse ``text`` with MLM, then run ACM on the chosen tabletop action (assumed geometry)."""
+    """Live: parse ``text`` with MLM, then run ARM on the chosen tabletop action (assumed geometry)."""
     from splm.meaning.adapters import TextAdapter
 
     actions = material.proposed_actions(actor="self")

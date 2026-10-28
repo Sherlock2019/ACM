@@ -42,7 +42,7 @@ class EntityIndex:
         if entity_id:
             return entity_id, SELF if entity_id == SELF else text
         if is_first_person(element):
-            # "I", "me", "we": the speaker. When ACM is given its own planned action,
+            # "I", "me", "we": the speaker. When ARM is given its own planned action,
             # this is the model itself - never resolved to some earlier third party.
             return SELF, "self"
         resolved = self._resolved.get((sentence_index, text.lower()))

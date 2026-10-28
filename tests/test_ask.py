@@ -1,4 +1,4 @@
-"""Ask ACM: questions about an action answered in Phrase DNA, from the engine's report."""
+"""Ask ARM: questions about an action answered in Phrase DNA, from the engine's report."""
 
 import re
 
@@ -47,7 +47,7 @@ def test_subject_question_answers_in_phrase_dna(run):
     row = out["chains"][0]
     assert row["dna"]["who"] == "Sarah" and row["dna"]["why"] == "because: John sold his car to Sarah"
     assert "rule" in row["dna"]["rule"]
-    # the question did not parse (frozen parses only), so ACM matched on its words and says so
+    # the question did not parse (frozen parses only), so ARM matched on its words and says so
     assert out["question"]["parsed"] is False and out["question"]["note"]
 
 

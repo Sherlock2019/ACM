@@ -1,4 +1,4 @@
-"""The inference suite: 'what will happen next to ...?' answered from ACM's own trace."""
+"""The inference suite: 'what will happen next to ...?' answered from ARM's own trace."""
 
 import pytest
 
@@ -53,7 +53,7 @@ def test_honesty_cases(suite):
     assert "describes a state" in by_action(suite, "John is tired.")["answers"][0]["answer"]
     kick = by_action(suite, "John kicked the ball.")
     assert any("no verdict" in a["answer"] for a in kick["answers"])
-    limits = answer(by_action(suite, "Mark broke the window."), "What can't ACM tell")
+    limits = answer(by_action(suite, "Mark broke the window."), "What can't ARM tell")
     assert "not 'no impact'" in limits["answer"]
 
 
@@ -66,4 +66,4 @@ def test_self_view_reads_in_the_first_person(suite):
 def test_answers_function_handles_empty_report():
     from acm.schema import ConsequenceReport
 
-    assert answers(ConsequenceReport(action_text="", language="en"))[0]["answer"] == "ACM found no action to evaluate."
+    assert answers(ConsequenceReport(action_text="", language="en"))[0]["answer"] == "ARM found no action to evaluate."

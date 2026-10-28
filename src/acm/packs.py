@@ -1,4 +1,4 @@
-"""Consequence packs: the YAML knowledge ACM reasons with.
+"""Consequence packs: the YAML knowledge ARM reasons with.
 
 Same rule as MLM's language packs - no linguistic or world facts in Python. Which
 verb is a SALE, what a SALE changes and which states are exclusive all live in

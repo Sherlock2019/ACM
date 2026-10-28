@@ -1,13 +1,13 @@
-"""The language layer: a local LLM answers questions from ACM's facts, in Phrase DNA.
+"""The language layer: a local LLM answers questions from ARM's facts, in Phrase DNA.
 
     question --LLM--> plan      (physics questions: which object, which action, how far)
-    ACM / simulator   facts     (consequences, rules, events — computed, not generated)
+    ARM / simulator   facts     (consequences, rules, events — computed, not generated)
     facts + question --LLM--> answer + one phrase per consequence:
                               WHO · DOES · WHAT · WHERE · WHEN · WITH WHOM · WHY
 
 The model only words the answer. It is told to use the facts and nothing else, runs at
 temperature 0 with a fixed seed, and every phrase it returns is checked for shape. When
-the model is unreachable, callers fall back to ACM's own deterministic sentences.
+the model is unreachable, callers fall back to ARM's own deterministic sentences.
 
 Defaults to Ollama on this machine (qwen2.5:7b); override with ACM_LLM_URL / ACM_LLM_MODEL.
 Nothing is sent off the machine unless ACM_LLM_URL points elsewhere.
@@ -87,12 +87,12 @@ def _phrases(raw: Any) -> list[dict[str, str | None]]:
 
 # -- answering ---------------------------------------------------------------------------------
 
-ANSWER_SYSTEM = """You are the language layer of ACM, the Actions Consequential Model.
-ACM's engine has already computed the FACTS (JSON) about an action and its consequences.
+ANSWER_SYSTEM = """You are the language layer of ARM, the Action Reaction Model.
+ARM's engine has already computed the FACTS (JSON) about an action and its consequences.
 Answer the QUESTION using ONLY those FACTS.
 Rules:
 - Never add a consequence, cause, person, place, number or reason that is not in FACTS.
-- If FACTS do not answer the question, say ACM has no evidence for it (never say "no impact").
+- If FACTS do not answer the question, say ARM has no evidence for it (never say "no impact").
 - Facts marked unknown stay unknown; assumed values are called assumptions.
 - For a what-if, say concretely which consequences are new and which no longer follow.
 - Keep the answer to 1-4 plain sentences.
@@ -105,7 +105,7 @@ Give one phrase per consequence you mention, each written as a consequence of th
 
 def answer(question: str, facts: dict[str, Any], kind: str = "phrase") -> dict[str, Any]:
     """The LLM's grounded answer: {"text", "phrases", "model", "seconds"}."""
-    source = "ACM's rule engine" if kind == "phrase" else "the physics simulation and the object behaviour library"
+    source = "ARM's rule engine" if kind == "phrase" else "the physics simulation and the object behaviour library"
     user = f"FACTS (from {source}):\n{json.dumps(facts, ensure_ascii=False)}\n\nQUESTION: {question}"
     data, seconds = chat_json(ANSWER_SYSTEM, user)
     text = _text(data.get("answer"))

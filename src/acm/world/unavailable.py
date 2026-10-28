@@ -41,7 +41,7 @@ class VJEPA2ACPredictor:
     The model predicts *latent* frame representations conditioned on 7-D
     end-effector deltas of a Franka arm (position, extrinsic Euler orientation,
     gripper), from 256x256 video at 4 fps. It produces neither rendered future
-    frames nor ACM facts; a decoder or probe from latents to scene states would be
+    frames nor ARM facts; a decoder or probe from latents to scene states would be
     needed first. Not run or evaluated here.
     """
 

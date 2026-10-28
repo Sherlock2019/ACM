@@ -1,7 +1,7 @@
-"""Actions Consequential Model (ACM).
+"""Action Reaction Model (ARM).
 
 Built on the Meaning Language Model: MLM turns an action phrase into Universal
-Phrase DNA (who does what, to whom, where, when, why); ACM turns that frame into a
+Phrase DNA (who does what, to whom, where, when, why); ARM turns that frame into a
 graph of the full action in its context and predicts what the action changes,
 circle by circle:
 

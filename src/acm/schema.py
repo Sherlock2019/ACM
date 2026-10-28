@@ -1,4 +1,4 @@
-"""ACM's output: state changes, where they land, and how they relate to others."""
+"""ARM's output: state changes, where they land, and how they relate to others."""
 
 from __future__ import annotations
 
@@ -52,7 +52,7 @@ class RelationStatus(str, Enum):
     AT_RISK = "at_risk"  # blocked, unless an unnamed participant is the owner
     HINDERED = "hindered"  # removes something the goal or action needs
     UNAFFECTED = "unaffected"
-    NO_EVIDENCE = "no_evidence"  # ACM does not know what one side changes
+    NO_EVIDENCE = "no_evidence"  # ARM does not know what one side changes
 
 
 #: Kept for readability at call sites that only deal with goals.
@@ -97,7 +97,7 @@ class Consequence(BaseModel):
     direction: str | None = Field(default=None, description="'+', '-' or '0' for impacts")
     certainty: float = Field(
         ge=0.0, le=1.0,
-        description="ACM's rule certainty (tense, modality, conditions). Not a calibrated probability.",
+        description="ARM's rule certainty (tense, modality, conditions). Not a calibrated probability.",
     )
     source: str = Field(
         description="'rule:<CONCEPT>', 'impact:<aspect>', 'frame', 'generic', or the backend for external facts"
@@ -111,10 +111,10 @@ class Consequence(BaseModel):
 
 
 class ExternalFact(BaseModel):
-    """A state change ACM did not derive from its own rules.
+    """A state change ARM did not derive from its own rules.
 
     It was observed (image/video evidence) or predicted by a named backend (a
-    simulator). ACM places it in the circles like any other fact, but keeps its
+    simulator). ARM places it in the circles like any other fact, but keeps its
     basis and evidence so the two are never confused.
     """
 
@@ -134,7 +134,7 @@ class Participant(BaseModel):
 
 
 class UnknownConsequence(BaseModel):
-    """Something ACM cannot say, and what it would need to say it."""
+    """Something ARM cannot say, and what it would need to say it."""
 
     about: str
     about_label: str
@@ -197,7 +197,7 @@ class ConsequenceReport(BaseModel):
     unknowns: list[UnknownConsequence] = Field(default_factory=list)
     trace: dict[str, Any] = Field(
         default_factory=dict,
-        description="What ACM used: MLM frame, concept, role bindings, state facts, categories, rules fired",
+        description="What ARM used: MLM frame, concept, role bindings, state facts, categories, rules fired",
     )
     graph: dict[str, Any] = Field(default_factory=dict)
     notes: list[str] = Field(default_factory=list)

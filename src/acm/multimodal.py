@@ -1,9 +1,9 @@
-"""MLM meaning (from text, image or video) -> prediction -> ACM consequences.
+"""MLM meaning (from text, image or video) -> prediction -> ARM consequences.
 
     MeaningDocument --available_at(T)--> state at T + earlier events + goals
         + explicit ProposedAction
         -> TransitionPredictor (tabletop simulator) -> PredictedOutcome
-        -> ACM: action frame (rules) + predicted changes (simulation, via
+        -> ARM: action frame (rules) + predicted changes (simulation, via
            packs/universal/simulation.yaml) + scene participants + unknowns
         -> ConsequenceReport per alternative, all from the same initial state
 
@@ -116,7 +116,7 @@ class MultimodalBridge:
             f"Predicted changes come from {outcome.backend.name}@{outcome.backend.version} "
             "(a constrained simulator, not general physical understanding)."
         )
-        report.notes.append("ACM certainty scores are rule weights, not calibrated real-world probabilities.")
+        report.notes.append("ARM certainty scores are rule weights, not calibrated real-world probabilities.")
         return ScenarioResult(key, action, outcome, report, at_time, context)
 
     # -- mapping ---------------------------------------------------------------------
@@ -181,7 +181,7 @@ class MultimodalBridge:
         state = doc.states[-1] if doc.states else None
         for goal in doc.goals:
             if goal.frame is not None or not goal.desired:
-                continue  # stated goals with frames are read by ACM from the frame itself
+                continue  # stated goals with frames are read by ARM from the frame itself
             facts = []
             for desired in goal.desired:
                 spec = self._properties.get(desired.property)

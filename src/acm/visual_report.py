@@ -1,7 +1,7 @@
 """A self-contained HTML report of the multimodal demo: no scripts, no network.
 
 Sections: input, MLM meaning (with entity ids and evidence), proposed action,
-initial vs predicted scene per alternative (with movement arrows), ACM circles,
+initial vs predicted scene per alternative (with movement arrows), ARM circles,
 assumptions and unknowns, and the prediction-vs-outcome comparison. Every value
 carries a text label - OBSERVED, INFERRED, ASSUMED, PREDICTED, UNKNOWN - so
 nothing depends on colour alone. Future scenes are labelled simulated.
@@ -126,20 +126,20 @@ def render_report(demo: dict[str, Any]) -> str:
                      f"<pre>{_e(json.dumps({k: v for k, v in metrics.items() if k != 'per_entity'}, indent=1))}</pre>"
                      f"<p class='warn'>{_e(data['scripted_outcome']['label'])}</p>")
         sections.append(
-            f"<section><h2>{flow.upper()} → MLM → ACM</h2>"
+            f"<section><h2>{flow.upper()} → MLM → ARM</h2>"
             f"<h3>1–3. Input, MLM meaning, entity ids and evidence</h3>{_meaning_table(data['meaning'])}"
             f"<h3>4. Proposed action</h3><pre>{_e(json.dumps(push['action'], indent=1))}</pre>"
             f"<h3>5–7. Initial vs predicted, per alternative (same initial state)</h3>"
             f"<div class='card'>{scene_svg(scene, None, 'INITIAL - ' + ('observed' if flow != 'text' else 'assumed positions'))}</div>"
             f"<div class='grid'>{alt}</div>"
-            f"<h3>8. ACM consequences — push toward the edge</h3>{_circles(push['circles'])}"
+            f"<h3>8. ARM consequences — push toward the edge</h3>{_circles(push['circles'])}"
             f"<h3>9. Assumptions and unknowns</h3><ul>{assumptions}{unknowns}</ul>{extra}</section>"
         )
     sale = demo["flows"]["sale"]
-    sections.append(f"<section><h2>TEXT → MLM → ACM: the sale (rule-derived consequences)</h2>"
+    sections.append(f"<section><h2>TEXT → MLM → ARM: the sale (rule-derived consequences)</h2>"
                     f"<p>{_e(sale['note'])}</p>{_circles(sale['circles'])}</section>")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ACM Multimodal Report</title><style>
+<title>ARM Multimodal Report</title><style>
 body{{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#f8fafc;color:#0f172a;max-width:1200px;margin:auto}}
 .badge{{position:sticky;top:0;background:#7e22ce;color:#fff;padding:8px 12px;border-radius:8px;font-weight:600;z-index:2}}
 section{{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:16px 0}}
@@ -151,5 +151,5 @@ table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #e2e8
 @media (max-width:700px){{.grid2{{grid-template-columns:1fr}}}}
 </style></head><body><div class="badge">{_e(demo['badge'])}</div>
 <p>Extraction is replayed from fixtures (not live model inference). Future scenes are simulated by a constrained
-tabletop simulator; a generated picture is not evidence that a prediction is correct. ACM certainty scores are
+tabletop simulator; a generated picture is not evidence that a prediction is correct. ARM certainty scores are
 not calibrated probabilities.</p>{''.join(sections)}</body></html>"""
