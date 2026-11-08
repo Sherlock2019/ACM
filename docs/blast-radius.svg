@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 900" width="1240" height="900" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1240" height="900" rx="18" fill="#f8fafc"/>
+<text x="40" y="52" font-size="15" font-weight="700" letter-spacing="2" fill="#0891b2">ACTION–REACTION MODEL</text>
+<text x="40" y="98" font-size="40" font-weight="800" fill="#0b1b2e">The radius of consequences</text>
+<text x="40" y="130" font-size="18" fill="#475569">One action can create effects across people, places and systems.</text>
+<text x="40" y="158" font-size="16" fill="#0e7490">Example: “I will sell my car to Sarah in Paris tomorrow to pay my debt.”  (Mark wants to buy my car. Sarah needs a car.)</text>
+<circle cx="380" cy="515" r="330.0" fill="#fed7aa" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="294.5" fill="#fde68a" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="259.0" fill="#fef9c3" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="223.5" fill="#dcfce7" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="188.0" fill="#ccfbf1" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="152.5" fill="#cffafe" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="117.0" fill="#dbeafe" stroke="#ffffff" stroke-width="3"/>
+<circle cx="380" cy="515" r="81.5" fill="#e0e7ff" stroke="#ffffff" stroke-width="3"/>
+<text x="380" y="457.2" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">1</text>
+<text x="380" y="421.8" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">2</text>
+<text x="380" y="386.2" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">3</text>
+<text x="380" y="350.8" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">4</text>
+<text x="380" y="315.2" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">5</text>
+<text x="380" y="279.8" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">6</text>
+<text x="380" y="244.2" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">7</text>
+<text x="380" y="208.8" text-anchor="middle" font-size="16" font-weight="700" fill="#0b1b2e">8</text>
+<circle cx="380" cy="515" r="42" fill="#0b1b2e" stroke="#ffffff" stroke-width="3"/>
+<text x="380" y="520" text-anchor="middle" font-size="14" font-weight="800" letter-spacing="1" fill="#ffffff">ACTION</text>
+<circle cx="770" cy="250" r="14" fill="#e0e7ff" stroke="#cbd5e1"/>
+<text x="770" y="255" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">1</text>
+<text x="798" y="244" font-size="16" font-weight="800" fill="#0b1b2e">ACTOR<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: self</tspan></text>
+<text x="798" y="263" font-size="13.5" fill="#475569">Goals, resources and immediate outcomes</text>
+<text x="798" y="281" font-size="12.5" font-style="italic" fill="#0e7490">→ loses my car · gains money · own goal &#x27;pay my debt&#x27;: ENABLED</text>
+<circle cx="770" cy="328" r="14" fill="#dbeafe" stroke="#cbd5e1"/>
+<text x="770" y="333" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">2</text>
+<text x="798" y="322" font-size="16" font-weight="800" fill="#0b1b2e">OTHER PARTICIPANTS<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: impacted · other actors</tspan></text>
+<text x="798" y="341" font-size="13.5" fill="#475569">People affected, their goals and possible reactions</text>
+<text x="798" y="359" font-size="12.5" font-style="italic" fill="#0e7490">→ Sarah gains my car · Mark&#x27;s goal BLOCKED · Sarah&#x27;s need ADVANCED</text>
+<circle cx="770" cy="406" r="14" fill="#cffafe" stroke="#cbd5e1"/>
+<text x="770" y="411" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">3</text>
+<text x="798" y="400" font-size="16" font-weight="800" fill="#0b1b2e">LOCAL PHYSICAL WORLD<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: local environment</tspan></text>
+<text x="798" y="419" font-size="13.5" fill="#475569">Objects, surroundings and immediate environment</text>
+<text x="798" y="437" font-size="12.5" font-style="italic" fill="#0e7490">→ Paris: the sale takes place here</text>
+<circle cx="770" cy="484" r="14" fill="#ccfbf1" stroke="#cbd5e1"/>
+<text x="770" y="489" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">4</text>
+<text x="798" y="478" font-size="16" font-weight="800" fill="#0b1b2e">NEIGHBOURHOOD<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: neighbour</tspan></text>
+<text x="798" y="497" font-size="13.5" fill="#475569">Nearby people, places and community</text>
+<text x="798" y="515" font-size="12.5" font-style="italic" fill="#0e7490">→ Boulogne-Billancourt, Saint-Denis, Montreuil: no known impact</text>
+<circle cx="770" cy="562" r="14" fill="#dcfce7" stroke="#cbd5e1"/>
+<text x="770" y="567" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">5</text>
+<text x="798" y="556" font-size="16" font-weight="800" fill="#0b1b2e">CITY / REGION<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: organization · city</tspan></text>
+<text x="798" y="575" font-size="13.5" fill="#475569">Local services, infrastructure and institutions</text>
+<text x="798" y="593" font-size="12.5" font-style="italic" fill="#0e7490">→ insurers and the vehicle registry record the new owner</text>
+<circle cx="770" cy="640" r="14" fill="#fef9c3" stroke="#cbd5e1"/>
+<text x="770" y="645" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">6</text>
+<text x="798" y="634" font-size="16" font-weight="800" fill="#0b1b2e">SOCIETY<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: society</tspan></text>
+<text x="798" y="653" font-size="13.5" fill="#475569">Social norms, trust and collective behaviour</text>
+<text x="798" y="671" font-size="12.5" font-style="italic" fill="#0e7490">→ money circulates through the economy</text>
+<circle cx="770" cy="718" r="14" fill="#fde68a" stroke="#cbd5e1"/>
+<text x="770" y="723" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">7</text>
+<text x="798" y="712" font-size="16" font-weight="800" fill="#0b1b2e">ECONOMY &amp; COUNTRIES<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: country</tspan></text>
+<text x="798" y="731" font-size="13.5" fill="#475569">Markets, organisations and national effects</text>
+<text x="798" y="749" font-size="12.5" font-style="italic" fill="#0e7490">→ France: a taxable transaction counts in national activity</text>
+<circle cx="770" cy="796" r="14" fill="#fed7aa" stroke="#cbd5e1"/>
+<text x="770" y="801" text-anchor="middle" font-size="14" font-weight="700" fill="#0b1b2e">8</text>
+<text x="798" y="790" font-size="16" font-weight="800" fill="#0b1b2e">THE WORLD<tspan font-size="12" font-weight="500" fill="#64748b">  · layer: earth</tspan></text>
+<text x="798" y="809" font-size="13.5" fill="#475569">Cross-border, global and planetary effects</text>
+<text x="798" y="827" font-size="12.5" font-style="italic" fill="#0e7490">→ an existing car is reused instead of a new one being made</text>
+<text x="40" y="878" font-size="13" fill="#64748b">"No known impact" means no rule matched, never that there is no impact. Generated by scripts/draw_blast_radius.py.</text>
+</svg>
