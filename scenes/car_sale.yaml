@@ -1,0 +1,372 @@
+# ACM scene: The Car Sale. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# Facts given by the scenario carry source scenario_fact. The script (stage directions and
+# dialogue) and the demo analysis and branches are authored demo content: they show the
+# interface and the reasoning format, they are not model predictions. The sale is proposed
+# and disputed; nothing here says ownership transferred or the debt was settled.
+
+schema: acm.scene/1
+id: car_sale
+title: "The Car Sale: One Action, Multiple Consequences"
+description: >-
+  Mark and Sarah owe their mutual friend Florence €5,000. Mark offers Sarah's red Austin Mini
+  to Florence to settle the debt. Sarah does not agree to sell it.
+action: "Mark offers Sarah's car to Florence to settle a €5,000 debt."
+location:
+  name: Mark and Sarah's garage
+  city: Paris
+  marks:
+    - { id: workbench,  label: "workbench",               x: 0.5, y: 0.5 }
+    - { id: shelf,      label: "shelf",                   x: 1.2, y: 0.3 }
+    - { id: car_left,   label: "beside the car (left)",   x: 1.8, y: 2.2 }
+    - { id: car_bay,    label: "car bay",                 x: 3.3, y: 2.4 }
+    - { id: car_right,  label: "beside the car (right)",  x: 4.8, y: 2.2 }
+    - { id: middle,     label: "middle of the garage",    x: 3.3, y: 4.0 }
+    - { id: entrance,   label: "garage entrance",         x: 6.4, y: 3.0 }
+    - { id: driveway,   label: "driveway, outside",       x: 7.6, y: 3.6 }
+time: "Tomorrow, 10:00 a.m. (a scenario label, not a calendar date)"
+context:
+  - Mark and Sarah owe their mutual friend Florence €5,000.
+  - Sarah owns a red Austin Mini.
+  - Mark offers the car to Florence to settle the debt.
+  - Sarah does not agree to sell it.
+  - Whether Florence knew of Sarah's objection beforehand is unknown.
+  - Whether Mark has authority to sell the car is unknown.
+  - The scene ends before the handover is completed.
+status: "Disputed; handover not completed"
+initial:
+  sale: not proposed
+  sarah_consent: not asked
+  handover_completed: false
+unknowns:
+  - Whether Mark has authority to sell the car.
+  - Whether Florence knew of Sarah's objection before arriving.
+  - Whether the car is worth €5,000.
+caveats:
+  - The sale is proposed and disputed. Ownership has not transferred and the debt is not settled.
+  - The dialogue is illustrative demo content, not a recording or a model prediction.
+
+actors:
+  - id: mark
+    name: Mark
+    role: Sarah's husband
+    relationships: { sarah: husband, florence: "friend; owes her €5,000 with Sarah" }
+    goals: ["Settle the €5,000 debt to Florence"]
+    preferences: ["Offers Sarah's car as settlement"]
+    position: car_left
+    knows: ["He and Sarah owe Florence €5,000", "The car is Sarah's"]
+    unknown: ["Why he chose this approach", "Whether he has authority to sell the car"]
+    inferences:
+      - { kind: thought,   text: "“This could settle the debt quickly.”" }
+      - { kind: feeling,   text: "May feel pressure to resolve the debt, or defensive once Sarah objects." }
+      - { kind: reaction,  text: "May defend the plan or back down." }
+  - id: sarah
+    name: Sarah
+    role: Car owner
+    relationships: { mark: wife, florence: "friend; owes her €5,000 with Mark" }
+    goals: []
+    preferences: ["Does not agree to sell her car"]
+    position: car_right
+    knows: ["The car is hers", "She and Mark owe Florence €5,000"]
+    unknown: ["Whether she would accept an alternative", "How attached she is to the car"]
+    inferences:
+      - { kind: thought,   text: "“A decision about my car is being made without me.”" }
+      - { kind: feeling,   text: "May feel upset, worried or let down." }
+      - { kind: reaction,  text: "May refuse the sale outright or ask for another way to repay." }
+  - id: florence
+    name: Florence
+    role: Mutual friend and creditor
+    relationships: { mark: "friend; is owed €5,000", sarah: "friend; is owed €5,000" }
+    goals: []
+    preferences: ["Is owed €5,000"]
+    position: entrance
+    knows: ["She is owed €5,000"]
+    unknown: ["Whether she knew of Sarah's objection before arriving", "Whether she wants the car at all"]
+    inferences:
+      - { kind: thought,   text: "“I want to be repaid, but not with a car that is in dispute.”" }
+      - { kind: feeling,   text: "May feel uncomfortable or surprised." }
+      - { kind: reaction,  text: "May delay the handover or suggest another repayment plan." }
+
+objects:
+  - { id: car,  label: "Red Austin Mini", description: "Sarah's car", owner: sarah, position: car_bay, attributes: { colour: red, offered_to: null } }
+  - { id: keys, label: "Car keys",        description: "The Mini's keys", owner: sarah, holder: mark, attributes: { offered_to: null } }
+  - { id: notebook, label: "Notebook",    description: "On the workbench", position: workbench }
+  - id: debt
+    label: "€5,000 debt"
+    kind: obligation
+    description: "Mark and Sarah owe Florence €5,000"
+    attributes: { amount: 5000, currency: EUR, creditor: florence, debtors: [mark, sarah], status: unpaid }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Mark stands beside Sarah's red Mini, holding its keys. Florence waits near the garage entrance. Sarah stands beside the car."
+  - id: e2
+    order: 2
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: florence
+    description: "Mark offers the Mini to Florence to settle the debt."
+    dialogue: "Florence, we owe you €5,000. I'm offering you the Mini to settle the debt."
+    voice: "steady, slightly hurried"
+    effects:
+      - { subject: scene, attribute: sale, value: proposed }
+      - { subject: car,   attribute: offered_to, value: florence }
+  - id: e3
+    order: 3
+    actor: mark
+    type: action
+    verb: offer
+    target: florence
+    object: keys
+    description: "Mark extends the keys toward Florence."
+    animation: "extend right arm, keys in hand"
+    effects:
+      - { subject: keys, attribute: offered_to, value: florence }
+  - id: e4
+    order: 4
+    actor: sarah
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Sarah objects to the sale."
+    dialogue: "Stop. That's my car, and I don't agree to sell it."
+    voice: "firm, raised"
+    effects:
+      - { subject: scene, attribute: sale, value: disputed }
+      - { subject: scene, attribute: sarah_consent, value: refused }
+  - id: e5
+    order: 5
+    actor: florence
+    type: action
+    verb: pause
+    description: "Florence pauses."
+  - id: e6
+    order: 6
+    actor: florence
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Florence asks whether Sarah agreed."
+    dialogue: "Mark, did Sarah agree to this?"
+    voice: "careful, quiet"
+  - id: e7
+    order: 7
+    actor: mark
+    type: action
+    verb: gesture
+    object: keys
+    description: "Mark lowers his hand. The keys remain with him."
+    animation: "lower right arm"
+    effects:
+      - { subject: keys, attribute: offered_to, value: null }
+
+scopes:
+  - { n: 1, id: actor,         title: "Mark",                            short: "Mark" }
+  - { n: 2, id: participants,  title: "Sarah and Florence",              short: "Sarah & Florence" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Relationships and community",     short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [mark, sarah]
+      description: "Mark's goal (settle the debt with the car) conflicts with Sarah's stated position (she does not agree to sell it)."
+      evidence: [e2, e4]
+      status: stated
+    - between: [florence, mark]
+      description: "Florence's repayment now depends on a transaction that is disputed."
+      evidence: [e4, e6]
+      status: possible
+
+  consequences:
+    - id: c1
+      scope: actor
+      affected: [mark]
+      description: "His proposed repayment plan is challenged by Sarah's objection."
+      goal: "Settle the €5,000 debt to Florence"
+      evidence: [e2, e4]
+      status: stated
+      effect: { mark: negative }
+      horizon: immediate
+    - id: c2
+      scope: actor
+      affected: [mark, sarah]
+      description: "His relationship with Sarah may be affected."
+      evidence: [e2, e4]
+      status: possible
+      effect: { mark: negative, sarah: negative }
+      horizon: later
+      questions: ["How do Mark and Sarah usually settle disagreements?"]
+    - id: c3
+      scope: participants
+      affected: [sarah]
+      description: "Sarah objects: her car is offered without her agreement."
+      evidence: [e2, e4]
+      status: stated
+      effect: { sarah: negative }
+      horizon: immediate
+    - id: c4
+      scope: participants
+      affected: [florence]
+      description: "Florence must decide how to respond to the dispute."
+      evidence: [e5, e6]
+      status: possible
+      effect: { florence: mixed }
+      horizon: later
+    - id: c5
+      scope: participants
+      affected: [florence, mark, sarah]
+      description: "The €5,000 debt remains unpaid at the end of the scene."
+      goal: "Settle the €5,000 debt to Florence"
+      evidence: [e7]
+      status: stated
+      effect: { florence: negative, mark: negative, sarah: negative }
+      horizon: immediate
+    - id: c6
+      scope: physical
+      affected: [car, keys]
+      description: "The car and keys remain in the garage during the depicted scene; the keys stay with Mark."
+      evidence: [e7]
+      status: stated
+      horizon: immediate
+    - id: c7
+      scope: relationships
+      affected: [mark, sarah, florence]
+      description: "The disagreement could affect the friendship between the three."
+      evidence: [e4, e6]
+      status: possible
+      effect: { mark: negative, sarah: negative, florence: negative }
+      horizon: later
+    - id: c8
+      scope: city
+      affected: [car]
+      description: "Vehicle registration may become relevant if a valid sale is eventually agreed."
+      status: possible
+      horizon: later
+      assumptions: ["A valid sale is agreed later."]
+      questions: ["Does Mark have authority to sell the car?"]
+    - { id: c9,  scope: society, description: "No specific societal impact is established.", status: not_identified }
+    - { id: c10, scope: economy, description: "No national economic impact is established.", status: not_identified }
+    - { id: c11, scope: world,   description: "No specific global impact is established.",   status: not_identified }
+
+  branches:
+    - id: A
+      title: "A repayment plan"
+      parent: car_sale
+      source: authored_demo
+      assumptions: ["Mark accepts Sarah's objection.", "Florence is willing to wait for part of the money."]
+      summary: "Mark withdraws the offer and the three discuss paying Florence in instalments."
+      plausibility: "Sarah asks for another way and Florence asks about consent, so an agreed alternative follows directly from what both said; nothing in the scene rules it out."
+      events:
+        - { id: a1, order: 8,  actor: mark, type: action, verb: place, object: keys, target: shelf, description: "Mark puts the keys down on a shelf.",
+            effects: [ { subject: keys, attribute: holder, value: null }, { subject: keys, attribute: position, value: shelf }, { subject: mark, attribute: position, value: workbench } ] }
+        - { id: a2, order: 9,  actor: mark, type: dialogue, verb: speak, target: sarah, description: "Mark accepts Sarah's objection.",
+            dialogue: "You're right. I should have discussed this with you first.",
+            effects: [ { subject: scene, attribute: sale, value: withdrawn }, { subject: car, attribute: offered_to, value: null } ] }
+        - { id: a3, order: 10, actor: sarah, type: action, verb: move, target: middle, description: "Sarah steps away from the car.",
+            effects: [ { subject: sarah, attribute: position, value: middle } ] }
+        - { id: a4, order: 11, actor: sarah, type: dialogue, verb: speak, target: florence, description: "Sarah wants another way to repay.",
+            dialogue: "We still need to repay Florence. Let's find another way." }
+        - { id: a5, order: 12, actor: florence, type: dialogue, verb: speak, description: "Florence offers to wait for part of it.",
+            dialogue: "I can wait for part of it if we agree on a payment plan." }
+        - { id: a6, order: 13, actor: mark, type: action, verb: take, target: notebook, description: "Mark picks up a notebook from the workbench.",
+            effects: [ { subject: notebook, attribute: holder, value: mark }, { subject: notebook, attribute: position, value: null } ] }
+      goal_changes:
+        - { actor: mark,     change: "His plan changes from selling the car to a repayment plan; settling the debt is still possible.", effect: mixed }
+        - { actor: sarah,    change: "Keeps the decision about her car.", effect: positive }
+        - { actor: florence, change: "May be repaid over time rather than at once.", effect: mixed }
+      inferences:
+        mark:     [ { kind: feeling, text: "Might feel relief that the conflict eases, or frustration that repayment will take longer." } ]
+        sarah:    [ { kind: feeling, text: "Might feel heard and less worried." } ]
+        florence: [ { kind: feeling, text: "Might feel more comfortable, though still waiting for her money." } ]
+      consequences:
+        - { id: ca1, scope: participants, affected: [florence], description: "Repayment becomes a schedule instead of a handover.", evidence: [a5], status: possible, effect: { florence: mixed }, horizon: later }
+      unknowns: ["Can they afford regular payments?", "How long can Florence wait?"]
+
+    - id: B
+      title: "Florence steps back"
+      parent: car_sale
+      source: authored_demo
+      assumptions: ["Florence will not take the car without Sarah's agreement."]
+      summary: "Florence declines the keys; the handover pauses and the debt remains."
+      plausibility: "Florence already paused and asked whether Sarah agreed (e5, e6); stepping back is a direct continuation."
+      events:
+        - { id: b1, order: 8,  actor: florence, type: dialogue, verb: speak, target: mark, description: "Florence declines the car for now.",
+            dialogue: "I won't take the car unless you both agree. Talk it over, and call me.",
+            effects: [ { subject: scene, attribute: sale, value: paused } ] }
+        - { id: b2, order: 9,  actor: florence, type: action, verb: move, target: driveway, description: "Florence steps out onto the driveway.",
+            effects: [ { subject: florence, attribute: position, value: driveway } ] }
+        - { id: b3, order: 10, actor: mark, type: action, verb: hold, target: keys, description: "Mark puts the keys in his pocket." }
+      goal_changes:
+        - { actor: mark,     change: "Still needs a way to settle the debt.", effect: negative }
+        - { actor: sarah,    change: "The handover stops.", effect: positive }
+        - { actor: florence, change: "Avoids a disputed transaction; the debt remains unpaid.", effect: mixed }
+      inferences:
+        mark:     [ { kind: feeling, text: "Might feel embarrassed or under more pressure." } ]
+        sarah:    [ { kind: feeling, text: "Might feel relieved, and still upset with Mark." } ]
+        florence: [ { kind: feeling, text: "Might feel awkward about being caught in the middle." } ]
+      consequences:
+        - { id: cb1, scope: participants, affected: [florence, mark, sarah], description: "The debt remains unpaid.", evidence: [b1], status: stated, effect: { florence: negative, mark: negative, sarah: negative }, horizon: immediate }
+      unknowns: ["Will the friendship be affected?", "What will Mark and Sarah propose next?"]
+
+    - id: C
+      title: "The argument escalates"
+      parent: car_sale
+      source: authored_demo
+      assumptions: ["Mark insists on the sale.", "Sarah does not change her position."]
+      summary: "Mark argues the sale is necessary; Sarah keeps objecting and the disagreement intensifies."
+      plausibility: "Mark's stated goal is unchanged and Sarah has objected; if neither moves, the conflict in the analysis intensifies."
+      events:
+        - { id: c_1, order: 8,  actor: mark, type: dialogue, verb: speak, target: sarah, description: "Mark insists.",
+            dialogue: "We have no other way to pay. The car has to go." }
+        - { id: c_2, order: 9,  actor: sarah, type: dialogue, verb: speak, target: mark, description: "Sarah repeats her refusal.",
+            dialogue: "It's my car. I've said no." }
+        - { id: c_3, order: 10, actor: sarah, type: action, verb: gesture, target: mark, description: "Sarah holds out her hand for the keys." }
+        - { id: c_4, order: 11, actor: florence, type: action, verb: move, target: driveway, description: "Florence steps back toward the driveway.",
+            effects: [ { subject: florence, attribute: position, value: driveway } ] }
+        - { id: c_5, order: 12, actor: florence, type: dialogue, verb: speak, description: "Florence withdraws.",
+            dialogue: "I should leave you two to talk." }
+      goal_changes:
+        - { actor: mark,     change: "Pushes his plan, but the sale stays disputed.", effect: negative }
+        - { actor: sarah,    change: "Has to defend her position again; trust may be damaged.", effect: negative }
+        - { actor: florence, change: "Withdraws; repayment is delayed.", effect: negative }
+      inferences:
+        mark:     [ { kind: feeling, text: "Might feel cornered or defensive." } ]
+        sarah:    [ { kind: feeling, text: "Might feel angry or disregarded." } ]
+        florence: [ { kind: feeling, text: "Might feel very uncomfortable." } ]
+      consequences:
+        - { id: cc1, scope: relationships, affected: [mark, sarah, florence], description: "The relationships between all three are strained.", evidence: [c_1, c_2, c_5], status: possible, effect: { mark: negative, sarah: negative, florence: negative }, horizon: later }
+      unknowns: ["Can they de-escalate and discuss alternatives?", "Would Florence accept the car at all while Sarah objects?"]
+
+    - id: D
+      title: "Sarah considers an offer"
+      parent: car_sale
+      source: authored_demo
+      assumptions: ["Sarah is willing to discuss terms.", "The car is worth roughly what is owed (not established)."]
+      summary: "Sarah may consider selling on her own terms: price and how she would get around."
+      plausibility: "Sarah refused this offer; whether she would sell on her own terms is not established, so this branch depends on that assumption."
+      events:
+        - { id: d1, order: 8,  actor: sarah, type: dialogue, verb: speak, target: mark, description: "Sarah sets conditions.",
+            dialogue: "I might sell it, but not like this. What is it worth, and how would I get to work?",
+            effects: [ { subject: scene, attribute: sale, value: under discussion } ] }
+        - { id: d2, order: 9,  actor: mark, type: dialogue, verb: speak, target: sarah, description: "Mark agrees to look at the price.",
+            dialogue: "We can look up the price tonight." }
+        - { id: d3, order: 10, actor: florence, type: dialogue, verb: speak, target: sarah, description: "Florence defers to Sarah.",
+            dialogue: "I'd only take it if it's your decision, Sarah." }
+      goal_changes:
+        - { actor: mark,     change: "May still have a path to settling the debt.", effect: mixed }
+        - { actor: sarah,    change: "Has a say in the decision and its terms.", effect: positive }
+        - { actor: florence, change: "Could accept or decline a revised agreement.", effect: undetermined }
+      inferences:
+        mark:     [ { kind: feeling, text: "Might feel hopeful, and aware that he overstepped." } ]
+        sarah:    [ { kind: feeling, text: "Might feel more in control, though still reluctant." } ]
+        florence: [ { kind: feeling, text: "Might feel reassured that any deal would be agreed by Sarah." } ]
+      consequences:
+        - { id: cd1, scope: city, affected: [car], description: "Registration would matter only if Sarah agrees to a sale.", evidence: [d1], status: possible, horizon: later, assumptions: ["Sarah agrees to sell."] }
+      unknowns: ["Does Sarah ultimately agree, and on what terms?", "What would she use for transport?"]
