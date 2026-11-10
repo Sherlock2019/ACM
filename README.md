@@ -8,42 +8,61 @@ Action–Consequence Model**, everywhere in the user interface. Only the user-fa
 changed. The repository, the Python package, the `acm` command, the `/acm/...` routes
 and the `ACM_LLM_*` environment variables kept their names throughout.*
 
-ACM has two parts that share one idea, that every action has consequences, and the
-same honesty rules:
+| | |
+|---|---|
+| [**What**](#what-acm-is) | a model of what an action *does*: an eight-layer world model, from the physical world to the planet |
+| [**Why**](#why-acm-exists-what-an-llm-cannot-do) | an LLM predicts words, not world states, and cannot show why it says what it says |
+| [**How**](#how-it-works) | the action is perceived, routed to the world layers that should examine it, and each layer reports its consequences with evidence |
+| [**So what**](#so-what-acm-compared-with-llm-mode) | explicit, inspectable, repeatable consequences that say when they do not know |
+| [**What next**](#what-next) | a real model behind every layer: 3D physics, perception, institutions, economy, planet |
 
-| Part | Input | What it does | Where |
+---
+
+## What ACM is
+
+> A language model predicts the next word. MLM, the
+> [Meaning Language Model](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-),
+> first works out what a sentence means. **ACM goes one step further: it predicts what an
+> action *does*:** what it changes, for whom, in which systems, and how far it reaches.
+
+ACM sees the world as a **stack of layers above every action**, read bottom-up like the OSI
+network model it borrows its shape from. An action happens in the physical world and is
+perceived. A **consequence router** decides which world models, actors and systems should
+examine it. Each layer above the router has its own kind of model.
+
+| Level | Layer | What it examines |
+|---:|---|---|
+| 8 | 🌍 Planetary and ecosystem | Resources, pollution, biodiversity and sustainability |
+| 7 | 🏛️ Society and collective systems | Economy, markets, society, public governance and politics |
+| 6 | 🏭 Business and institutions | Organisations, operations, processes, finance and policies |
+| 5 | 💻 Digital and information systems | Applications, records, calculations, permissions and workflows |
+| 4 | 🧠 Human and social | Goals, behaviour, dialogue, relationships and group reactions |
+| 3 | 🧭 **Consequence routing** | Which world models, actors and systems should examine an event |
+| 2 | 👁️ Perception and observation | Images, video, audio, speech, sensors and observations |
+| 1 | ⚙️ Physical world | Objects, materials, movement, forces, location and energy |
+| Source | 🎬 Action or event | Who acts, why, their goal and desired outcome, and what happens |
+
+Every consequence ACM reports sits on **two axes**:
+
+- its **layer**: *which kind of system* it is about, and so which model examines it;
+- its **ring** (scope) in the [blast radius](#the-blast-radius): *how far* it reaches, from
+  the actor and the other participants out to the city, society, the economy and the world.
+
+ACM has two engines that share this model and the same honesty rules:
+
+| Engine | Input | What it does | Where |
 |---|---|---|---|
-| **Scene engine** (new) | a situation as a structured script: people, goals, objects, actions, dialogue | builds the scene state event by event, shows the consequences per scope, offers possible next scenes, exports scene directions | [`src/acm/scene/`](src/acm/scene/), [`scenes/`](scenes/), dashboard `/acm/scenario` |
+| **Scene engine** | a situation as a structured script: people, goals, objects, actions, dialogue | builds the scene state event by event, routes each event to the world layers, shows the consequences per layer and per ring, offers possible next scenes, exports scene directions | [`src/acm/scene/`](src/acm/scene/), [`scenes/`](scenes/), dashboard `/acm/scenario` |
 | **Rule engine** | one action sentence (+ context sentences) | parses it with MLM and predicts its consequences from YAML rule packs, ring by ring | [`src/acm/engine.py`](src/acm/engine.py), [`packs/`](packs/), dashboard `/acm` |
 
-The [scene engine](#the-scene-engine-a-situation-as-a-script) is documented first; the
-rule engine follows from [The blast radius](#the-blast-radius).
-
-> A language model predicts the next word. MLM first works out what a sentence means.
-> **ACM goes one step further: it predicts what an action *does*. It traces the
-> consequences for the one acting, for those it lands on, for other actors' goals,
-> and then across its whole blast radius, layer by layer: the place it happens,
-> its neighbours, the organization it belongs to, its city, its country, society,
-> and the earth.**
-
-ACM is built on the [Meaning Language Model (MLM)](https://github.com/Sherlock2019/NPLM-Next-Phrase-language-model-),
-which turns a phrase into *Universal Phrase DNA*: who does what, to whom, where,
-when, how and why. ACM turns that structure into a graph of the full action in its
-context. It predicts the consequences circle by circle (who is affected) and
-across the **blast radius**, layer by layer (where the effects reach, from the site
-of the action out to the earth). It stores every node as a vector so it can be
-compared with past actions. When the actor is **"I"**, the report is the model's
-view of its **own** planned action.
+When the actor is **"I"**, the report is the model's view of its **own** planned action:
+ACM becomes a check an agent can run before it acts.
 
 ![How ACM sees an action](docs/acm-vision.png)
 
-*Generated by [`scripts/draw_vision.py`](scripts/draw_vision.py) from a real run:
-the MLM parser plus the ACM engine. Nothing is placed by hand. Each ring shows what
-ACM's report put there. The coloured strips are the actual node vectors, and the
-scores on the right come from a real search of the graph vector store.*
-*The image predates the blast-radius layers (neighbour, organization, city and
-country) and still shows the original six circles. Regenerating it needs MLM's
-parser. The [blast radius diagram](#the-blast-radius) below shows every layer.*
+*Generated by [`scripts/draw_vision.py`](scripts/draw_vision.py) from a real run of the
+rule engine: the MLM parser plus the ACM engine, nothing placed by hand. The image predates
+the world layers and the full eight-ring radius; regenerating it needs MLM's parser.*
 
 ---
 
@@ -60,6 +79,7 @@ has these limits by design:
 | **It never says "I don't know"** | Gaps are filled with the most likely words. A missing cause becomes an invented one, and an unknown verb still gets a confident verdict. |
 | **Same question, different answers** | Sampling changes the outcome. Three runs of one prompt can disagree about who ends up with the car. |
 | **No physics** | Whether a pushed mug falls depends on mass, friction and distance to the edge. The model never simulates them. |
+| **One undifferentiated view** | Physics, people, records, institutions and the economy are all just text to it; nothing decides which of them an action actually touches. |
 | **The view stops at the people mentioned** | Neighbours, organizations, the country and the earth appear only if the text mentions them. |
 
 A real recording (SmolLM2-135M, local, `examples/llm_baseline.json`, made by
@@ -77,33 +97,121 @@ A real recording (SmolLM2-135M, local, `examples/llm_baseline.json`, made by
 A small base model makes the failure easy to see. Larger models fail less often, but
 in the same way, and the failure is harder to spot.
 
+---
+
+## How it works
+
+```mermaid
+flowchart BT
+    A["🎬 Action or event<br/>who acts, why, what happens"] --> P1["⚙️ 1 Physical world<br/>positions, holders, forces"]
+    P1 --> P2["👁️ 2 Perception<br/>who sees or hears it"]
+    P2 --> R["🧭 3 Consequence routing<br/>which layers, actors, systems"]
+    R --> H["🧠 4 Human and social"]
+    R --> D["💻 5 Digital"]
+    R --> B["🏭 6 Business"]
+    R --> S["🏛️ 7 Society"]
+    R --> E["🌍 8 Planetary"]
+    H & D & B & S & E --> C["Consequences<br/>layer · ring · status · evidence"]
+    C --> N["Possible next scenes<br/>and scene directions"]
+```
+
+1. **The action as data.** A scene is a script (`acm.scene/1`): place, time, actors with
+   goals and stated positions, objects with owners and holders, and ordered events
+   (action, dialogue, observation). A single sentence is parsed by MLM into the same
+   who · does what · to whom · where · when · why.
+2. **Physical state, event by event.** Each event's effects (`keys.holder = mark`) update
+   the scene state, so ACM knows what is true before and after every step: in the Car Sale,
+   the sale ends *disputed*, the car is still Sarah's and the debt is unpaid.
+3. **Perception.** Who could see or hear each event: Florence hears Sarah's objection, so
+   her next question follows from what she perceived.
+4. **Routing.** The consequence router (`acm.scene.layers.route`) sends every event to the
+   layers, people and objects that should examine it, and lists the rule that fired:
+   dialogue goes to human and social; someone else's property brings its owner in; a debt
+   goes to business and digital; a consequence citing the event routes it to that layer.
+5. **Each layer reports.** Consequences carry their layer, their ring, a status (`stated` ·
+   `possible` · `unknown` · `not identified`), the events that support them, and a source
+   (`scenario fact` · `authored demo` · `generated inference`). Feelings and thoughts are
+   only ever *possible*. A layer with nothing identified says so, never "no impact".
+6. **Next scenes.** Branches continue the scene under stated assumptions, from authored
+   demo content or the local model (validated, labelled, never given probabilities), and
+   play from the state where the scene ended.
+7. **Directions out.** The selected scene is exported as `acm.directions/1` for the 2D
+   player today and a 3D engine, physics and text-to-speech later.
+
+The rule engine follows the same path for one sentence: Phrase DNA → concepts and state
+changes → who it lands on → other actors' goals → the blast radius from scoped impact rules →
+a graph with vectors in a searchable store. A local LLM only *phrases* ACM's results; it
+never decides a consequence. Details: [the world layers](#the-world-layers-eight-layers-above-every-action),
+[the scene engine](#the-scene-engine-a-situation-as-a-script), and
+[Architecture](#architecture) with Steps 1–9 for the rule engine.
+
+---
+
 ## So what: ACM compared with LLM mode
 
-In ACM, **rules determine the outcomes and the LLM only explains them**:
+In ACM, **models and rules determine the outcomes and the LLM only explains them**:
 
 | | LLM mode | ACM |
 |---|---|---|
-| Output | the next likely words | explicit state changes: `has(Sarah, car) = true` |
-| Why it says so | hidden in the weights | every consequence carries its basis (`rule` · `simulation` · `observation`) and the rule that fired |
-| Unknowns | filled with plausible text | reported: "no rule matched" is never "no impact", and unknown places are not guessed |
+| Output | the next likely words | explicit state changes: `has(Sarah, car) = true`, `sale = disputed` |
+| Which systems are affected | whatever the text drifts to | a routing table: each event, the layers it goes to, and the rule that sent it there |
+| Why it says so | hidden in the weights | every consequence carries its basis, its supporting events and its source |
+| Unknowns | filled with plausible text | reported: "not identified" is never "no impact", and unknown places are not guessed |
+| Facts vs guesses | blended | stated · possible · unknown, and scenario fact · authored · generated, on every item |
 | Other people's goals | often forgotten or contradicted | checked one by one: advanced · enabled · blocked · at risk · hindered |
-| Reach | whoever the text mentions | the full blast radius, from self to the earth |
-| Physical actions | guessed from text | simulated in a physics engine using object properties |
+| Reach | whoever the text mentions | eight world layers × eight rings, from the actor to the world |
+| Physical actions | guessed from text | scene state today; simulated in a physics engine using object properties |
 | Repeatability | varies with sampling | same input, same report, same certainty |
 | Memory | the context window | a graph vector database of every analysed action |
-| Changing what it knows | retrain or fine-tune | edit a YAML pack; no Python, no retraining |
+| Changing what it knows | retrain or fine-tune | edit a YAML scene or pack; no Python, no retraining |
 
 **Where an LLM is still better:** breadth (it has seen every verb), fluency, and
 always having an answer for an unseen situation. That is why ACM keeps a local LLM
-to phrase its answers and to read free-form questions, but never lets it decide a
-consequence.
+to phrase its answers, read free-form questions and propose next scenes, which are
+validated and labelled as generated, but never lets it decide a consequence.
+
+---
+
+## What next
+
+Today ACM is a transparent baseline: the layers that work are the action, routing, and human
+and social layers; the others are partly modelled by rules and say so. Each next step puts a
+real model behind a layer, measured against that baseline.
+
+| Layer | Today | Next |
+|---|---|---|
+| ⚙️ 1 Physical world | positions, holders and owners; 2D matter.js stand-in in the physics lab | **Unreal Engine 5 in the loop** (Chaos Physics, Physical Materials, Movie Render Queue) driven by the scene directions, simulated events fed back as state changes; world models (V-JEPA 2-AC) behind the same interface ([docs/world_model_feasibility.md](docs/world_model_feasibility.md)) |
+| 👁️ 2 Perception | who sees or hears each event; replayed image and video detections | **real perception**: a vision-language model (Qwen3-VL) and a detector/tracker (YOLO), keeping the no-future-leakage rule |
+| 🧭 3 Routing | explicit rules plus cited evidence | more rules per domain, routing of model-generated branches, and a routing benchmark on annotated scenes |
+| 🧠 4 Human and social | authored scenes, optional model-generated branches | model-generated analysis (validated like branches), more scenes, people and objects together (a worker reacting to a falling box) |
+| 💻 5 Digital | explicit state changes and amounts | sandboxed models of real systems (registries, ledgers, permissions): run the change, compare records before and after |
+| 🏭 6 Business | obligations in the scene, organisation impact rules | process and policy models, contract and jurisdiction rule packs |
+| 🏛️ 7 Society | society and country impact rules | economic and political models (econometrics, agent-based, historical analogues), always labelled with their uncertainty |
+| 🌍 8 Planetary | earth impact rules | resource and emission models |
+
+Across all layers:
+
+1. **Layers that talk to each other.** Each layer reads state changes and writes new events
+   back; the router runs until nothing changes or a time horizon is reached. Certainty can
+   only drop from one hop to the next, and each layer keeps its own clock (physics in
+   milliseconds, people in minutes, institutions in days, the economy in months).
+2. **Bigger knowledge packs.** More concepts, verbs, impact rules, places and languages;
+   each is a YAML edit.
+3. **Learned components that beat the baseline.** A learned embedder, then trained
+   consequence models, scored on the inference suite against the rules.
+4. **An AI checking its own actions.** When the actor is "I", the report is the agent's
+   view of its own planned action: see the consequences on every layer, then decide.
 
 ---
 
 ## Contents
 
+- [What ACM is](#what-acm-is)
 - [Why ACM exists: what an LLM cannot do](#why-acm-exists-what-an-llm-cannot-do)
+- [How it works](#how-it-works)
 - [So what: ACM compared with LLM mode](#so-what-acm-compared-with-llm-mode)
+- [What next](#what-next)
+
 - [The scene engine: a situation as a script](#the-scene-engine-a-situation-as-a-script)
   - [The world layers: eight layers above every action](#the-world-layers-eight-layers-above-every-action)
   - [What you can do now](#what-you-can-do-now)
@@ -131,7 +239,7 @@ consequence.
 - [Honesty rules](#honesty-rules)
 - [Extending ACM](#extending-acm)
 - [Limitations](#limitations)
-- [What next](#what-next)
+- [Tests and scripts](#tests-and-scripts)
 - [Project layout](#project-layout)
 
 ---
@@ -142,7 +250,8 @@ The scene engine represents a situation as a **script**: where and when it happe
 there and how they are related, each person's goals and what they know, which objects are
 present and who owns or holds them, and an ordered list of actions and dialogue. From that
 script it builds the **state of the scene before and after every event**. It then shows the
-**consequences** for the people involved and the wider world, scope by scope, and offers
+**consequences** for the people involved and the wider world, routed to the world layers
+that should examine each event and placed on the rings of the radius, and offers
 **possible next scenes**, each with its assumptions and reasoning. The selected scene can
 be **exported as structured scene directions** for future 3D, physics and text-to-speech
 integrations.
@@ -151,7 +260,8 @@ integrations.
 flowchart TD
     INPUT["Initial scene<br/>people, context, goals"] --> SCRIPT["Structured script<br/>actions and dialogue"]
     SCRIPT --> STATE["Scene state<br/>after every event"]
-    STATE --> ANALYSIS["ACM analysis<br/>consequences and conflicts"]
+    STATE --> ROUTE["Consequence routing<br/>event → world layers"]
+    ROUTE --> ANALYSIS["ACM analysis<br/>consequences per layer and ring"]
     ANALYSIS --> NEXT["Possible next scenes"]
     NEXT --> SELECT["User selects a branch"]
     SELECT --> DIRECTOR["Scene directions<br/>acm.directions/1"]
@@ -437,6 +547,12 @@ needed: the dashboard renders whatever the bundle contains.
 ---
 
 ## The blast radius
+
+*The radius is the **how far** axis: rings from the actor out to the world. The rule
+engine's code and packs call its outer rings "layers" (neighbour, organization, city,
+country, society, earth); in this README those are **rings**, and **layers** means the
+[world layers](#the-world-layers-eight-layers-above-every-action), the **which system**
+axis.*
 
 ### Start with a phrase
 
@@ -1397,31 +1513,6 @@ attribute and pass it as `ConsequenceEngine(embedder=...)`.
 
 ---
 
-## What next
-
-The current system is a transparent, rule-based baseline. Each next step replaces one
-part with something learned or simulated, and is measured against that baseline:
-
-1. **Unreal Engine 5 in the loop.** Replace the 2D matter.js stand-in with a 3D Unreal
-   scene (Chaos Physics, Physical Materials, Movie Render Queue) behind the
-   `TransitionPredictor` interface, and feed simulated events back into ACM.
-2. **Real perception.** Swap the hand-authored image and video replays for a
-   vision-language model (Qwen3-VL) and a detector/tracker (YOLO), keeping the
-   no-future-leakage rule.
-3. **Bigger knowledge packs.** More concepts, verbs, impact rules, places and languages.
-   Each is a YAML edit.
-4. **Learned components that beat the baseline.** A learned embedder, then trained
-   consequence models, scored on the inference suite against the rules.
-5. **World models.** V-JEPA 2-AC and similar models behind the same transition
-   interface ([docs/world_model_feasibility.md](docs/world_model_feasibility.md)).
-6. **An AI checking its own actions.** When the actor is "I", the report is the agent's
-   view of its own planned action. ACM becomes a pre-action check: see the
-   consequences, then decide.
-7. **People and objects together.** Human responses to physical events, such as a
-   worker reacting to a falling box. This is a concept today and not built yet.
-
----
-
 ## Tests and scripts
 
 ```bash
@@ -1438,7 +1529,8 @@ ACM/
   start.sh           launcher: starts the whole POC (API + dashboard); also cli, any acm command, tests
   dash.sh            alias for start.sh
   scenes/            scene-engine scripts (acm.scene/1): car_sale.yaml
-  src/acm/scene/     scene engine: schema, validate, state, providers, directions, bundle
+  src/acm/scene/     scene engine: schema, validate, state, layers (world layers + router),
+                     providers, directions, bundle
   packs/universal/   states, concepts, impacts (per layer), places (gazetteer),
                      simulation (predicted change → state), settings
   packs/<lang>/      actions (verb → concept, goal markers), categories
