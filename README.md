@@ -105,6 +105,7 @@ consequence.
 - [Why ACM exists: what an LLM cannot do](#why-acm-exists-what-an-llm-cannot-do)
 - [So what: ACM compared with LLM mode](#so-what-acm-compared-with-llm-mode)
 - [The scene engine: a situation as a script](#the-scene-engine-a-situation-as-a-script)
+  - [The world layers: eight layers above every action](#the-world-layers-eight-layers-above-every-action)
   - [What you can do now](#what-you-can-do-now)
   - [The demo: Mark, Sarah and Florence](#the-demo-mark-sarah-and-florence)
   - [Facts, authored content, inferences and unknowns](#facts-authored-content-inferences-and-unknowns)
@@ -158,6 +159,56 @@ flowchart TD
     DIRECTOR --> AUDIO["Transcript + browser voice (now)<br/>TTS provider (planned)"]
 ```
 
+### The world layers: eight layers above every action
+
+ACM's world model is a **stack of layers**, read bottom-up like the OSI network model it
+borrows its shape from. An action or event is the source. It happens in the physical world
+and is perceived. The **consequence router** then decides which world models, actors and
+systems should examine it. Each layer above the router has its own kind of model.
+
+| Level | ACM world layer | What it examines | OSI analogy | In ACM today |
+|---:|---|---|---|---|
+| **8** | 🌍 Planetary and ecosystem | Resources, pollution, biodiversity and sustainability | (beyond the stack) | partly: earth-scoped impact rules; no ecosystem model |
+| **7** | 🏛️ Society and collective systems | Economy, markets, society, public governance and politics | Application | partly: society/country impact rules; no economic or political model |
+| **6** | 🏭 Business and institutions | Organisations, operations, processes, finance and policies | Presentation | partly: obligations in the scene, organisation impact rules |
+| **5** | 💻 Digital and information systems | Applications, records, calculations, permissions and workflows | Session | partly: explicit state changes and amounts; no external system connected |
+| **4** | 🧠 Human and social | Goals, behaviour, dialogue, relationships and group reactions | Transport | working: the script model and next scenes (authored or local model) |
+| **3** | 🧭 **Consequence routing** | Which world models, actors and systems should examine an event | Network (routing) | working: `acm.scene.layers.route` |
+| **2** | 👁️ Perception and observation | Images, video, audio, speech, sensors and observations | Data Link | partly: who sees or hears each event; image/video detection is replayed |
+| **1** | ⚙️ Physical world | Objects, materials, movement, forces, location and energy | Physical | partly: positions, holders, owners (2D); 3D physics (Unreal) planned |
+| **Source** | 🎬 Action or event | Who acts, why, their goal and desired outcome, and what happens | Source | working: the scene script |
+
+The OSI column is an analogy for the stack's shape, not a claim that networking concepts
+apply. Inserting the router at level 3 (OSI's routing layer) moves the human and social layer
+and everything above it up one level compared with the first draft of this table.
+
+**Layers and rings are two axes.** A layer says *which kind of system* a consequence is about
+and which model examines it; a ring (scope) says *how far* it reaches, from the actor to the
+world. Every consequence in a scene file has both, e.g. `scope: participants, layer: business`.
+Consequences belong to levels 1, 2 and 4 to 8; validation rejects `action` and `routing`.
+
+**The router** (`acm.scene.layers.route`) is a set of explicit rules over each event, and every
+route lists the rules that fired:
+
+| Rule | Routed to |
+|---|---|
+| a physical verb (move, hold, offer, place, take, gesture), a physical object, or a change of position or holder | physical |
+| every event: speech is heard and actions are seen by the others present; observations by everyone | perception |
+| dialogue, or an action aimed at a person | human and social |
+| an object owned by someone other than the actor (the owner becomes involved) | human and social |
+| a change to an owned object, or an obligation: records and calculations may apply | digital |
+| an obligation (debt, agreement) | business |
+| a consequence at a layer cites the event as evidence | that layer |
+
+In the Car Sale, `e2` (Mark offers the Mini) goes to perception (heard by Sarah and Florence),
+human and social (dialogue; the car is Sarah's, so she is involved) and digital (an owned
+object's status changes). `e7` (the keys stay with Mark) also reaches business, because the
+unpaid debt (`c5`) cites it. Society and planetary receive no event and record *not
+identified*, which means nothing was identified, not that nothing happens.
+
+The dashboard shows this as section **D · World layers** of `/acm/scenario`: the stack, the
+consequences at each layer, the route of every event with its reasons, and a routing table.
+The home page shows the generic stack under *What is ACM?*.
 ### What you can do now
 
 - Open **The Car Sale** in the dashboard (`/acm/scenario`), with no API key, GPU or internet.
@@ -289,7 +340,7 @@ launcher clones it if missing). The scene engine itself needs only `pydantic` an
 ```bash
 ./start.sh            # sets up .venv, writes the demo data (incl. scene_car_sale.json), starts API + dashboard
 # open http://127.0.0.1:3010/acm/scenario      (menu: Prediction Modes → Scene engine: The Car Sale)
-#      ...?section=E opens a section directly, ...?all=1 shows all sections on one page
+#      ...?section=A..F opens a section directly (D: world layers), ...?all=1 shows all sections on one page
 ./start.sh stop
 ```
 
@@ -299,6 +350,8 @@ Without the dashboard:
 acm scene validate car_sale        # car_sale: valid (3 actors, 4 objects, 7 events, 4 authored branches)
 acm scene show                     # the script as text
 acm scene analyze                  # the demo analysis as JSON
+acm scene layers                   # the world-layer stack with this scene's consequences per layer
+acm scene route                    # where the consequence router sends each event, and why
 acm scene select --branch A        # branch A with its timeline and directions
 acm scene export --branch A -o a.json
 acm scene bundle -o ../SLM/web/public/demo/scene_car_sale.json   # what the dashboard reads
@@ -308,7 +361,7 @@ acm scene branches --provider model                              # needs a local
 Checks:
 
 ```bash
-pytest                              # 101 tests (40 for the scene engine); no GPU, no network
+pytest                              # 106 tests (45 for the scene engine); no GPU, no network
 cd ../SLM/web && npm run typecheck  # dashboard types
 ```
 
@@ -519,7 +572,7 @@ git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
 python -m venv .venv && source .venv/bin/activate
 pip install -e ../SLM -e ".[dev]"
-pytest                                   # 101 tests, no parser model needed
+pytest                                   # 106 tests, no parser model needed
 ```
 
 Or let the launcher do it. **`./start.sh` starts the whole POC.** It creates `.venv`
@@ -1372,7 +1425,7 @@ part with something learned or simulated, and is measured against that baseline:
 ## Tests and scripts
 
 ```bash
-pytest                              # 101 tests: CoNLL-U, multimodal and scene fixtures, no GPU, no network
+pytest                              # 106 tests: CoNLL-U, multimodal and scene fixtures, no GPU, no network
 python -m acm.cli demo              # multimodal demo, self-contained HTML report
 python scripts/make_fixtures.py     # regenerate fixtures (needs MLM's parser); review the diff
 python scripts/draw_vision.py       # regenerate docs/acm-vision.svg from a real run
@@ -1395,7 +1448,7 @@ ACM/
   src/acm/world/     transition interface, tabletop simulator, PyBullet / V-JEPA stubs
   scripts/           make_fixtures.py, draw_vision.py, make_inference_suite.py, make_llm_baseline.py
   examples/          inference_suite.yaml (+ frozen .conllu), llm_baseline.json (recorded LLM answers)
-  tests/             101 tests over committed fixtures
+  tests/             106 tests over committed fixtures
   docs/              multimodal.md, world_model_feasibility.md, demo/tabletop_report.html,
                      acm-vision.svg / .png
 ```

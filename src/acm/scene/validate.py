@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable
 
-from acm.scene.schema import VERBS, Branch, Consequence, Event, EventType, Inference, Scene, Status
+from acm.scene.schema import CONSEQUENCE_LAYERS, VERBS, Branch, Consequence, Event, EventType, Inference, Scene, Status
 
 
 class SceneError(ValueError):
@@ -70,6 +70,8 @@ def _check_consequences(items: list[Consequence], scene: Scene, events: set[str]
         tag = f"{where} consequence {c.id}"
         if scopes and c.scope not in scopes:
             problems.append(f"{tag}: unknown scope {c.scope!r}")
+        if c.layer not in CONSEQUENCE_LAYERS:
+            problems.append(f"{tag}: layer {c.layer.value!r} holds events or routes, not consequences")
         for a in c.affected:
             if a not in parties:
                 problems.append(f"{tag}: unknown affected party {a!r}")

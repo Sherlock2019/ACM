@@ -187,6 +187,7 @@ demo:
   consequences:
     - id: c1
       scope: actor
+      layer: human_social
       affected: [mark]
       description: "His proposed repayment plan is challenged by Sarah's objection."
       goal: "Settle the €5,000 debt to Florence"
@@ -196,6 +197,7 @@ demo:
       horizon: immediate
     - id: c2
       scope: actor
+      layer: human_social
       affected: [mark, sarah]
       description: "His relationship with Sarah may be affected."
       evidence: [e2, e4]
@@ -205,6 +207,7 @@ demo:
       questions: ["How do Mark and Sarah usually settle disagreements?"]
     - id: c3
       scope: participants
+      layer: human_social
       affected: [sarah]
       description: "Sarah objects: her car is offered without her agreement."
       evidence: [e2, e4]
@@ -213,6 +216,7 @@ demo:
       horizon: immediate
     - id: c4
       scope: participants
+      layer: human_social
       affected: [florence]
       description: "Florence must decide how to respond to the dispute."
       evidence: [e5, e6]
@@ -221,6 +225,7 @@ demo:
       horizon: later
     - id: c5
       scope: participants
+      layer: business
       affected: [florence, mark, sarah]
       description: "The €5,000 debt remains unpaid at the end of the scene."
       goal: "Settle the €5,000 debt to Florence"
@@ -230,6 +235,7 @@ demo:
       horizon: immediate
     - id: c6
       scope: physical
+      layer: physical
       affected: [car, keys]
       description: "The car and keys remain in the garage during the depicted scene; the keys stay with Mark."
       evidence: [e7]
@@ -237,6 +243,7 @@ demo:
       horizon: immediate
     - id: c7
       scope: relationships
+      layer: human_social
       affected: [mark, sarah, florence]
       description: "The disagreement could affect the friendship between the three."
       evidence: [e4, e6]
@@ -245,15 +252,32 @@ demo:
       horizon: later
     - id: c8
       scope: city
+      layer: digital
       affected: [car]
       description: "Vehicle registration may become relevant if a valid sale is eventually agreed."
       status: possible
       horizon: later
       assumptions: ["A valid sale is agreed later."]
       questions: ["Does Mark have authority to sell the car?"]
-    - { id: c9,  scope: society, description: "No specific societal impact is established.", status: not_identified }
-    - { id: c10, scope: economy, description: "No national economic impact is established.", status: not_identified }
-    - { id: c11, scope: world,   description: "No specific global impact is established.",   status: not_identified }
+    - id: c12
+      scope: participants
+      layer: perception
+      affected: [mark, sarah, florence]
+      description: "Everyone present sees the keys held out and hears Sarah's objection; Florence asks about consent right after hearing it."
+      evidence: [e3, e4, e6]
+      status: stated
+      horizon: immediate
+    - id: c13
+      scope: city
+      layer: digital
+      affected: [car, debt]
+      description: "No record changes during the scene: no payment is made and no registration transfer is started."
+      evidence: [e7]
+      status: stated
+      horizon: immediate
+    - { id: c9,  scope: society, layer: society, description: "No specific societal impact is established.", status: not_identified }
+    - { id: c10, scope: economy, layer: society, description: "No national economic impact is established.", status: not_identified }
+    - { id: c11, scope: world,   layer: planetary, description: "No specific global, environmental or ecosystem impact is established.", status: not_identified }
 
   branches:
     - id: A
@@ -286,7 +310,7 @@ demo:
         sarah:    [ { kind: feeling, text: "Might feel heard and less worried." } ]
         florence: [ { kind: feeling, text: "Might feel more comfortable, though still waiting for her money." } ]
       consequences:
-        - { id: ca1, scope: participants, affected: [florence], description: "Repayment becomes a schedule instead of a handover.", evidence: [a5], status: possible, effect: { florence: mixed }, horizon: later }
+        - { id: ca1, scope: participants, layer: business, affected: [florence], description: "Repayment becomes a schedule instead of a handover.", evidence: [a5], status: possible, effect: { florence: mixed }, horizon: later }
       unknowns: ["Can they afford regular payments?", "How long can Florence wait?"]
 
     - id: B
@@ -312,7 +336,7 @@ demo:
         sarah:    [ { kind: feeling, text: "Might feel relieved, and still upset with Mark." } ]
         florence: [ { kind: feeling, text: "Might feel awkward about being caught in the middle." } ]
       consequences:
-        - { id: cb1, scope: participants, affected: [florence, mark, sarah], description: "The debt remains unpaid.", evidence: [b1], status: stated, effect: { florence: negative, mark: negative, sarah: negative }, horizon: immediate }
+        - { id: cb1, scope: participants, layer: business, affected: [florence, mark, sarah], description: "The debt remains unpaid.", evidence: [b1], status: stated, effect: { florence: negative, mark: negative, sarah: negative }, horizon: immediate }
       unknowns: ["Will the friendship be affected?", "What will Mark and Sarah propose next?"]
 
     - id: C
@@ -341,7 +365,7 @@ demo:
         sarah:    [ { kind: feeling, text: "Might feel angry or disregarded." } ]
         florence: [ { kind: feeling, text: "Might feel very uncomfortable." } ]
       consequences:
-        - { id: cc1, scope: relationships, affected: [mark, sarah, florence], description: "The relationships between all three are strained.", evidence: [c_1, c_2, c_5], status: possible, effect: { mark: negative, sarah: negative, florence: negative }, horizon: later }
+        - { id: cc1, scope: relationships, layer: human_social, affected: [mark, sarah, florence], description: "The relationships between all three are strained.", evidence: [c_1, c_2, c_5], status: possible, effect: { mark: negative, sarah: negative, florence: negative }, horizon: later }
       unknowns: ["Can they de-escalate and discuss alternatives?", "Would Florence accept the car at all while Sarah objects?"]
 
     - id: D
@@ -368,5 +392,5 @@ demo:
         sarah:    [ { kind: feeling, text: "Might feel more in control, though still reluctant." } ]
         florence: [ { kind: feeling, text: "Might feel reassured that any deal would be agreed by Sarah." } ]
       consequences:
-        - { id: cd1, scope: city, affected: [car], description: "Registration would matter only if Sarah agrees to a sale.", evidence: [d1], status: possible, horizon: later, assumptions: ["Sarah agrees to sell."] }
+        - { id: cd1, scope: city, layer: digital, affected: [car], description: "Registration would matter only if Sarah agrees to a sale.", evidence: [d1], status: possible, horizon: later, assumptions: ["Sarah agrees to sell."] }
       unknowns: ["Does Sarah ultimately agree, and on what terms?", "What would she use for transport?"]

@@ -55,6 +55,24 @@ class Horizon(str, Enum):
     UNKNOWN = "unknown"
 
 
+class Layer(str, Enum):
+    """ACM's world-model layers, bottom-up (definitions and the router: acm.scene.layers)."""
+
+    ACTION = "action"              # 0 the source: the action or event
+    PHYSICAL = "physical"          # 1
+    PERCEPTION = "perception"      # 2
+    ROUTING = "routing"            # 3 decides which layers examine an event
+    HUMAN_SOCIAL = "human_social"  # 4
+    DIGITAL = "digital"            # 5
+    BUSINESS = "business"          # 6
+    SOCIETY = "society"            # 7
+    PLANETARY = "planetary"        # 8
+
+
+#: Layers a consequence can belong to (0 is the event itself, 3 is the router).
+CONSEQUENCE_LAYERS = [x for x in Layer if x not in (Layer.ACTION, Layer.ROUTING)]
+
+
 class EventType(str, Enum):
     ACTION = "action"
     DIALOGUE = "dialogue"
@@ -170,6 +188,7 @@ class Scope(_Model):
 class Consequence(_Model):
     id: str
     scope: str
+    layer: Layer = Field(description="which world layer the consequence is about (not action or routing)")
     affected: list[str] = Field(default_factory=list, description="actor, object or system ids")
     description: str
     goal: str | None = None

@@ -45,7 +45,8 @@ def main(argv: list[str] | None = None) -> int:
                       help="where to write the self-contained HTML report")
     demo.add_argument("--json", type=Path, default=None, help="also write the full demo result as JSON")
     scene = sub.add_parser("scene", help="the scene engine: a structured script, its consequences, next scenes")
-    scene.add_argument("action", choices=["list", "validate", "show", "analyze", "branches", "select", "export", "bundle"])
+    scene.add_argument("action", choices=["list", "validate", "show", "analyze", "layers", "route", "branches", "select",
+                                          "export", "bundle"])
     scene.add_argument("scene", nargs="?", default="car_sale", help="scene id (scenes/<id>.yaml) or a path")
     scene.add_argument("--branch", default=None, help="branch id, for select / export")
     scene.add_argument("--provider", choices=["demo", "model"], default="demo",
@@ -122,8 +123,8 @@ def main(argv: list[str] | None = None) -> int:
 
 def scene_command(args: argparse.Namespace) -> int:
     from acm.scene import (
-        DemoProvider, ProviderError, SceneError, bundle, directions, generate_branches, load_scene, scene_ids,
-        select_branch,
+        LAYERS, DemoProvider, ProviderError, SceneError, bundle, directions, generate_branches, load_scene, route,
+        scene_ids, select_branch,
     )
 
     def emit(data) -> None:
@@ -153,6 +154,27 @@ def scene_command(args: argparse.Namespace) -> int:
             print(f"  {e.order:>2}. {who + ': ' if e.dialogue else ''}{e.dialogue or e.description}")
     elif args.action == "analyze":
         emit(DemoProvider().analyze(scene))
+    elif args.action == "layers":
+        consequences = DemoProvider().analyze(scene).consequences
+        for layer in LAYERS:
+            here = [c for c in consequences if c.layer.value == layer["id"]]
+            print(f"{layer['level']}  {layer['icon']} {layer['name']:<32} [{layer['status']}]  OSI: {layer['osi']}")
+            for c in here:
+                print(f"     {c.id:<4} {c.status.value:<14} {c.description}")
+            if layer["id"] == "action":
+                print(f"     {scene.action or scene.description}")
+            elif layer["id"] == "routing":
+                print(f"     routes {len(scene.events)} events (acm scene route)")
+            elif not here:
+                print("     (no consequence recorded at this layer)")
+    elif args.action == "route":
+        table = route(scene, consequences=DemoProvider().analyze(scene).consequences)
+        if args.out:
+            emit(table)
+        else:
+            for row in table:
+                print(f"{row['event']}: " + " · ".join(
+                    f"{r['layer']} ({'; '.join(r['reasons'])})" for r in row["routes"]))
     elif args.action == "branches":
         try:
             result = generate_branches(scene, args.provider, fallback=not args.no_fallback)

@@ -10,7 +10,7 @@ import yaml
 
 from acm import llm
 from acm.scene import (
-    DIRECTIONS_SCHEMA, SCENES_DIR, DemoProvider, ModelProvider, ProviderError, Scene, SceneError, Source, Status,
+    CONSEQUENCE_LAYERS, DIRECTIONS_SCHEMA, LAYERS, SCENES_DIR, DemoProvider, Layer, route, ModelProvider, ProviderError, Scene, SceneError, Source, Status,
     bundle, check_directions, directions, final_state, generate_branches, load_scene, select_branch, timeline,
     validate_scene,
 )
@@ -126,6 +126,53 @@ def test_analysis_covers_all_eight_scopes(scene):
     assert not any("settled" in c.description and c.status == Status.STATED for c in analysis.consequences)
 
 
+# --- world layers and routing ---------------------------------------------------------------
+
+def test_layer_stack_is_ordered_bottom_up():
+    assert [l["level"] for l in LAYERS] == list(range(9))
+    assert [l["id"] for l in LAYERS] == [x.value for x in Layer]
+    assert LAYERS[0]["id"] == "action" and LAYERS[3]["id"] == "routing" and LAYERS[3]["osi"] == "Network"
+    assert LAYERS[-1]["id"] == "planetary"
+    assert all(l["status"] in {"working", "partial", "planned"} for l in LAYERS)
+
+
+def test_analysis_covers_every_consequence_layer(scene):
+    layers = {c.layer for c in DemoProvider().analyze(scene).consequences}
+    assert layers == set(CONSEQUENCE_LAYERS)
+    planetary = [c for c in DemoProvider().analyze(scene).consequences if c.layer == Layer.PLANETARY]
+    assert all(c.status == Status.NOT_IDENTIFIED for c in planetary)
+
+
+def test_consequence_needs_a_world_layer(raw):
+    data = copy.deepcopy(raw)
+    del data["demo"]["consequences"][0]["layer"]
+    with pytest.raises(ValueError):
+        Scene.model_validate(data)
+    problems = _invalid(raw, lambda d: d["demo"]["consequences"][0].update(layer="routing"))
+    assert any("holds events or routes" in p for p in problems)
+
+
+def test_router_sends_each_event_to_the_right_layers(scene):
+    table = {row["event"]: {r["layer"]: r for r in row["routes"]}
+             for row in route(scene, consequences=DemoProvider().analyze(scene).consequences)}
+    assert set(table) == {e.id for e in scene.events}
+    assert set(table["e1"]["perception"]["actors"]) == {"mark", "sarah", "florence"}
+    offer = table["e2"]  # Mark offers Sarah's car: heard, social, the owner is involved, records may apply
+    assert {"perception", "human_social", "digital"} <= set(offer)
+    assert "sarah" in offer["human_social"]["actors"]
+    assert "physical" in table["e3"] and "keys" in table["e3"]["physical"]["objects"]
+    assert all(r["reasons"] for routes in table.values() for r in routes.values())
+    assert not any(l in routes for routes in table.values() for l in ("action", "routing"))
+
+
+def test_every_cited_event_is_routed_to_its_consequence_layer(scene):
+    consequences = DemoProvider().analyze(scene).consequences
+    table = {row["event"]: {r["layer"] for r in row["routes"]} for row in route(scene, consequences=consequences)}
+    for c in consequences:
+        for ev in c.evidence:
+            assert c.layer.value in table[ev], (c.id, ev)
+
+
 # --- branches -----------------------------------------------------------------------------
 
 @pytest.mark.parametrize("bid,title,assumption", [
@@ -188,6 +235,9 @@ def test_bundle_is_json(scene):
     data = json.loads(json.dumps(bundle(scene), ensure_ascii=False))
     assert data["scene"]["id"] == "car_sale" and "demo" not in data["scene"]
     assert len(data["branches"]) == 4 and all(b["source"] == "authored_demo" for b in data["branches"])
+    assert len(data["layers"]) == 9 and len(data["routing"]) == len(scene.events)
+    assert set(data["branch_routing"]) == {"A", "B", "C", "D"}
+    assert all("layer" in c for c in data["analysis"]["consequences"])
 
 
 # --- providers ----------------------------------------------------------------------------
