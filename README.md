@@ -88,9 +88,13 @@ ACM has two engines that share this model and the same honesty rules:
 When the actor is **"I"**, the report is the model's view of its **own** planned action:
 ACM becomes a check an agent can run before it acts.
 
-![How ACM sees an action: the actor at the centre, the action around it, and the impact spreading outward world by world](docs/acm-vision.svg)
+[![How ACM sees an action: the origin actor at the centre, its action around it, and the impact spreading outward through the eight worlds](docs/acm-vision.svg)](docs/acm-vision.svg)
 
-*Animated: the origin actor (red dummy) acts; its action (red vectors) reaches the other
+**[⛶ Open the radar full screen](docs/acm-vision.svg)** (click the image too; it stays animated).
+
+*The rings are the eight worlds, from the centre out in the same order as the
+[world-layers stack](docs/world-layers.svg): atomic, physical, perception, human and animal
+behaviour, digital, business, society and economy, earth. Animated: the origin actor (red dummy) acts; its action (red vectors) reaches the other
 actors in the same space (blue dummies), whose reactions (blue vectors) carry the
 consequence onward; and the impact spreads outward world by world by proximity, each ring
 lighting up as the wave reaches it. A reaction here is the consequence for that actor's
@@ -158,7 +162,13 @@ flowchart BT
    actors with goals (their desired outcomes) and stated positions, objects with owners
    and holders, and ordered events (action, dialogue, observation). A single sentence is
    parsed by MLM into the same who · does what · to whom · where · when · why.
-2. **Prediction routing.** The consequence router (`acm.scene.layers.route`) sends every
+2. **Prediction routing: the WHERE of the phrase.** Routing starts from the world the
+   action itself happens in, which is the WHERE of its Phrase DNA: throw a ball *in the
+   park* (physical), send a message *on Facebook*, post an image or send an email
+   (digital), buy something *at a shop* (economy), stream or post *on a platform* (media),
+   vote *at the polls* or protest *in the street* (politics, in society). Routing by the
+   WHERE is the design; today the consequence router (`acm.scene.layers.route`) decides
+   from each event's verb, type, objects and effects. It sends every
    event to the worlds, people and objects that should examine it, and lists the rule that
    fired: dialogue goes to human and social; someone else's property brings its owner in;
    a debt goes to business and digital; a consequence citing the event routes it to that
