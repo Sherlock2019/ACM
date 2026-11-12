@@ -76,8 +76,8 @@ git clone git@github.com:Sherlock2019/ACM.git && cd ACM && ./start.sh   # → ht
 
 ## What next: build it with us
 
-Built today: the shared meaning (MLM), routing, state changes, other actors' goals, 8 scenes and
-a 2D physics lab, with rules standing in for most worlds' models. Connecting the real specialist
+Built today: the shared meaning (MLM), routing, state changes, other actors' goals and a
+2D physics lab, with rules standing in for most worlds' models. Connecting the real specialist
 models is the next step, and everything not built yet is labelled.
 
 To finish it, we need **top AI talent**: physics simulation (Unreal Engine 5), computer vision,

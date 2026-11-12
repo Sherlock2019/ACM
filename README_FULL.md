@@ -34,14 +34,14 @@ ACM predicts the consequence in each world by those laws.
 |---|---|---|
 | 🌍 Earth (planetary) | ecology, climate, resource cycles, biodiversity | partly: earth-scoped impact rules; no ecosystem model |
 | 🏛️ Society & economy | economic, legal and social laws | partly: society and country impact rules; no economic or political model |
-| 🏭 Business & institutions | contracts, policies, accounting, regulation | partly: obligations in scenes, organisation impact rules |
+| 🏭 Business & institutions | contracts, policies, accounting, regulation | partly: obligation and organisation impact rules |
 | 💻 Digital systems | data, logic, permissions, protocols, workflows | partly: explicit state changes and amounts |
-| 🧠 Human & animal behaviour | behavioural and psychological laws | working: scene scripts, goals, next scenes |
+| 🧠 Human & animal behaviour | behavioural and psychological laws | working: other actors' goals checked (advanced, blocked, at risk) |
 | 👁️ Perception | vibration and signals: light, sound, sensing | partly: who sees or hears each event; image/video detections are replayed |
 | ⚙️ Physical | force, motion, gravity, friction, energy | partly: positions, holders, owners; a 2D physics lab; Unreal Engine 5 planned |
 | ⚛️ Atomic & molecular | atomic and chemical laws | planned (inside the physical layer in code); the physics lab applies a fracture rule |
-| 🧭 Prediction routing | none: picks the worlds whose laws apply | working: `acm.scene.layers.route` |
-| 🎬 Action | the cause: actor, goal, action, as Phrase DNA | working: MLM parser and scene scripts |
+| 🧭 Prediction routing | none: picks the worlds whose laws apply | working: explicit rules over verb, type and objects |
+| 🎬 Action | the cause: actor, goal, action, as Phrase DNA | working: MLM parser |
 
 Every consequence sits on **two axes**: its **world** (which laws judge it) and its **ring**
 (how far it reaches, from the actor and the other participants out to the city, society, the
@@ -98,95 +98,27 @@ flowchart BT
     P --> REP["Consequences per world and ring<br/>status · evidence · source"]
     C2 --> REP
     REP --> G["Compared with the desired outcome"]
-    G --> N["Possible next scenes · scene directions"]
 ```
 
 1. **The action, as data.** It arrives as text, an image, a video or audio. MLM turns a sentence
-   into Phrase DNA (who · does what · to whom · where · when · why); a scene is a script
-   (`acm.scene/1`) with actors, goals, objects and ordered events.
+   into Phrase DNA (who · does what · to whom · where · when · why).
 2. **Routing by the WHERE.** The action's WHERE names its world: throw a ball *in the park*
    (physical), post *on Facebook* or send an email (digital), buy *at a shop* (economy), vote
    *at the polls* or protest *in the street* (politics, in society). *Routing by the WHERE is
-   the design; today the router decides from each event's verb, type, objects and effects
-   ([rules below](#the-next-status-engine)).*
-3. **Each world predicts by its own laws.** Effects update the state event by event (in the car
-   sale, the sale ends *disputed*, the car is still Sarah's, the debt unpaid); perception tracks
-   who saw or heard what; the other worlds apply their rules.
+   the design; today the router decides from each event's verb, type, objects and effects.*
+3. **Each world predicts by its own laws.** State changes (`has(Sarah, car) = true`), who saw or
+   heard what, and each world's rules for what the action does there.
 4. **Other actors react.** Each actor's goal is checked against the predicted state: advanced,
    enabled, blocked, at risk or hindered.
 5. **The cascade.** A consequence in one world affects its neighbours **by proximity**: the cup
    falls, people hear the crash, the owner is annoyed, a report is logged. Worlds can also change
    together (**synchronicity**), which counts as correlation, never cause. *Design, not built yet:
    ACM reports consequences per world but does not yet pass them from one world to the next.*
-6. **Compared with the desired outcome, then next scenes.** Branches continue the scene under
-   stated assumptions (authored, or from a local model, validated and labelled) and can be
-   exported as `acm.directions/1`.
+6. **Compared with the desired outcome:** does the action get the actor what they wanted, and
+   what else does it change?
 
 A local LLM only **phrases** ACM's results and reads free-form questions; it never decides a
-consequence. Two engines share this model:
-
-| Engine | Input | Output | Where |
-|---|---|---|---|
-| **Next Status Engine** | a situation as a script: people, goals, objects, actions, dialogue | state after every event, routing to the worlds, consequences per world and ring, next scenes, scene directions | [`src/acm/scene/`](src/acm/scene/), [`scenes/`](scenes/), dashboard `/acm/scenario` |
-| **Rule engine** | one action sentence + context sentences | MLM parse → state changes → other actors' goals → the blast radius from YAML rule packs → a graph with vectors | [`src/acm/engine.py`](src/acm/engine.py), [`packs/`](packs/), dashboard `/acm` |
-
-### The Next Status Engine
-
-**What it is for:** playing a situation forward step by step, to see the **next status** of the world
-and of every actor before it happens. It keeps the facts straight over many steps (who owns
-what, who knows what), lets other actors react to what they actually saw and heard, checks an
-agent's proposed next action against the current status, and compares possible futures. The
-rule engine gives the full reach of one action; the Next Status Engine shows how a situation
-unfolds, which is what an agent needs to choose its next move.
-
-A scene is a **script**: where and when, who is there (relationships, goals, what they know),
-objects and who owns or holds them, and ordered actions and dialogue. The engine computes the
-state after every event, routes each event to the worlds, shows consequences per world and ring,
-offers next scenes, and exports the chosen one as `acm.directions/1` for the 2D player now and
-3D, physics and text-to-speech later.
-
-| Scene | Origin actor → action | WHERE |
-|---|---|---|
-| [`car_sale`](scenes/car_sale.yaml) | Mark offers Sarah's car to Florence to settle a €5,000 debt | economy |
-| [`iphone_gift`](scenes/iphone_gift.yaml) | Mark offers Sarah an iPhone 18 bought on a 24-month plan | economy |
-| [`beach_post`](scenes/beach_post.yaml) | Sarah posts a photo of Mark on Facebook on his sick day | digital |
-| [`park_ball`](scenes/park_ball.yaml) | Leo throws a ball in the park; a window breaks | physical |
-| [`factory_protest`](scenes/factory_protest.yaml) | Florence joins a street protest against a chemical factory | politics |
-| [`ev_purchase`](scenes/ev_purchase.yaml) | Karim buys an electric car on a loan | economy |
-| [`job_loss`](scenes/job_loss.yaml) | Claire, Mark's manager, lays him off | business |
-| [`lottery_win`](scenes/lottery_win.yaml) | Sarah tells Mark she won €1 million | economy |
-
-Each scene has consequences in every world and ring and at least two next scenes. Open one at
-`/acm/scenario?scene=<id>`; sections A–F cover the overview, the 2D player with voice, actors,
-world layers, the consequence radius and next scenes.
-
-**Provenance on every item:**
-
-| Label | Meaning |
-|---|---|
-| `scenario_fact` | given by the scenario |
-| `authored_demo` | written for the demo: dialogue, analysis, branches (not model output) |
-| `generated_inference` | from the local model, validated, not verified |
-| `stated` · `possible` · `unknown` · `not_identified` | supported by cited events · plausible · not established · nothing found (never "no impact") |
-
-Thoughts and feelings exist only as inferences; the schema rejects an inference marked `stated`.
-
-**The router's rules today** (each route lists the rules that fired):
-
-| Rule | Routed to |
-|---|---|
-| a physical verb (move, hold, offer, place, take, gesture), a physical object, or a change of position or holder | physical |
-| every event: speech is heard, actions are seen | perception |
-| dialogue, an action aimed at a person, or someone else's property | human and social |
-| a change to an owned object, or an obligation | digital |
-| an obligation (debt, agreement) | business |
-| a consequence at a world cites the event | that world |
-
-**Generated branches.** `ModelProvider` asks the local LLM (Ollama, `qwen2.5:7b` by default;
-`ACM_LLM_URL` / `ACM_LLM_MODEL`) for more next scenes. The reply is validated against the scene:
-unknown people or objects are rejected, unknown verbs dropped, and generated events never change
-the state. If the model is down, the API returns 503 and the dashboard says why; the command line
-falls back to the authored branches and says so. Nothing has a probability.
+consequence.
 
 ### The rule engine
 
@@ -261,7 +193,6 @@ To analyse new text, also install MLM's parser: `pip install -e "../SLM[parse]"`
 | `/acm/tour` | four chapters with real outputs, including ACM next to a real local LLM |
 | `/acm/inference` | 53 scenarios and 280+ "what happens next to …?" questions, each with its reasoning |
 | `/acm` | the rule-engine demo: a phrase, an image and a video, each with its blast radius and a chat |
-| `/acm/scenario` | the Next Status Engine, with a picker for the [eight scenes](#the-next-status-engine) |
 | `/acm/scene` | the physics lab (mockup): recognise objects, simulate an action, see the consequences cascade |
 | `/multimodal`, `/mlm` | MLM's multimodal demo and playground |
 
@@ -270,9 +201,8 @@ acm predict "I will sell my car to Sarah in Paris tomorrow to pay my debt." \
     --context "Mark wants to buy my car." --context "Sarah needs a car."   # --format text|mermaid|json
 acm graph "..."        # the action graph as Mermaid
 acm remember "..."     # store it in the graph vector DB;  acm similar "..." finds the nearest
-acm scene list | validate | show | analyze | layers | route | branches | select | export | bundle
 acm demo               # multimodal demo + docs/demo/tabletop_report.html
-pytest                 # 106 tests (33 for the Next Status Engine), committed fixtures, no GPU or network
+pytest                 # 106 tests, committed fixtures, no GPU or network
 ```
 
 ---
@@ -324,7 +254,6 @@ specialist model sees one link; only the connected system sees the chain.
 | **Second- and third-order effects** | the ripples behind the obvious result, which is where the real cost or risk often is |
 | **Every actor counted** | each person's goal checked (advanced, enabled, blocked, at risk, hindered), their reaction predicted |
 | **What-if before acting** | alternative actions compared against the desired outcome, before anything happens |
-| **Next actions, checked** | possible next actions are proposed as phrases and validated against the state before anything is done |
 | **Any input, one meaning** | text, image, video or audio reach the same Phrase DNA, so evidence from all of them adds up |
 | **Memory of similar cases** | the graph vector database finds past actions that played out the same way |
 
@@ -362,10 +291,10 @@ specialist model sees one link; only the connected system sees the chain.
 effect on customers, staff and the business; governments testing a policy's ripple through
 society, the economy and the environment; and people facing a life decision.
 
-*Token, compute and cost savings follow from the architecture but are not yet benchmarked. Next
-scenes and the graph memory exist today; the harness config and inter-world propagation are next.*
+*Token, compute and cost savings follow from the architecture but are not yet benchmarked. The graph
+memory exists today; the harness config and inter-world propagation are next.*
 
-*Today:* the shared meaning, routing, the consequence graph, scenes and a 2D physics engine are
+*Today:* the shared meaning, routing, the consequence graph and a 2D physics engine are
 in place, and rules stand in for most worlds' models (see [What](#what)). *Next:* plugging in the
 real specialist models, world by world ([What next](#what-next)).
 
@@ -379,10 +308,10 @@ real specialist models, world by world ([What next](#what-next)).
 | Other people's goals | often forgotten | checked one by one |
 | Reach | whoever the text mentions | eight worlds × eight rings |
 | Repeatability | varies with sampling | same input, same report |
-| Changing what it knows | retrain | edit a YAML scene or pack |
+| Changing what it knows | retrain | edit a YAML pack |
 
 **Where an LLM is still better:** breadth, fluency, and an answer for any unseen situation. That
-is why ACM keeps one to phrase answers and propose next scenes, but never to decide.
+is why ACM keeps one to phrase answers, but never to decide.
 
 **Honesty rules**, enforced in code and tests:
 
@@ -404,7 +333,7 @@ A real model behind each world, measured against today's rules (status: [the wor
 |---|---|
 | ⚙️ Physical (+ atomic) | Unreal Engine 5 in the loop; world models (V-JEPA 2-AC) behind the same interface |
 | 👁️ Perception | a vision-language model (Qwen3-VL) and a detector/tracker (YOLO) |
-| 🧭 Routing | routing by the WHERE; a routing benchmark on annotated scenes |
+| 🧭 Routing | routing by the WHERE; a routing benchmark on annotated examples |
 | 🧠 Behaviour | model-generated analysis, validated like branches |
 | 💻 Digital | sandboxed models of real systems (registries, ledgers, permissions) |
 | 🏭 Business | process, contract and jurisdiction rule packs |
@@ -417,7 +346,7 @@ that must beat the rule baseline.
 
 ### Build it with us
 
-The architecture, the meaning layer, the Next Status Engine and the first worlds are in place. To
+The architecture, the meaning layer, routing and the first worlds are in place. To
 finish the Butterfly Model, we are looking for **top AI talent** to work together:
 
 | Help needed | On which world |
@@ -435,7 +364,6 @@ finish the Butterfly Model, we are looking for **top AI talent** to work togethe
 **Limitations today**
 
 - **Seed knowledge:** 18 concepts; 49 English, 24 French and 17 Vietnamese verbs; 42 impact rules; 18 gazetteer places. Anything else falls back to generic consequences or "not known".
-- **Scenes are authored:** their analysis and branches are demo content; the model adds branches only.
 - **Most worlds are rules, not models.**
 - **Coarse text identity:** "John's car" and "his car" match, but so would two different cars.
 - **No vision model run, no 3D physics yet:** replays and a 2D stand-in, labelled as such.
@@ -448,17 +376,14 @@ finish the Butterfly Model, we are looking for **top AI talent** to work togethe
 - **An impact:** a rule in `packs/universal/impacts.yaml` with its ring as `scope`, plus words in `packs/<lang>/categories.yaml`.
 - **A place:** an entry in `packs/universal/places.yaml` with `kind`, `neighbours`, `organization`, `city`, `country`.
 - **A language:** `packs/<lang>/actions.yaml` and `categories.yaml` (MLM must support it).
-- **A scene:** write `scenes/<id>.yaml` ([schema](src/acm/scene/schema.py); verbs: `move`, `hold`, `offer`, `place`, `take`, `speak`, `pause`, `gesture`), run `acm scene validate <id>`, then `acm scene bundle <id> -o ../SLM/web/public/demo/scene_<id>.json` (or `./start.sh`), and add it to the picker in the dashboard's `app/acm/scenario/page.tsx`.
 - **A learned embedder:** `embed(**features) -> list[float]` with a `dim`, passed as `ConsequenceEngine(embedder=...)`.
 
 **Project layout**
 
 ```
 start.sh, dash.sh   launcher (dash.sh is an alias)
-scenes/             eight scene scripts (acm.scene/1)
 packs/              universal: states, concepts, impacts, places; <lang>: actions, categories
 src/acm/            engine, entities, graph, store, render, cli, multimodal, inference, ask, llm
-src/acm/scene/      Next Status Engine: schema, validate, state, layers (router), providers, directions
 src/acm/world/      transition interface, tabletop simulator, PyBullet / V-JEPA stubs
 scripts/            draw_vision, make_fixtures, make_inference_suite, make_llm_baseline
 examples/           inference suite (53 scenarios), recorded LLM baseline
