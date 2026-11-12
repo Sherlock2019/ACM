@@ -1,6 +1,6 @@
 # <img src="docs/logo.png" alt="Butterfly logo" height="64" align="absmiddle"> The Butterfly Model: the Action–Worlds Consequence prediction Model (ACM)
 
-[← Short version](README.md) · **Full version**
+[← ⚡ 30-second version](README.md) · **📖 3-minute full version**
 
 **1 actor · 1 action = consequences in cascade. See what an action changes before taking it.**
 

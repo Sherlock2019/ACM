@@ -1,6 +1,6 @@
 # <img src="docs/logo.png" alt="Butterfly logo" height="64" align="absmiddle"> The Butterfly Model (ACM)
 
-**Short version** · [Full version →](README_FULL.md)
+**⚡ 30-second version** · [📖 3-minute full version →](README_FULL.md)
 
 **1 actor · 1 action = consequences in cascade.**
 
