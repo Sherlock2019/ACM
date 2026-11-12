@@ -30,17 +30,29 @@ network model it borrows its shape from. An action happens in the physical world
 perceived. A **consequence router** decides which world models, actors and systems should
 examine it. Each layer above the router has its own kind of model.
 
-| Level | Layer | What it examines |
-|---:|---|---|
-| 8 | 🌍 Planetary and ecosystem | Resources, pollution, biodiversity and sustainability |
-| 7 | 🏛️ Society and collective systems | Economy, markets, society, public governance and politics |
-| 6 | 🏭 Business and institutions | Organisations, operations, processes, finance and policies |
-| 5 | 💻 Digital and information systems | Applications, records, calculations, permissions and workflows |
-| 4 | 🧠 Human and social | Goals, behaviour, dialogue, relationships and group reactions |
-| 3 | 🧭 **Consequence routing** | Which world models, actors and systems should examine an event |
-| 2 | 👁️ Perception and observation | Images, video, audio, speech, sensors and observations |
-| 1 | ⚙️ Physical world | Objects, materials, movement, forces, location and energy |
-| Source | 🎬 Action or event | Who acts, why, their goal and desired outcome, and what happens |
+**Each world follows its own laws.** ACM predicts the consequence of an action separately
+in each world, by that world's laws: physical laws in the physical world, behavioural and
+psychological laws for people and animals, economic laws in the economy, and so on up to
+the laws of the earth.
+
+<p align="center">
+  <img src="docs/world-layers.svg" alt="One action, many worlds: the action is parsed by MLM into Phrase DNA, passes through the atomic, physical and perception worlds, is routed by the consequence router, and is examined by the human and animal behaviour, digital systems, business, society and economy, and earth worlds, each with its own laws" width="900">
+</p>
+
+| Level | Layer | Its laws | What it examines |
+|---:|---|---|---|
+| 8 | 🌍 Planetary and ecosystem | **Earth laws:** ecology, climate, resource cycles, biodiversity | Resources, pollution, biodiversity and sustainability |
+| 7 | 🏛️ Society and collective systems | **Economic, legal and social laws:** supply and demand, prices, law, trust, governance | Economy, markets, society, public governance and politics |
+| 6 | 🏭 Business and institutions | **Institutional laws:** contracts, policies, accounting, regulation | Organisations, operations, processes, finance and policies |
+| 5 | 💻 Digital and information systems | **Digital system laws:** data, logic, permissions, protocols, workflows | Applications, records, calculations, permissions and workflows |
+| 4 | 🧠 Human and social | **Behavioural and psychological laws** of humans and animals: goals, emotions, reactions, relationships | Goals, behaviour, dialogue, relationships and group reactions |
+| 3 | 🧭 **Consequence routing** | No laws of its own: sends each event to the worlds whose laws apply | Which world models, actors and systems should examine an event |
+| 2 | 👁️ Perception and observation | **Laws of vibration and signals:** light, sound, waves, sensing | Images, video, audio, speech, sensors and observations |
+| 1 | ⚙️ Physical world | **Physical laws:** force, motion, gravity, friction, energy. At the atomic scale: **atomic and chemical laws** (bonds, reactions, heat) | Objects, materials, movement, forces, location and energy |
+| Source | 🎬 Action or event | The cause: an actor, their goal and the action, parsed by MLM into Phrase DNA | Who acts, why, their goal and desired outcome, and what happens |
+
+The atomic and molecular world is shown as its own band in the diagram but sits inside
+level 1 in the code; it has no model yet.
 
 Every consequence ACM reports sits on **two axes**:
 
@@ -276,17 +288,17 @@ borrows its shape from. An action or event is the source. It happens in the phys
 and is perceived. The **consequence router** then decides which world models, actors and
 systems should examine it. Each layer above the router has its own kind of model.
 
-| Level | ACM world layer | What it examines | OSI analogy | In ACM today |
-|---:|---|---|---|---|
-| **8** | 🌍 Planetary and ecosystem | Resources, pollution, biodiversity and sustainability | (beyond the stack) | partly: earth-scoped impact rules; no ecosystem model |
-| **7** | 🏛️ Society and collective systems | Economy, markets, society, public governance and politics | Application | partly: society/country impact rules; no economic or political model |
-| **6** | 🏭 Business and institutions | Organisations, operations, processes, finance and policies | Presentation | partly: obligations in the scene, organisation impact rules |
-| **5** | 💻 Digital and information systems | Applications, records, calculations, permissions and workflows | Session | partly: explicit state changes and amounts; no external system connected |
-| **4** | 🧠 Human and social | Goals, behaviour, dialogue, relationships and group reactions | Transport | working: the script model and next scenes (authored or local model) |
-| **3** | 🧭 **Consequence routing** | Which world models, actors and systems should examine an event | Network (routing) | working: `acm.scene.layers.route` |
-| **2** | 👁️ Perception and observation | Images, video, audio, speech, sensors and observations | Data Link | partly: who sees or hears each event; image/video detection is replayed |
-| **1** | ⚙️ Physical world | Objects, materials, movement, forces, location and energy | Physical | partly: positions, holders, owners (2D); 3D physics (Unreal) planned |
-| **Source** | 🎬 Action or event | Who acts, why, their goal and desired outcome, and what happens | Source | working: the scene script |
+| Level | ACM world layer | Its laws | What it examines | OSI analogy | In ACM today |
+|---:|---|---|---|---|---|
+| **8** | 🌍 Planetary and ecosystem | Earth laws: ecology, climate, resource cycles, biodiversity | Resources, pollution, biodiversity and sustainability | (beyond the stack) | partly: earth-scoped impact rules; no ecosystem model |
+| **7** | 🏛️ Society and collective systems | Economic, legal and social laws | Economy, markets, society, public governance and politics | Application | partly: society/country impact rules; no economic or political model |
+| **6** | 🏭 Business and institutions | Institutional laws: contracts, policies, accounting, regulation | Organisations, operations, processes, finance and policies | Presentation | partly: obligations in the scene, organisation impact rules |
+| **5** | 💻 Digital and information systems | Digital system laws: data, logic, permissions, protocols | Applications, records, calculations, permissions and workflows | Session | partly: explicit state changes and amounts; no external system connected |
+| **4** | 🧠 Human and social | Behavioural and psychological laws (humans and animals) | Goals, behaviour, dialogue, relationships and group reactions | Transport | working: the script model and next scenes (authored or local model) |
+| **3** | 🧭 **Consequence routing** | none: routes to the worlds whose laws apply | Which world models, actors and systems should examine an event | Network (routing) | working: `acm.scene.layers.route` |
+| **2** | 👁️ Perception and observation | Laws of vibration and signals: light, sound, waves | Images, video, audio, speech, sensors and observations | Data Link | partly: who sees or hears each event; image/video detection is replayed |
+| **1** | ⚙️ Physical world | Physical laws; at the atomic scale, atomic and chemical laws | Objects, materials, movement, forces, location and energy | Physical | partly: positions, holders, owners (2D); 3D physics (Unreal) planned; no atomic or chemical model |
+| **Source** | 🎬 Action or event | the cause, parsed by MLM into Phrase DNA | Who acts, why, their goal and desired outcome, and what happens | Source | working: the scene script |
 
 The OSI column is an analogy for the stack's shape, not a claim that networking concepts
 apply. Inserting the router at level 3 (OSI's routing layer) moves the human and social layer
