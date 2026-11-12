@@ -36,7 +36,7 @@ ACM predicts the consequence in each world by those laws.
 | 🏛️ Society & economy | economic, legal and social laws | partly: society and country impact rules; no economic or political model |
 | 🏭 Business & institutions | contracts, policies, accounting, regulation | partly: obligation and organisation impact rules |
 | 💻 Digital systems | data, logic, permissions, protocols, workflows | partly: explicit state changes and amounts |
-| 🧠 Human & animal behaviour | behavioural and psychological laws | working: other actors' goals checked (advanced, blocked, at risk) |
+| 🧠 Human & animal behaviour | behavioural and psychological laws | working: other actors' goals checked; the [Scenario Engine](#the-scenario-engine-a-special-feature-for-the-human-world) for scripted human reactions |
 | 👁️ Perception | vibration and signals: light, sound, sensing | partly: who sees or hears each event; image/video detections are replayed |
 | ⚙️ Physical | force, motion, gravity, friction, energy | partly: positions, holders, owners; a 2D physics lab; Unreal Engine 5 planned |
 | ⚛️ Atomic & molecular | atomic and chemical laws | planned (inside the physical layer in code); the physics lab applies a fracture rule |
@@ -150,6 +150,43 @@ facts live in Python; all of it is YAML under [`packs/`](packs/):
 | 6. Graph + vectors | one graph per action; every node carries an 83-dim **structural** vector (kind, role, entity type, ring, lemma hash, certainty/tense): *John sold his car to Sarah* ≈ *He sold it to Sarah*, but *car* ≠ *vehicle* | MLM role inventory |
 | 7. Vector DB | SQLite, exact cosine search: `similar_actions`, `history(entity)`, `search(kind=...)`; FAISS or pgvector later behind the same methods | [`store.py`](src/acm/store.py) |
 
+### The Scenario Engine: a special feature for the human world
+
+People don't react to an action through physics or accounting rules: they react through goals,
+emotions, relationships and what they know. The **Scenario Engine** predicts the consequences of
+an action on **human behaviour**, using the format humans have always used to tell how people
+react: **the script**.
+
+A scenario is written like a movie script: a place and time, characters with their goals,
+relationships and what each one knows, the objects they own or hold, and an ordered list of
+actions and dialogue. From it the engine computes the status after every line (who owns what,
+who knows what, who objects), predicts how each character reacts to what they actually saw and
+heard, and proposes possible next scenes, each with its assumptions.
+
+| Scenario | Origin actor → action | WHERE |
+|---|---|---|
+| [`car_sale`](scenes/car_sale.yaml) | Mark offers Sarah's car to Florence to settle a €5,000 debt | economy |
+| [`iphone_gift`](scenes/iphone_gift.yaml) | Mark offers Sarah an iPhone 18 bought on a 24-month plan | economy |
+| [`beach_post`](scenes/beach_post.yaml) | Sarah posts a photo of Mark on Facebook on his sick day | digital |
+| [`park_ball`](scenes/park_ball.yaml) | Leo throws a ball in the park; a window breaks | physical |
+| [`factory_protest`](scenes/factory_protest.yaml) | Florence joins a street protest against a chemical factory | politics |
+| [`ev_purchase`](scenes/ev_purchase.yaml) | Karim buys an electric car on a loan | economy |
+| [`job_loss`](scenes/job_loss.yaml) | Claire, Mark's manager, lays him off | business |
+| [`lottery_win`](scenes/lottery_win.yaml) | Sarah tells Mark she won €1 million | economy |
+
+Open one at `/acm/scenario?scene=<id>`: the cast, a 2D player with voice, each character's goals
+and possible feelings, the consequences per world, and the next scenes.
+
+**Today and next**
+
+| | Today | Next |
+|---|---|---|
+| **Behaviour predictions** | written by hand for each scenario, to fix the format; a local LLM can propose more next scenes, which are validated against the script and labelled as generated | **trained** to predict them |
+| **Training data** | none yet | **movie and TV scripts** (how characters react, scene after scene) and **psychology knowledge** (goals, emotions, motivation, social behaviour), from licensed or public sources |
+| **Honesty** | facts, authored content and model output are labelled on every line; feelings are only ever *possible*, never *stated* | the same labels on trained predictions, scored against held-out scripts |
+
+Code: [`src/acm/scene/`](src/acm/scene/) and [`scenes/`](scenes/); command line: `acm scene list | show | analyze | route | branches | export`.
+
 ### Multimodal input and the physical world
 
 The same scene can arrive as text, an image or a video; each is first converted into MLM's
@@ -193,6 +230,7 @@ To analyse new text, also install MLM's parser: `pip install -e "../SLM[parse]"`
 | `/acm/tour` | four chapters with real outputs, including ACM next to a real local LLM |
 | `/acm/inference` | 53 scenarios and 280+ "what happens next to …?" questions, each with its reasoning |
 | `/acm` | the rule-engine demo: a phrase, an image and a video, each with its blast radius and a chat |
+| `/acm/scenario` | the Scenario Engine: eight scenarios of human reactions |
 | `/acm/scene` | the physics lab (mockup): recognise objects, simulate an action, see the consequences cascade |
 | `/multimodal`, `/mlm` | MLM's multimodal demo and playground |
 
@@ -334,7 +372,7 @@ A real model behind each world, measured against today's rules (status: [the wor
 | ⚙️ Physical (+ atomic) | Unreal Engine 5 in the loop; world models (V-JEPA 2-AC) behind the same interface |
 | 👁️ Perception | a vision-language model (Qwen3-VL) and a detector/tracker (YOLO) |
 | 🧭 Routing | routing by the WHERE; a routing benchmark on annotated examples |
-| 🧠 Behaviour | model-generated analysis, validated like branches |
+| 🧠 Behaviour | the Scenario Engine trained on movie scripts and psychology knowledge |
 | 💻 Digital | sandboxed models of real systems (registries, ledgers, permissions) |
 | 🏭 Business | process, contract and jurisdiction rule packs |
 | 🏛️ Society & economy | economic and political models, labelled with their uncertainty |
@@ -353,7 +391,7 @@ finish the Butterfly Model, we are looking for **top AI talent** to work togethe
 |---|---|
 | Physics simulation: Unreal Engine 5 (Chaos), world models (V-JEPA 2-AC) | ⚙️ physical, ⚛️ atomic |
 | Computer vision: vision-language models, detection and tracking | 👁️ perception |
-| Agents, behaviour modelling, LLM evaluation | 🧠 behaviour, 🧭 routing |
+| Behaviour prediction: training on movie scripts and psychology data, agents, LLM evaluation | 🧠 behaviour (Scenario Engine), 🧭 routing |
 | Digital twins of real systems: registries, ledgers, permissions | 💻 digital, 🏭 business |
 | Economic, political, climate and resource modelling | 🏛️ society & economy, 🌍 earth |
 
@@ -384,6 +422,8 @@ finish the Butterfly Model, we are looking for **top AI talent** to work togethe
 start.sh, dash.sh   launcher (dash.sh is an alias)
 packs/              universal: states, concepts, impacts, places; <lang>: actions, categories
 src/acm/            engine, entities, graph, store, render, cli, multimodal, inference, ask, llm
+src/acm/scene/      Scenario Engine: script format, validation, status per line, router, next scenes
+scenes/             eight scenarios (acm.scene/1)
 src/acm/world/      transition interface, tabletop simulator, PyBullet / V-JEPA stubs
 scripts/            draw_vision, make_fixtures, make_inference_suite, make_llm_baseline
 examples/           inference suite (53 scenarios), recorded LLM baseline

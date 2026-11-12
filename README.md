@@ -76,7 +76,8 @@ git clone git@github.com:Sherlock2019/ACM.git && cd ACM && ./start.sh   # → ht
 
 ## What next: build it with us
 
-Built today: the shared meaning (MLM), routing, state changes, other actors' goals and a
+Built today: the shared meaning (MLM), routing, state changes, other actors' goals, a
+**Scenario Engine** for human reactions (to be trained on movie scripts and psychology), and a
 2D physics lab, with rules standing in for most worlds' models. Connecting the real specialist
 models is the next step, and everything not built yet is labelled.
 
