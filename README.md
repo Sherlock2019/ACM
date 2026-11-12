@@ -29,13 +29,24 @@ ACM predicts the consequences of an action before it is taken.
 
 [![The radar: the origin actor at the centre, other actors reacting, the impact spreading through the eight worlds](docs/acm-vision.svg)](docs/acm-vision.svg)
 
-## So what
+## So what: all AI models working as one
 
-- **Mark's case, answered right:** his goal is **BLOCKED**. One car, one owner, and Sarah has it.
-- **Every answer shows its rule and evidence.** Same input, same answer.
-- **Unknown is said out loud:** no rule matched never means no impact.
-- **An AI can check its own action** ("I will…") before taking it.
-- **New knowledge is a YAML edit**, not retraining.
+Today AI is fragmented. Language models handle words, vision models images, physics engines
+motion, behaviour models people, economic models markets, climate models the planet. **Each sees
+one slice. None sees the whole consequence of a single action.**
+
+The Butterfly Model connects them into **one system**. MLM gives every model the same meaning of
+the action, routing sends it to the right worlds, and in each world the best specialist model
+predicts by that world's laws. Their answers come back into one picture.
+
+| Benefit | Why it matters |
+|---|---|
+| **The whole cascade, not one slice** | one action → physical, human, digital, financial, social and planetary effects, together |
+| **The best model for each world** | a physics engine for motion, a vision model for perception, an economic model for markets |
+| **Plug and play** | swap in a better model for one world without retraining the others |
+| **Explainable end to end** | every consequence says which world, which model or rule, which evidence |
+| **Safer AI agents** | an agent sees the full consequences of its own action before taking it |
+| **Better human decisions** | people, companies and governments see what a choice changes, and for whom |
 
 ```bash
 git clone git@github.com:Sherlock2019/NPLM-Next-Phrase-language-model-.git SLM
@@ -44,8 +55,9 @@ git clone git@github.com:Sherlock2019/ACM.git && cd ACM && ./start.sh   # → ht
 
 ## What next: build it with us
 
-Built today: meaning, state changes, other actors' goals, 8 scenes, routing, a 2D physics lab.
-Most worlds are still rules, and everything not built is labelled.
+Built today: the shared meaning (MLM), routing, state changes, other actors' goals, 8 scenes and
+a 2D physics lab, with rules standing in for most worlds' models. Connecting the real specialist
+models is the next step, and everything not built yet is labelled.
 
 To finish it, we need **top AI talent**: physics simulation (Unreal Engine 5), computer vision,
 world models, agents, and economic and earth modelling. Each world needs a real model behind it.

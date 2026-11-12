@@ -11,7 +11,7 @@
 | [**What**](#what) | a model of what an action *does*, across eight worlds, each with its own laws |
 | [**Why**](#why) | an LLM predicts words, not world states, and cannot show why it says what it says |
 | [**How**](#how) | actor → action → routing by its WHERE → consequences cascade world by world; two engines; run it |
-| [**So what**](#so-what) | explicit, inspectable, repeatable consequences that say when they do not know |
+| [**So what**](#so-what) | all AI models working as one: the whole cascade of an action, explained, before it happens |
 | [**What next**](#what-next) | a real model behind every world; [build it with us](#build-it-with-us); limitations; how to extend |
 
 ---
@@ -271,6 +271,50 @@ pytest                 # 106 tests (33 for the scene engine), committed fixtures
 ---
 
 ## So what
+
+### All AI models working as one
+
+Today AI is fragmented. Language models handle words, vision models images, physics engines
+motion, behaviour models people, economic models markets, climate models the planet. **Each sees
+one slice. None sees the whole consequence of a single action**, and none can tell what its slice
+does to the others.
+
+The Butterfly Model is a **holistic architecture** that connects them into one system:
+
+```mermaid
+flowchart LR
+  A["One action"] --> M["MLM<br/>one shared meaning"]
+  M --> R["Routing<br/>which worlds?"]
+  R --> P["⚙️ physics engine"]
+  R --> V["👁️ vision model"]
+  R --> B["🧠 behaviour model / LLM"]
+  R --> D["💻 digital twin"]
+  R --> E["🏛️ economic model"]
+  R --> C["🌍 climate model"]
+  P & V & B & D & E & C --> G["One consequence graph<br/>every world, every ring, with evidence"]
+```
+
+- **One language between models.** MLM's Phrase DNA (who · does what · to whom · where · why) is
+  the common meaning every model reads, whether the action came as text, image, video or audio.
+- **One router.** The action goes to the worlds it touches, starting from its WHERE.
+- **The best specialist per world**, each predicting by its own laws.
+- **One graph back.** Every model's answer lands in the same consequence graph, so effects in one
+  world can feed the next.
+
+| Benefit | Why it matters |
+|---|---|
+| **The whole cascade, not one slice** | one action → physical, human, digital, financial, social and planetary effects, together |
+| **The best model for each world** | no single model has to be good at everything |
+| **Plug and play** | swap in a better model for one world without retraining the others; rules stand in until a model exists |
+| **Explainable end to end** | every consequence says which world, which model or rule, which evidence |
+| **Safer AI agents** | an agent sees the full consequences of its own action ("I will…") before taking it |
+| **Better human decisions** | people, companies and governments see what a choice changes, for whom, and how far |
+
+*Today:* the shared meaning, routing, the consequence graph, scenes and a 2D physics engine are
+in place, and rules stand in for most worlds' models (see [What](#what)). *Next:* plugging in the
+real specialist models, world by world ([What next](#what-next)).
+
+### Compared with a language model alone
 
 | | LLM mode | ACM |
 |---|---|---|
