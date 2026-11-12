@@ -37,13 +37,21 @@ ACM predicts the consequences of an action before it is taken.
 - **An AI can check its own action** ("I will…") before taking it.
 - **New knowledge is a YAML edit**, not retraining.
 
-Today: meaning, state changes, other actors' goals, 8 scenes, routing, a 2D physics lab. Next:
-Unreal Engine 5 physics, real vision, and worlds passing consequences to each other. Most worlds
-are rules today, and everything not built is labelled.
-
 ```bash
 git clone git@github.com:Sherlock2019/NPLM-Next-Phrase-language-model-.git SLM
 git clone git@github.com:Sherlock2019/ACM.git && cd ACM && ./start.sh   # → http://127.0.0.1:3010
 ```
+
+## What next: build it with us
+
+Built today: meaning, state changes, other actors' goals, 8 scenes, routing, a 2D physics lab.
+Most worlds are still rules, and everything not built is labelled.
+
+To finish it, we need **top AI talent**: physics simulation (Unreal Engine 5), computer vision,
+world models, agents, and economic and earth modelling. Each world needs a real model behind it.
+
+**Let's work together:**
+- Profile and projects: **[dzoannguyentran.jobsmatchnow.com](https://dzoannguyentran.jobsmatchnow.com/#projects)**
+- WhatsApp: **[+84 908 618 075](https://wa.me/84908618075)**
 
 © 2026 Dzoan Nguyen Tran · [MIT](LICENSE)

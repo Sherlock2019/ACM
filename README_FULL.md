@@ -12,7 +12,7 @@
 | [**Why**](#why) | an LLM predicts words, not world states, and cannot show why it says what it says |
 | [**How**](#how) | actor → action → routing by its WHERE → consequences cascade world by world; two engines; run it |
 | [**So what**](#so-what) | explicit, inspectable, repeatable consequences that say when they do not know |
-| [**What next**](#what-next) | a real model behind every world; limitations; how to extend |
+| [**What next**](#what-next) | a real model behind every world; [build it with us](#build-it-with-us); limitations; how to extend |
 
 ---
 
@@ -315,6 +315,23 @@ A real model behind each world, measured against today's rules (status: [the wor
 Across all worlds: the cascade itself (worlds passing consequences to their neighbours until
 nothing changes, certainty dropping at each hop), bigger knowledge packs, and learned components
 that must beat the rule baseline.
+
+### Build it with us
+
+The architecture, the meaning layer, the scene engine and the first worlds are in place. To
+finish the Butterfly Model, we are looking for **top AI talent** to work together:
+
+| Help needed | On which world |
+|---|---|
+| Physics simulation: Unreal Engine 5 (Chaos), world models (V-JEPA 2-AC) | ⚙️ physical, ⚛️ atomic |
+| Computer vision: vision-language models, detection and tracking | 👁️ perception |
+| Agents, behaviour modelling, LLM evaluation | 🧠 behaviour, 🧭 routing |
+| Digital twins of real systems: registries, ledgers, permissions | 💻 digital, 🏭 business |
+| Economic, political, climate and resource modelling | 🏛️ society & economy, 🌍 earth |
+
+**Let's work together:**
+- Profile and projects: **[dzoannguyentran.jobsmatchnow.com](https://dzoannguyentran.jobsmatchnow.com/#projects)**
+- WhatsApp: **[+84 908 618 075](https://wa.me/84908618075)**
 
 **Limitations today**
 
