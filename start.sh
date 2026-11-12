@@ -4,6 +4,7 @@
 #   ./start.sh                         set up ACM, refresh the demo results, start the MLM API +
 #                                      dashboard (detached), print the URLs (incl. public IP)
 #   ./start.sh stop | status | restart the API + dashboard
+#   ./start.sh update                  git pull ACM and MLM, then restart (e.g. on EC2)
 #   ./start.sh cli                     interactive prompt (type an action, get its consequences)
 #   ./start.sh predict "..." [opts]    any acm subcommand: predict | graph | remember | similar | demo
 #   ./start.sh test                    run the test suite
@@ -134,9 +135,38 @@ start_poc() {
     echo "  Stop                 ./start.sh stop"
 }
 
+pull_repo() {
+    # Fast-forward a checkout to origin. Local edits (usually generated files such as
+    # next-env.d.ts, package-lock.json or demo JSON) are stashed, not lost: `git stash list`.
+    local dir="$1"
+    echo "== updating $dir"
+    if [[ -n "$(git -C "$dir" status --porcelain)" ]]; then
+        git -C "$dir" stash push --include-untracked --quiet -m "start.sh update $(date +%F-%T)"
+        echo "   local changes stashed (git -C $dir stash list)"
+    fi
+    git -C "$dir" pull --ff-only --quiet && git -C "$dir" log --oneline -1
+}
+
+update() {
+    local before
+    before="$(git -C "$MLM" rev-parse HEAD)"
+    pull_repo "$ROOT" || return 1
+    pull_repo "$MLM" || return 1
+    if ! git -C "$MLM" diff --quiet "$before" HEAD -- web/package.json web/package-lock.json; then
+        echo "== dashboard dependencies changed: npm install"
+        (cd "$MLM/web" && npm install --no-audit --no-fund) || return 1
+    fi
+}
+
 case "${1:-start}" in
     stop | status)
         exec "$MLM/start.sh" "$1"
+        ;;
+    update)
+        # Pull ACM and MLM, then restart with the new code (re-exec: this script may have changed).
+        update || exit 1
+        "$MLM/start.sh" stop
+        exec "$ROOT/start.sh" start
         ;;
 esac
 

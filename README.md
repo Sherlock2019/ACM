@@ -1407,6 +1407,7 @@ The launcher wraps the same commands:
 ```bash
 ./start.sh                              # the whole POC as the ACM app: http://127.0.0.1:3010/ → home page
 ./start.sh stop | status | restart
+./start.sh update                       # git pull ACM + MLM (e.g. on EC2), then restart
 ./start.sh cli                          # interactive: type an action; '+...' adds a context line
 ./start.sh predict "..." --format mermaid
 ./start.sh demo                         # multimodal demo + docs/demo/tabletop_report.html
