@@ -310,6 +310,23 @@ flowchart LR
 | **Safer AI agents** | an agent sees the full consequences of its own action ("I will…") before taking it |
 | **Better human decisions** | people, companies and governments see what a choice changes, for whom, and how far |
 
+### A phrase model for consequences and next actions
+
+ACM is built on a **next-phrase** model: it predicts the next **consequence** or the next
+**action** as a unit of meaning (Phrase DNA: who · does what · to whom · where · why), not token
+by token. That changes how an AI system uses language models:
+
+| Benefit | How |
+|---|---|
+| **Saves tokens** | a consequence or next action is one structured phrase, not paragraphs of generated text; the LLM only words the final answer |
+| **The best context** | instead of the whole history, an LLM or agent gets a compact, relevant context: the worlds the action touches, the actors and their goals, the current state, and the evidence |
+| **Harness configuration** | routing decides which worlds an action touches, so it can configure the agent harness: which specialist models and tools to call, in which order, with which context |
+| **Next actions, checked** | possible next actions (next scenes) are proposed as phrases and validated against the scene state before anything is done |
+
+*Token savings and context quality are design goals: they follow from the architecture but are
+not yet benchmarked. Next scenes exist today in the scene engine; harness configuration is the
+next step.*
+
 *Today:* the shared meaning, routing, the consequence graph, scenes and a 2D physics engine are
 in place, and rules stand in for most worlds' models (see [What](#what)). *Next:* plugging in the
 real specialist models, world by world ([What next](#what-next)).

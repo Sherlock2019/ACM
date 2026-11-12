@@ -47,6 +47,11 @@ predicts by that world's laws. Their answers come back into one picture.
 | **Explainable end to end** | every consequence says which world, which model or rule, which evidence |
 | **Safer AI agents** | an agent sees the full consequences of its own action before taking it |
 | **Better human decisions** | people, companies and governments see what a choice changes, and for whom |
+| **Predicts in phrases, not tokens** | the next consequence or next action comes out as a unit of meaning (Phrase DNA), not word by word: fewer tokens |
+| **The best context for any LLM** | only what matters goes in: the worlds touched, the actors, their goals, the state, the evidence |
+| **A harness config for agents** | routing tells the agent harness which models and tools to call, with which context |
+
+*Token savings and context quality are design goals, not yet benchmarked.*
 
 ```bash
 git clone git@github.com:Sherlock2019/NPLM-Next-Phrase-language-model-.git SLM
