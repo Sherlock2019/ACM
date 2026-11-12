@@ -60,6 +60,24 @@ Every consequence ACM reports sits on **two axes**:
 - its **ring** (scope) in the [blast radius](#the-blast-radius): *how far* it reaches, from
   the actor and the other participants out to the city, society, the economy and the world.
 
+**Consequences cross worlds.** A consequence in one world has consequences in the other
+worlds, in two ways:
+
+- **By proximity (⇅).** It ripples into neighbouring worlds and nearby actors. The cup
+  falls (physical), people hear the crash (perception), the owner is annoyed (behaviour),
+  a damage report is logged (digital), and the café writes off the cup (business).
+- **By synchronicity (∿).** Worlds change together, at the same moment, down to the
+  quantum level, so a change in one world is matched by a change in another even when
+  no visible chain of cause links them.
+
+At the quantum level, changing together is correlation, not a signal: entangled systems
+stay correlated but cannot carry cause and effect between them. So a synchronous link
+would mark two consequences as *correlated*, never as one *causing* the other.
+
+This is a concept, not yet modelled. Today a consequence that cites an event routes that
+event to its layer, but ACM does not yet propagate a consequence from one world into the
+others.
+
 ACM has two engines that share this model and the same honesty rules:
 
 | Engine | Input | What it does | Where |
