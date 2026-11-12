@@ -1,0 +1,195 @@
+# ACM scene: The Ball in the Park. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Leo), 1 action (he throws a ball), WHERE: the physical world
+# (in the park). Facts given by the scenario carry source scenario_fact; the script, analysis
+# and branches are authored demo content, not physics or model predictions.
+
+schema: acm.scene/1
+id: park_ball
+title: "The Ball in the Park: A Window Breaks"
+description: >-
+  Leo, 10, throws a ball in the park next to a row of houses. It flies over the fence and
+  breaks Mrs Dubois's window. His father Karim is sitting on a bench nearby.
+action: "Leo throws a ball in the park."
+location:
+  name: The park by Rue des Lilas
+  city: Lyon
+  marks:
+    - { id: lawn,   label: "the lawn",                x: 2.0, y: 3.0 }
+    - { id: bench,  label: "the bench",               x: 0.5, y: 1.0 }
+    - { id: fence,  label: "the garden fence",        x: 6.0, y: 3.0 }
+    - { id: garden, label: "Mrs Dubois's garden",     x: 7.5, y: 3.0 }
+    - { id: house,  label: "Mrs Dubois's window",     x: 8.5, y: 2.5 }
+time: "Sunday, 3:00 p.m. (a scenario label)"
+context:
+  - Leo is 10 and plays in the park most Sundays.
+  - The lawn ends at the fence of Mrs Dubois's garden.
+  - Karim is Leo's father; Mrs Dubois is a retired neighbour.
+status: "The window is broken; Karim has offered to pay"
+initial:
+  liability: not discussed
+unknowns:
+  - What the window costs to replace.
+  - Whether home insurance will be used.
+caveats:
+  - The flight of the ball and the breakage are scenario facts, not a physics simulation.
+  - The dialogue is illustrative demo content.
+
+actors:
+  - id: leo
+    name: Leo
+    role: A boy playing ball, the origin actor
+    relationships: { karim: son, dubois: neighbour }
+    goals: ["Play ball"]
+    position: lawn
+    knows: ["The fence is at the end of the lawn"]
+    inferences:
+      - { kind: feeling,  text: "May feel scared and ashamed after the crash." }
+      - { kind: reaction, text: "May hide, or apologise." }
+  - id: karim
+    name: Karim
+    role: Leo's father
+    relationships: { leo: father, dubois: neighbour }
+    goals: ["Keep an eye on Leo"]
+    position: bench
+    inferences:
+      - { kind: feeling, text: "May feel embarrassed and responsible." }
+  - id: dubois
+    name: Mrs Dubois
+    role: Neighbour, owner of the window
+    relationships: { leo: neighbour, karim: neighbour }
+    goals: ["A quiet Sunday at home"]
+    position: house
+    inferences:
+      - { kind: feeling,  text: "May feel startled and angry." }
+      - { kind: reaction, text: "May demand payment or call the park keeper." }
+
+objects:
+  - { id: ball,   label: "Football", owner: leo, holder: leo }
+  - { id: window, label: "Window pane", description: "Mrs Dubois's living-room window", owner: dubois, position: house, attributes: { state: intact } }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Leo plays with his ball on the lawn. Karim reads on the bench."
+  - id: e2
+    order: 2
+    actor: leo
+    type: action
+    verb: hold
+    target: ball
+    description: "Leo picks up the ball and runs up."
+  - id: e3
+    order: 3
+    actor: leo
+    type: action
+    verb: gesture
+    description: "Leo throws the ball hard toward the far end of the lawn."
+    animation: "overarm throw"
+    effects:
+      - { subject: ball, attribute: holder, value: null }
+  - id: e4
+    order: 4
+    type: observation
+    description: "The ball clears the fence and smashes Mrs Dubois's window."
+    effects:
+      - { subject: window, attribute: state, value: broken }
+      - { subject: ball, attribute: position, value: garden }
+  - id: e5
+    order: 5
+    actor: leo
+    type: action
+    verb: pause
+    description: "Leo freezes."
+  - id: e6
+    order: 6
+    actor: dubois
+    type: action
+    verb: move
+    target: fence
+    description: "Mrs Dubois comes out to the fence."
+    effects:
+      - { subject: dubois, attribute: position, value: fence }
+  - id: e7
+    order: 7
+    actor: dubois
+    type: dialogue
+    verb: speak
+    target: karim
+    description: "Mrs Dubois confronts Karim."
+    dialogue: "Is this your son's ball? My window is in pieces!"
+    voice: "loud, shaken"
+  - id: e8
+    order: 8
+    actor: karim
+    type: dialogue
+    verb: speak
+    target: dubois
+    description: "Karim apologises and offers to pay."
+    dialogue: "I'm so sorry. We'll pay for the window."
+    effects:
+      - { subject: scene, attribute: liability, value: accepted }
+
+scopes:
+  - { n: 1, id: actor,         title: "Leo",                             short: "Leo" }
+  - { n: 2, id: participants,  title: "Karim and Mrs Dubois",            short: "Karim & Mrs Dubois" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Neighbours",                      short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [dubois, karim]
+      description: "Mrs Dubois's window is broken by Karim's son's ball."
+      evidence: [e4, e7]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: human_social, affected: [leo], description: "Leo's game stops: the ball is in the neighbour's garden and he is in trouble.", goal: "Play ball", evidence: [e4, e5], status: stated, effect: { leo: negative }, horizon: immediate }
+    - { id: c2, scope: physical, layer: physical, affected: [window, ball], description: "The glass shatters; the ball lies in Mrs Dubois's garden among the shards.", evidence: [e4], status: stated, horizon: immediate }
+    - { id: c3, scope: participants, layer: perception, affected: [dubois, karim], description: "The crash is heard across the park; Mrs Dubois comes out to the fence.", evidence: [e4, e6], status: stated, horizon: immediate }
+    - { id: c4, scope: participants, layer: business, affected: [karim, dubois, window], description: "Karim accepts responsibility for paying for the window.", evidence: [e8], status: stated, effect: { karim: negative, dubois: positive }, horizon: later }
+    - { id: c5, scope: participants, layer: human_social, affected: [dubois], description: "Mrs Dubois is shaken; her living room is open to the cold until the pane is replaced.", evidence: [e7], status: possible, effect: { dubois: negative }, horizon: immediate }
+    - { id: c6, scope: relationships, layer: human_social, affected: [karim, dubois], description: "How Karim follows up may shape relations between the neighbours.", evidence: [e8], status: possible, horizon: later }
+    - { id: c7, scope: city, layer: digital, affected: [window], description: "If home insurance is used, a claim with photos is filed online.", status: possible, horizon: later, assumptions: ["They use home insurance."] }
+    - { id: c8, scope: society, layer: society, description: "Ball games near the houses may come up at the next residents' meeting.", status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "No national economic impact is established.", status: not_identified }
+    - { id: c10, scope: world, layer: planetary, affected: [window], description: "A new pane means new glass made (energy-intensive) and broken glass to dispose of or recycle.", status: possible, horizon: later }
+
+  branches:
+    - id: A
+      title: "Leo apologises"
+      parent: park_ball
+      source: authored_demo
+      assumptions: ["Karim brings Leo to apologise.", "Mrs Dubois accepts the apology."]
+      summary: "Leo apologises to Mrs Dubois and helps sweep up the glass outside."
+      plausibility: "Karim has already accepted responsibility; bringing Leo to apologise is a common next step."
+      events:
+        - { id: a1, order: 9,  actor: leo, type: action, verb: move, target: fence, description: "Leo walks to the fence.", effects: [ { subject: leo, attribute: position, value: fence } ] }
+        - { id: a2, order: 10, actor: leo, type: dialogue, verb: speak, target: dubois, description: "Leo apologises.", dialogue: "I'm really sorry, Mrs Dubois. I'll be more careful." }
+        - { id: a3, order: 11, actor: dubois, type: dialogue, verb: speak, target: leo, description: "Mrs Dubois softens.", dialogue: "Thank you for saying so. Play further from the houses next time." }
+      goal_changes:
+        - { actor: leo,    change: "Makes amends; the game is over for today.", effect: mixed }
+        - { actor: dubois, change: "Gets an apology and the promise of repair.", effect: positive }
+      consequences:
+        - { id: ca1, scope: relationships, layer: human_social, affected: [leo, dubois, karim], description: "Neighbour relations are likely to recover.", evidence: [a2, a3], status: possible, effect: { dubois: positive }, horizon: later }
+      unknowns: ["Who replaces the pane, and when?"]
+
+    - id: B
+      title: "The park keeper is called"
+      parent: park_ball
+      source: authored_demo
+      assumptions: ["Mrs Dubois reports it to the park keeper."]
+      summary: "Mrs Dubois reports the incident; the park keeper puts up a sign against ball games near the fence."
+      plausibility: "Mrs Dubois is upset, and the lawn borders private gardens; a report is a plausible reaction."
+      events:
+        - { id: b1, order: 9, actor: dubois, type: dialogue, verb: speak, target: karim, description: "Mrs Dubois says she will report it.", dialogue: "I'm calling the park keeper. This is the second time this summer." }
+      goal_changes:
+        - { actor: karim, change: "The matter becomes official.", effect: negative }
+      consequences:
+        - { id: cb1, scope: city, layer: society, description: "A rule against ball games near the houses may follow.", evidence: [b1], status: possible, horizon: later }
+      unknowns: ["Is there a park rule already?"]

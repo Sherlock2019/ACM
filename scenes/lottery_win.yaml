@@ -1,0 +1,186 @@
+# ACM scene: The Lottery Win. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Sarah), 1 action (she tells Mark she won the lottery),
+# WHERE: the economy (a prize to claim). Facts given by the scenario carry source
+# scenario_fact; the script, analysis and branches are authored demo content.
+
+schema: acm.scene/1
+id: lottery_win
+title: "The Lottery Win: €1 Million"
+description: >-
+  Sarah checks her ticket and finds she has won €1 million. She tells Mark in the living room.
+  They owe Florence €5,000. Sarah's sister Julie calls in the middle of it.
+action: "Sarah tells Mark she won €1 million in the lottery."
+location:
+  name: Mark and Sarah's living room
+  city: Paris
+  marks:
+    - { id: sofa,   label: "the sofa",   x: 2.0, y: 2.0 }
+    - { id: table,  label: "the coffee table", x: 2.0, y: 3.2 }
+    - { id: window, label: "the window", x: 5.0, y: 1.0 }
+time: "Saturday, 9:00 p.m., after the draw (a scenario label)"
+context:
+  - Sarah bought the ticket alone, with her own money.
+  - The prize is €1 million, not yet claimed.
+  - Mark and Sarah owe Florence €5,000.
+status: "Ticket confirmed at home; prize not yet claimed"
+initial:
+  prize_claimed: false
+  told: false
+unknowns:
+  - How they will use the money.
+  - Who else they will tell.
+caveats:
+  - Tax and claim rules are not established here.
+  - The dialogue is illustrative demo content.
+
+actors:
+  - id: sarah
+    name: Sarah
+    role: Ticket holder, the origin actor
+    relationships: { mark: wife, julie: sister }
+    goals: ["Keep the household secure"]
+    position: sofa
+    inferences:
+      - { kind: feeling, text: "May feel disbelief, then joy, then caution." }
+  - id: mark
+    name: Mark
+    role: Sarah's husband
+    relationships: { sarah: husband }
+    goals: ["Settle the €5,000 debt to Florence"]
+    position: window
+    inferences:
+      - { kind: reaction, text: "May want to repay Florence first, or to celebrate." }
+  - id: julie
+    name: Julie
+    role: Sarah's sister, on the phone
+    relationships: { sarah: sister }
+    inferences:
+      - { kind: reaction, text: "May keep it to herself, or tell family." }
+
+objects:
+  - { id: ticket, label: "Winning ticket", owner: sarah, holder: sarah, attributes: { prize_eur: 1000000 } }
+  - { id: phone,  label: "Sarah's phone", owner: sarah, position: table }
+  - id: debt
+    label: "€5,000 debt to Florence"
+    kind: obligation
+    attributes: { amount: 5000, currency: EUR, status: unpaid }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Sarah sits on the sofa checking the numbers on her phone; Mark stands at the window."
+  - id: e2
+    order: 2
+    actor: sarah
+    type: action
+    verb: hold
+    target: ticket
+    description: "Sarah holds up the ticket, hands shaking."
+  - id: e3
+    order: 3
+    actor: sarah
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Sarah tells Mark."
+    dialogue: "Mark… we won. A million euros. All six numbers."
+    voice: "whispered, then loud"
+    effects:
+      - { subject: scene, attribute: told, value: true }
+  - id: e4
+    order: 4
+    actor: mark
+    type: action
+    verb: move
+    target: sofa
+    description: "Mark rushes over to see the ticket."
+    effects:
+      - { subject: mark, attribute: position, value: sofa }
+  - id: e5
+    order: 5
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Mark thinks of the debt first."
+    dialogue: "First thing: we pay Florence back. Every cent."
+  - id: e6
+    order: 6
+    actor: julie
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Julie calls; Sarah puts her on speaker."
+    dialogue: "Sarah? You sound strange. Is everything all right?"
+  - id: e7
+    order: 7
+    actor: sarah
+    type: dialogue
+    verb: speak
+    target: julie
+    description: "Sarah decides to keep it quiet for now."
+    dialogue: "Everything's fine. I'll call you tomorrow."
+    effects:
+      - { subject: scene, attribute: kept_secret, value: true }
+
+scopes:
+  - { n: 1, id: actor,         title: "Sarah",                           short: "Sarah" }
+  - { n: 2, id: participants,  title: "Mark and Julie",                  short: "Mark & Julie" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Family and friends",              short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [sarah, julie]
+      description: "Sarah keeps the win from her sister for now."
+      evidence: [e6, e7]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: business, affected: [sarah, ticket], description: "Sarah holds a ticket worth €1 million, to be claimed.", evidence: [e2, e3], status: stated, effect: { sarah: positive }, horizon: later }
+    - { id: c2, scope: participants, layer: business, affected: [mark, debt], description: "Repaying Florence becomes easy; Mark wants it done first.", goal: "Settle the €5,000 debt to Florence", evidence: [e5], status: stated, effect: { mark: positive }, horizon: later }
+    - { id: c3, scope: participants, layer: human_social, affected: [mark, sarah], description: "Shock and joy; spending choices now need deciding together.", evidence: [e3, e5], status: possible, effect: { mark: positive, sarah: positive }, horizon: immediate }
+    - { id: c4, scope: participants, layer: perception, affected: [julie], description: "Julie hears something unusual in Sarah's voice, but not the news.", evidence: [e6, e7], status: stated, horizon: immediate }
+    - { id: c5, scope: physical, layer: physical, affected: [ticket], description: "The winning ticket stays in Sarah's hands; it is the only proof of the win.", evidence: [e2], status: stated, horizon: immediate }
+    - { id: c6, scope: relationships, layer: human_social, affected: [sarah, julie], description: "Keeping the secret may strain family trust when it comes out; telling may bring requests for money.", evidence: [e7], status: possible, horizon: later }
+    - { id: c7, scope: city, layer: digital, affected: [ticket], description: "Claiming the prize means identity checks and a bank transfer, recorded by the lottery and the bank.", status: possible, horizon: later, assumptions: ["Sarah claims the prize."] }
+    - { id: c8, scope: society, layer: society, description: "The lottery publishes a winner in Paris (usually without names).", status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "€1 million moves from the lottery pool to a household; any tax depends on local rules (not established).", status: possible, horizon: later }
+    - { id: c10, scope: world, layer: planetary, description: "No specific environmental impact is established.", status: not_identified }
+
+  branches:
+    - id: A
+      title: "Pay Florence first"
+      parent: lottery_win
+      source: authored_demo
+      assumptions: ["The prize is claimed.", "Sarah agrees with Mark."]
+      summary: "They claim the prize and repay Florence the next week."
+      plausibility: "Mark said so straight away, and the debt is their shared goal."
+      events:
+        - { id: a1, order: 8, actor: sarah, type: dialogue, verb: speak, target: mark, description: "Sarah agrees.", dialogue: "Yes. Florence first. Then we think about the rest, slowly.", effects: [ { subject: debt, attribute: status, value: "to be repaid" } ] }
+      goal_changes:
+        - { actor: mark, change: "The debt will be settled.", effect: positive }
+      consequences:
+        - { id: ca1, scope: relationships, layer: human_social, affected: [mark, sarah, debt], description: "Repaying the debt removes a strain on their friendship with Florence.", evidence: [a1], status: possible, horizon: later }
+      unknowns: ["How do they handle the rest of the money?"]
+
+    - id: B
+      title: "Tell the family"
+      parent: lottery_win
+      source: authored_demo
+      assumptions: ["Sarah changes her mind and calls Julie back."]
+      summary: "Sarah calls Julie back and tells her; the news starts to travel."
+      plausibility: "Sarah was close to telling Julie; sisters often share big news."
+      events:
+        - { id: b1, order: 8, actor: sarah, type: dialogue, verb: speak, target: julie, description: "Sarah calls Julie back.", dialogue: "Julie, sit down. I have to tell you something." , effects: [ { subject: scene, attribute: kept_secret, value: false } ] }
+      goal_changes:
+        - { actor: sarah, change: "Shares the joy, and loses control of who knows.", effect: mixed }
+      consequences:
+        - { id: cb1, scope: relationships, layer: human_social, affected: [sarah, julie], description: "The wider family may soon know, with possible requests for money.", evidence: [b1], status: possible, horizon: later }
+      unknowns: ["Who will Julie tell?"]

@@ -1,0 +1,203 @@
+# ACM scene: The Protest. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Florence), 1 action (she joins a street protest), WHERE:
+# politics, in the society world (in the street). Facts given by the scenario carry source
+# scenario_fact; the script, analysis and branches are authored demo content.
+
+schema: acm.scene/1
+id: factory_protest
+title: "The Protest: One Voice in the Street"
+description: >-
+  Florence joins a street protest against a planned chemical factory on the river. She
+  speaks to a journalist, Noah. The company's spokesman, Victor, is there; a police officer,
+  Inès, keeps order.
+action: "Florence joins a street protest against a new chemical factory."
+location:
+  name: Place de la Mairie
+  city: Rouen
+  marks:
+    - { id: crowd,   label: "in the crowd",       x: 3.0, y: 3.0 }
+    - { id: steps,   label: "town hall steps",    x: 3.0, y: 0.8 }
+    - { id: barrier, label: "the police barrier", x: 3.0, y: 1.8 }
+    - { id: press,   label: "press corner",       x: 6.0, y: 2.0 }
+time: "Saturday, 11:00 a.m. (a scenario label)"
+context:
+  - A company plans a chemical factory that would discharge treated water into the river.
+  - The building permit is pending at the town council.
+  - The company promises 200 jobs.
+status: "Florence's objection is on camera; the permit is still pending"
+initial:
+  filmed: false
+unknowns:
+  - What the factory would actually discharge.
+  - How the council will decide.
+caveats:
+  - Environmental effects are stated as possibilities, not assessments.
+  - The dialogue is illustrative demo content.
+
+actors:
+  - id: florence
+    name: Florence
+    role: Resident and protester, the origin actor
+    relationships: { noah: interviewee, victor: opponent }
+    goals: ["Stop the factory being built on the river"]
+    position: crowd
+    knows: ["Children swim in the river in summer"]
+    inferences:
+      - { kind: feeling, text: "May feel determined, and nervous on camera." }
+  - id: victor
+    name: Victor
+    role: The company's spokesman
+    relationships: { florence: opponent }
+    goals: ["Get the building permit"]
+    position: press
+    inferences:
+      - { kind: reaction, text: "May answer with jobs and standards, or invite critics to visit." }
+  - id: ines
+    name: Inès
+    role: Police officer
+    goals: ["Keep the protest peaceful"]
+    position: barrier
+  - id: noah
+    name: Noah
+    role: Local TV journalist
+    relationships: { florence: interviewer }
+    goals: ["Report the protest"]
+    position: press
+
+objects:
+  - { id: placard, label: "Placard", description: "“Our river, not your waste”", owner: florence, holder: florence }
+  - { id: camera,  label: "TV camera", owner: noah, holder: noah }
+  - id: permit
+    label: "Building permit"
+    kind: obligation
+    description: "The factory's building permit, pending at the council"
+    attributes: { status: pending }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Several hundred people gather in the square. Police stand at a barrier before the town hall steps."
+  - id: e2
+    order: 2
+    actor: florence
+    type: action
+    verb: hold
+    target: placard
+    description: "Florence raises her placard: “Our river, not your waste”."
+  - id: e3
+    order: 3
+    actor: florence
+    type: action
+    verb: move
+    target: press
+    description: "Florence walks to the press corner."
+    effects:
+      - { subject: florence, attribute: position, value: press }
+  - id: e4
+    order: 4
+    actor: florence
+    type: dialogue
+    verb: speak
+    target: noah
+    description: "Florence states her objection on camera."
+    dialogue: "This factory would discharge into the river where our children swim. We want it stopped."
+    voice: "clear, determined"
+  - id: e5
+    order: 5
+    actor: noah
+    type: action
+    verb: hold
+    target: camera
+    description: "Noah films her statement."
+    effects:
+      - { subject: scene, attribute: filmed, value: true }
+  - id: e6
+    order: 6
+    actor: victor
+    type: dialogue
+    verb: speak
+    target: noah
+    description: "Victor answers for the company."
+    dialogue: "The plant will meet every environmental standard and bring 200 jobs to Rouen."
+  - id: e7
+    order: 7
+    actor: ines
+    type: dialogue
+    verb: speak
+    target: florence
+    description: "Inès asks Florence to step back."
+    dialogue: "Madam, please stay behind the barrier."
+  - id: e8
+    order: 8
+    actor: florence
+    type: action
+    verb: move
+    target: barrier
+    description: "Florence steps back behind the barrier."
+    effects:
+      - { subject: florence, attribute: position, value: barrier }
+
+scopes:
+  - { n: 1, id: actor,         title: "Florence",                         short: "Florence" }
+  - { n: 2, id: participants,  title: "Victor, Noah and Inès",            short: "Victor, Noah, Inès" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",   short: "Physical" }
+  - { n: 4, id: relationships, title: "Neighbours and community",         short: "Community" }
+  - { n: 5, id: city,          title: "City and services",                short: "City · services" }
+  - { n: 6, id: society,       title: "Society and politics",             short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",              short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                 short: "World" }
+
+demo:
+  conflicts:
+    - between: [florence, victor]
+      description: "Florence wants the factory stopped; Victor wants the permit granted."
+      evidence: [e4, e6]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: human_social, affected: [florence], description: "Her position is now public and on camera.", goal: "Stop the factory being built on the river", evidence: [e4, e5], status: stated, effect: { florence: mixed }, horizon: immediate }
+    - { id: c2, scope: participants, layer: human_social, affected: [victor], description: "The company faces a filmed public objection.", evidence: [e4, e6], status: stated, effect: { victor: negative }, horizon: immediate }
+    - { id: c3, scope: physical, layer: physical, affected: [florence], description: "Florence steps back; the crowd stays behind the barrier and the square stays calm.", evidence: [e7, e8], status: stated, horizon: immediate }
+    - { id: c4, scope: participants, layer: perception, affected: [noah, victor], description: "Her words are recorded and heard by the crowd and the spokesman.", evidence: [e4, e5], status: stated, horizon: immediate }
+    - { id: c5, scope: city, layer: digital, affected: [camera], description: "The clip may be broadcast and shared online, reaching far beyond the square.", evidence: [e5], status: possible, horizon: later }
+    - { id: c6, scope: participants, layer: business, affected: [permit, victor], description: "The permit decision may face more scrutiny or delay.", evidence: [e4], status: possible, effect: { victor: negative }, horizon: later }
+    - { id: c7, scope: relationships, layer: human_social, affected: [florence], description: "Neighbours may split between the promised jobs and the river.", evidence: [e4, e6], status: possible, horizon: later }
+    - { id: c8, scope: society, layer: society, description: "Her voice joins a public debate on jobs versus the environment; the council may hold a consultation.", evidence: [e4, e6], status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "200 promised jobs on one side; river uses (fishing, tourism) on the other.", evidence: [e6], status: possible, horizon: later }
+    - { id: c10, scope: world, layer: planetary, description: "If the factory is built, discharges would affect the river's ecosystem; if not, that risk disappears.", status: possible, horizon: later, assumptions: ["Discharges are not fully harmless (not established)."] }
+
+  branches:
+    - id: A
+      title: "A public consultation"
+      parent: factory_protest
+      source: authored_demo
+      assumptions: ["The council responds to the protest."]
+      summary: "The council announces a public consultation before deciding the permit."
+      plausibility: "A filmed protest and a pending permit make a consultation a common next step."
+      events:
+        - { id: a1, order: 9, actor: noah, type: dialogue, verb: speak, description: "Noah reports the council's announcement.", dialogue: "Breaking: the council will hold a public consultation before ruling on the permit.", effects: [ { subject: permit, attribute: status, value: "pending, consultation announced" } ] }
+      goal_changes:
+        - { actor: florence, change: "Gets a formal voice in the decision.", effect: positive }
+        - { actor: victor,   change: "The permit is delayed.", effect: negative }
+      consequences:
+        - { id: ca1, scope: society, layer: society, description: "Residents can submit objections formally.", evidence: [a1], status: stated, horizon: later }
+      unknowns: ["How long will the consultation take?"]
+
+    - id: B
+      title: "An invitation to the site"
+      parent: factory_protest
+      source: authored_demo
+      assumptions: ["Victor wants to win over critics."]
+      summary: "Victor invites Florence to visit the planned site and see the treatment design."
+      plausibility: "Victor answered with standards; inviting critics is a way to make that case."
+      events:
+        - { id: b1, order: 9,  actor: victor, type: action, verb: move, target: barrier, description: "Victor walks over to Florence.", effects: [ { subject: victor, attribute: position, value: barrier } ] }
+        - { id: b2, order: 10, actor: victor, type: dialogue, verb: speak, target: florence, description: "Victor invites her.", dialogue: "Come and see the water-treatment plans yourself. Bring your questions." }
+      goal_changes:
+        - { actor: florence, change: "Can examine the design, but may be seen as softening.", effect: mixed }
+        - { actor: victor,   change: "Opens a dialogue with a visible critic.", effect: mixed }
+      consequences:
+        - { id: cb1, scope: relationships, layer: human_social, affected: [florence, victor], description: "A direct dialogue opens between protester and company.", evidence: [b2], status: possible, horizon: later }
+      unknowns: ["Will Florence accept?"]

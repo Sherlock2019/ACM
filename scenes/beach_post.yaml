@@ -1,0 +1,194 @@
+# ACM scene: The Beach Photo. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Sarah), 1 action (she posts a photo of Mark on Facebook),
+# WHERE: the digital world (on Facebook). Facts given by the scenario carry source
+# scenario_fact; the script, analysis and branches are authored demo content.
+
+schema: acm.scene/1
+id: beach_post
+title: "The Beach Photo: One Post, Many Viewers"
+description: >-
+  Mark called in sick to work today. At the beach, Sarah takes a photo of him asleep on his
+  towel and posts it publicly on Facebook as a joke. Mark's manager Paul sees it in his feed.
+action: "Sarah posts a photo of Mark at the beach on Facebook."
+location:
+  name: Plage du Prado
+  city: Marseille
+  marks:
+    - { id: towel, label: "Mark's towel",      x: 1.5, y: 2.0 }
+    - { id: towel_sarah, label: "Sarah's towel", x: 2.7, y: 2.0 }
+    - { id: water, label: "the water's edge",  x: 2.0, y: 5.0 }
+    - { id: path,  label: "beach path",        x: 6.0, y: 0.5 }
+time: "Tuesday, 11:30 a.m., a working day (a scenario label)"
+context:
+  - Mark called in sick this morning.
+  - Sarah's Facebook posts are public, and Mark's colleagues follow her.
+  - Paul is Mark's manager.
+status: "The post is public; Paul has asked Mark to see him tomorrow"
+initial:
+  posted: false
+  manager_aware: false
+unknowns:
+  - Whether Mark was actually ill.
+  - Whether Sarah knew he had called in sick.
+  - What Paul will decide tomorrow.
+caveats:
+  - The dialogue and messages are illustrative demo content.
+  - Nothing here establishes that Mark lied about being ill.
+
+actors:
+  - id: sarah
+    name: Sarah
+    role: Posts the photo, the origin actor
+    relationships: { mark: wife }
+    goals: ["Share a funny moment"]
+    position: towel_sarah
+    knows: ["Her posts are public"]
+    unknown: ["Whether she knew Mark had called in sick"]
+    inferences:
+      - { kind: thought,  text: "“This is too funny not to share.”" }
+      - { kind: feeling,  text: "May feel amused, then guilty when she hears about Paul." }
+  - id: mark
+    name: Mark
+    role: In the photo, on a sick day
+    relationships: { sarah: husband, paul: "employee of" }
+    goals: ["Rest today without trouble at work"]
+    position: towel
+    knows: ["He called in sick this morning"]
+    unknown: ["Whether he was ill"]
+    inferences:
+      - { kind: feeling,  text: "May feel caught out and embarrassed." }
+      - { kind: reaction, text: "May ask Sarah to delete the post, or call Paul to explain." }
+  - id: paul
+    name: Paul
+    role: Mark's manager, sees the post from the office
+    relationships: { mark: "manager of" }
+    goals: ["Keep the team reliable"]
+    knows: ["Mark called in sick today"]
+    inferences:
+      - { kind: thought, text: "“He doesn't look ill.”" }
+
+objects:
+  - { id: phone, label: "Sarah's phone", owner: sarah, holder: sarah }
+  - { id: photo, label: "Beach photo", description: "A digital photo of Mark asleep on his towel", owner: sarah, attributes: { visibility: none } }
+  - id: sick_leave
+    label: "Sick day"
+    kind: obligation
+    description: "Mark's declared sick day with his employer"
+    attributes: { employer_contact: paul, status: declared }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Mark sleeps on his towel in the sun. Sarah sits next to him, phone in hand."
+  - id: e2
+    order: 2
+    actor: sarah
+    type: action
+    verb: hold
+    target: phone
+    description: "Sarah takes a photo of Mark asleep."
+    effects:
+      - { subject: photo, attribute: visibility, value: private }
+  - id: e3
+    order: 3
+    actor: sarah
+    type: action
+    verb: gesture
+    description: "Sarah posts the photo publicly on Facebook: “Best sick day ever 😂”."
+    effects:
+      - { subject: scene, attribute: posted, value: true }
+      - { subject: photo, attribute: visibility, value: public }
+  - id: e4
+    order: 4
+    actor: paul
+    type: observation
+    description: "In the office, Paul sees the post in his feed."
+    effects:
+      - { subject: scene, attribute: manager_aware, value: true }
+  - id: e5
+    order: 5
+    actor: paul
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Paul messages Mark."
+    dialogue: "Feeling better, Mark? Come and see me in my office tomorrow."
+    effects:
+      - { subject: sick_leave, attribute: status, value: questioned }
+  - id: e6
+    order: 6
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Mark wakes and reads the message."
+    dialogue: "Sarah… did you post a photo of me? Paul saw it."
+    voice: "alarmed"
+
+scopes:
+  - { n: 1, id: actor,         title: "Sarah",                           short: "Sarah" }
+  - { n: 2, id: participants,  title: "Mark and Paul",                   short: "Mark & Paul" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Relationships and work",          short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [mark, paul]
+      description: "Mark's declared sick day is now questioned by his manager."
+      evidence: [e4, e5]
+      status: stated
+    - between: [sarah, mark]
+      description: "Sarah's joke exposed Mark at work."
+      evidence: [e3, e6]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: human_social, affected: [sarah], description: "Her joke post exposes Mark's sick day.", goal: "Share a funny moment", evidence: [e3, e6], status: stated, effect: { sarah: negative }, horizon: immediate }
+    - { id: c2, scope: participants, layer: business, affected: [mark, paul, sick_leave], description: "Mark's sick day is questioned by his employer; a meeting is set for tomorrow.", evidence: [e5], status: stated, effect: { mark: negative }, horizon: later }
+    - { id: c3, scope: participants, layer: human_social, affected: [mark], description: "Mark is caught out and embarrassed.", evidence: [e6], status: possible, effect: { mark: negative }, horizon: immediate }
+    - { id: c4, scope: participants, layer: perception, affected: [paul], description: "Paul sees the photo; the post's audience includes Mark's colleagues.", evidence: [e4], status: stated, horizon: immediate }
+    - { id: c5, scope: physical, layer: physical, affected: [mark], description: "Nothing changes on the beach: the post changes only who knows what.", evidence: [e3], status: stated, horizon: immediate }
+    - { id: c6, scope: city, layer: digital, affected: [photo], description: "The photo is public on Facebook: anyone on Sarah's network can view, share or screenshot it.", evidence: [e3], status: stated, horizon: immediate }
+    - { id: c7, scope: relationships, layer: human_social, affected: [mark, sarah], description: "Trust between Mark and Sarah may suffer.", evidence: [e6], status: possible, effect: { mark: negative, sarah: negative }, horizon: later }
+    - { id: c8, scope: society, layer: society, description: "A small case of how social media blurs private life and work.", status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "No national economic impact is established.", status: not_identified }
+    - { id: c10, scope: world, layer: planetary, description: "No specific environmental impact is established.", status: not_identified }
+
+  branches:
+    - id: A
+      title: "Delete and explain"
+      parent: beach_post
+      source: authored_demo
+      assumptions: ["Sarah agrees to delete the post.", "Mark chooses to call Paul."]
+      summary: "Sarah deletes the post; Mark calls Paul to explain."
+      plausibility: "Mark asked about the post right after Paul's message; deleting it and calling are the direct responses."
+      events:
+        - { id: a1, order: 7, actor: sarah, type: action, verb: gesture, description: "Sarah deletes the post.", effects: [ { subject: photo, attribute: visibility, value: deleted } ] }
+        - { id: a2, order: 8, actor: mark, type: dialogue, verb: speak, target: paul, description: "Mark calls Paul.", dialogue: "Paul, I'd rather explain now than tomorrow." }
+      goal_changes:
+        - { actor: mark,  change: "Faces the issue early; the outcome is still open.", effect: mixed }
+        - { actor: sarah, change: "Limits further spread of the photo.", effect: mixed }
+      consequences:
+        - { id: ca1, scope: city, layer: digital, affected: [photo], description: "Deleting the post stops new views, but cannot undo views or screenshots already made.", evidence: [a1], status: stated, horizon: immediate }
+      unknowns: ["Has anyone screenshotted it?", "Will Paul accept the explanation?"]
+
+    - id: B
+      title: "Ignore it"
+      parent: beach_post
+      source: authored_demo
+      assumptions: ["Mark does not reply to Paul today."]
+      summary: "Mark ignores the message; the post stays up."
+      plausibility: "Possible but risky: Paul has already seen the photo and asked for a meeting."
+      events:
+        - { id: b1, order: 7, actor: mark, type: action, verb: move, target: water, description: "Mark puts the phone down and walks to the water.", effects: [ { subject: mark, attribute: position, value: water } ] }
+      goal_changes:
+        - { actor: mark, change: "Avoids the issue today; tomorrow's meeting stays.", effect: negative }
+      consequences:
+        - { id: cb1, scope: city, layer: digital, affected: [photo], description: "The public post keeps collecting views and comments.", evidence: [e3, b1], status: possible, horizon: later }
+      unknowns: ["How many more colleagues will see it?"]

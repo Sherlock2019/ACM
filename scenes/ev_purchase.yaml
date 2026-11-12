@@ -1,0 +1,198 @@
+# ACM scene: The Electric Car. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Karim), 1 action (he buys an electric car), WHERE: the
+# economy (at the dealership). Facts given by the scenario carry source scenario_fact; the
+# script, analysis and branches are authored demo content, not market or emissions data.
+
+schema: acm.scene/1
+id: ev_purchase
+title: "The Electric Car: One Purchase at the Dealership"
+description: >-
+  Karim buys an electric car at a dealership with a five-year loan, trading in his diesel.
+  His wife Amina is with him; Nadia is the salesperson.
+action: "Karim buys an electric car at the dealership."
+location:
+  name: Garage Électra
+  city: Toulouse
+  marks:
+    - { id: desk,     label: "Nadia's desk",     x: 2.0, y: 0.6 }
+    - { id: chair_karim, label: "Karim's chair", x: 1.4, y: 1.6 }
+    - { id: chair_amina, label: "Amina's chair", x: 2.6, y: 1.6 }
+    - { id: showroom, label: "the showroom",     x: 4.0, y: 3.0 }
+    - { id: lot,      label: "the trade-in lot", x: 7.0, y: 3.5 }
+    - { id: exit,     label: "the exit",         x: 7.5, y: 0.5 }
+time: "Friday, 6:00 p.m. (a scenario label)"
+context:
+  - Karim spends about €250 a month on diesel.
+  - The electric car costs €32,000; the trade-in covers €4,000.
+  - The loan is €28,000 over 60 months, about €520 a month.
+  - They can charge at home.
+status: "Contract signed; Karim holds the keys"
+initial:
+  sale: not signed
+unknowns:
+  - Their real charging costs.
+  - Whether a purchase subsidy applies.
+  - What happens to the diesel next.
+caveats:
+  - Prices, loan terms and fuel costs are scenario facts, not market data.
+  - Environmental statements are possibilities, not a life-cycle assessment.
+
+actors:
+  - id: karim
+    name: Karim
+    role: The buyer, the origin actor
+    relationships: { amina: husband, nadia: customer }
+    goals: ["Cut fuel costs", "Drive cleaner"]
+    position: chair_karim
+    knows: ["Diesel costs them about €250 a month"]
+    inferences:
+      - { kind: feeling, text: "May feel excited and a little anxious about the loan." }
+  - id: amina
+    name: Amina
+    role: Karim's wife
+    relationships: { karim: wife }
+    goals: ["Keep the monthly budget safe"]
+    preferences: ["Worried about a five-year loan"]
+    position: chair_amina
+    inferences:
+      - { kind: reaction, text: "May accept, or ask to review the budget first." }
+  - id: nadia
+    name: Nadia
+    role: Salesperson
+    relationships: { karim: salesperson }
+    goals: ["Close the sale"]
+    position: desk
+
+objects:
+  - { id: ev,      label: "Electric car", description: "A new electric hatchback", position: showroom, attributes: { price_eur: 32000 } }
+  - { id: ev_keys, label: "Electric car keys", holder: nadia, attributes: { offered_to: null } }
+  - { id: diesel,  label: "Karim's diesel", description: "The trade-in", owner: karim, position: lot }
+  - id: loan
+    label: "Car loan"
+    kind: obligation
+    description: "€28,000 over 60 months"
+    attributes: { amount_eur: 28000, months: 60, monthly_eur: 520, debtors: [karim], status: proposed }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Karim and Amina sit at Nadia's desk; the electric car stands in the showroom."
+  - id: e2
+    order: 2
+    actor: nadia
+    type: dialogue
+    verb: speak
+    target: karim
+    description: "Nadia states the terms."
+    dialogue: "With your diesel as trade-in, the loan is €28,000 over five years."
+  - id: e3
+    order: 3
+    actor: amina
+    type: dialogue
+    verb: speak
+    target: karim
+    description: "Amina questions the monthly payment."
+    dialogue: "That's €520 a month. Are we sure?"
+    voice: "quiet, concerned"
+  - id: e4
+    order: 4
+    actor: karim
+    type: dialogue
+    verb: speak
+    target: amina
+    description: "Karim compares it with fuel."
+    dialogue: "We spend €250 a month on diesel now. Charging at home is far cheaper."
+  - id: e5
+    order: 5
+    actor: karim
+    type: action
+    verb: gesture
+    description: "Karim signs the purchase and loan contract."
+    effects:
+      - { subject: scene,  attribute: sale, value: signed }
+      - { subject: loan,   attribute: status, value: active }
+      - { subject: ev,     attribute: owner, value: karim }
+      - { subject: diesel, attribute: owner, value: null }
+  - id: e6
+    order: 6
+    actor: nadia
+    type: action
+    verb: offer
+    target: karim
+    object: ev_keys
+    description: "Nadia hands Karim the keys."
+    effects:
+      - { subject: ev_keys, attribute: offered_to, value: karim }
+  - id: e7
+    order: 7
+    actor: karim
+    type: action
+    verb: take
+    target: ev_keys
+    description: "Karim takes the keys."
+    effects:
+      - { subject: ev_keys, attribute: holder, value: karim }
+
+scopes:
+  - { n: 1, id: actor,         title: "Karim",                           short: "Karim" }
+  - { n: 2, id: participants,  title: "Amina and Nadia",                 short: "Amina & Nadia" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Family",                          short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [karim, amina]
+      description: "Karim's goal (cut fuel costs) takes on a loan that worries Amina."
+      evidence: [e3, e4]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: business, affected: [karim, loan], description: "He owes €28,000 over 60 months; his fuel spending should fall.", goal: "Cut fuel costs", evidence: [e2, e5], status: stated, effect: { karim: mixed }, horizon: later }
+    - { id: c2, scope: participants, layer: human_social, affected: [amina], description: "Amina's worry about the monthly payment is heard but not resolved.", goal: "Keep the monthly budget safe", evidence: [e3, e5], status: stated, effect: { amina: negative }, horizon: immediate }
+    - { id: c3, scope: participants, layer: business, affected: [nadia], description: "Nadia closes the sale.", evidence: [e5], status: stated, effect: { nadia: positive }, horizon: immediate }
+    - { id: c4, scope: physical, layer: physical, affected: [ev_keys, diesel], description: "The keys pass to Karim; the diesel stays on the lot as a trade-in.", evidence: [e7], status: stated, horizon: immediate }
+    - { id: c5, scope: participants, layer: perception, affected: [amina, nadia], description: "Amina and Nadia witness the signature.", evidence: [e5], status: stated, horizon: immediate }
+    - { id: c6, scope: city, layer: digital, affected: [ev, diesel], description: "Registration and insurance are moved online; the diesel's registration is transferred.", status: possible, horizon: later }
+    - { id: c7, scope: relationships, layer: human_social, affected: [karim, amina], description: "Money tension may follow if costs run higher than expected.", evidence: [e3], status: possible, effect: { karim: negative, amina: negative }, horizon: later }
+    - { id: c8, scope: society, layer: society, description: "One more electric car on the road; demand for public charging grows slightly.", status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "The sale and loan count in car sales and consumer credit; a subsidy may apply (not established).", evidence: [e5], status: possible, horizon: later }
+    - { id: c10, scope: world, layer: planetary, affected: [ev, diesel], description: "Driving emissions fall compared with the diesel; the battery has its own manufacturing footprint, and the diesel may keep running elsewhere.", status: possible, horizon: later }
+
+  branches:
+    - id: A
+      title: "Budget together"
+      parent: ev_purchase
+      source: authored_demo
+      assumptions: ["Amina and Karim review the budget that evening."]
+      summary: "At home, they redo the monthly budget with the loan and the fuel savings."
+      plausibility: "Amina's concern is unresolved; a budget review answers it directly."
+      events:
+        - { id: a1, order: 8, actor: amina, type: dialogue, verb: speak, target: karim, description: "Amina asks to redo the budget.", dialogue: "Tonight let's redo the budget with the loan and what we save on diesel." }
+        - { id: a2, order: 9, actor: karim, type: dialogue, verb: speak, target: amina, description: "Karim agrees.", dialogue: "Good idea. If it's too tight, we cut elsewhere." }
+      goal_changes:
+        - { actor: amina, change: "Her concern becomes a plan.", effect: positive }
+        - { actor: karim, change: "Keeps the car with a shared plan.", effect: positive }
+      consequences:
+        - { id: ca1, scope: relationships, layer: human_social, affected: [karim, amina], description: "A shared budget reduces the risk of money tension.", evidence: [a1, a2], status: possible, effect: { amina: positive }, horizon: later }
+      unknowns: ["Do the savings cover enough of the payment?"]
+
+    - id: B
+      title: "Drive away"
+      parent: ev_purchase
+      source: authored_demo
+      assumptions: ["The car is ready to drive today."]
+      summary: "Karim and Amina drive the new car home; the diesel stays at the dealership."
+      plausibility: "The contract is signed and Karim holds the keys."
+      events:
+        - { id: b1, order: 8, actor: karim, type: action, verb: move, target: exit, description: "Karim drives the car to the exit.", effects: [ { subject: karim, attribute: position, value: exit }, { subject: ev, attribute: position, value: exit } ] }
+      goal_changes:
+        - { actor: karim, change: "Starts driving electric.", effect: positive }
+      consequences:
+        - { id: cb1, scope: physical, layer: physical, affected: [ev, diesel], description: "The new car leaves; the diesel stays on the lot for resale.", evidence: [b1], status: stated, horizon: immediate }
+      unknowns: ["Who buys the diesel next?"]

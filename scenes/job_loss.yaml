@@ -1,0 +1,202 @@
+# ACM scene: The Layoff. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Claire, Mark's manager), 1 action (she lays Mark off), WHERE:
+# business and institutions (in the office). Facts given by the scenario carry source
+# scenario_fact; the script, analysis and branches are authored demo content.
+
+schema: acm.scene/1
+id: job_loss
+title: "The Layoff: Mark Loses His Job"
+description: >-
+  Claire, Mark's manager, tells him in her office that his position is cut in a restructuring.
+  That evening Mark tells Sarah at home. They still owe Florence €5,000.
+action: "Claire lays Mark off."
+location:
+  name: Office, then Mark and Sarah's kitchen
+  city: Paris
+  marks:
+    - { id: office_desk, label: "Claire's desk",          x: 1.0, y: 1.0 }
+    - { id: office_chair, label: "chair facing Claire",   x: 1.0, y: 2.0 }
+    - { id: office_door, label: "Claire's office door",   x: 3.0, y: 1.0 }
+    - { id: kitchen,     label: "the kitchen table (home)", x: 7.0, y: 3.0 }
+time: "Thursday: 9:00 a.m. at the office, 7:00 p.m. at home (scenario labels)"
+context:
+  - Mark's company is restructuring; his position is cut.
+  - He gets one month's notice and severance under his contract.
+  - Mark and Sarah owe Florence €5,000 and pay rent on a single main income.
+status: "Mark is laid off; Sarah knows; the household has lost its main income"
+initial:
+  employed: true
+  sarah_knows: false
+unknowns:
+  - How long it will take Mark to find work.
+  - The exact unemployment benefit he is entitled to.
+caveats:
+  - Contract terms and benefits are scenario facts, not legal advice.
+  - The dialogue is illustrative demo content.
+
+actors:
+  - id: claire
+    name: Claire
+    role: Mark's manager, the origin actor
+    relationships: { mark: "manager of" }
+    goals: ["Carry out the restructuring"]
+    position: office_desk
+    inferences:
+      - { kind: feeling, text: "May feel uncomfortable delivering the news." }
+  - id: mark
+    name: Mark
+    role: Employee, laid off
+    relationships: { claire: "employee of", sarah: husband }
+    goals: ["Keep the household afloat"]
+    position: office_chair
+    knows: ["He and Sarah owe Florence €5,000"]
+    inferences:
+      - { kind: feeling,  text: "May feel shocked, ashamed or angry." }
+      - { kind: reaction, text: "May start looking for work at once, or withdraw for a while." }
+  - id: sarah
+    name: Sarah
+    role: Mark's wife
+    relationships: { mark: wife }
+    goals: ["Keep the household secure"]
+    position: kitchen
+    inferences:
+      - { kind: feeling,  text: "May feel worried and want to support Mark." }
+
+objects:
+  - { id: letter, label: "Termination letter", owner: claire, holder: claire }
+  - id: job
+    label: "Mark's job"
+    kind: obligation
+    description: "Mark's employment contract"
+    attributes: { status: active, notice_months: 1 }
+  - id: debt
+    label: "€5,000 debt to Florence"
+    kind: obligation
+    attributes: { amount: 5000, currency: EUR, status: unpaid }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Claire asks Mark to come into her office and closes the door."
+  - id: e2
+    order: 2
+    actor: claire
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Claire tells Mark his position is cut."
+    dialogue: "Mark, I'm sorry. Your position is part of the restructuring. Your last day is in one month."
+    voice: "careful, formal"
+    effects:
+      - { subject: job, attribute: status, value: terminated_with_notice }
+      - { subject: scene, attribute: employed, value: false }
+  - id: e3
+    order: 3
+    actor: claire
+    type: action
+    verb: offer
+    target: mark
+    object: letter
+    description: "Claire hands Mark the termination letter."
+    effects:
+      - { subject: letter, attribute: holder, value: mark }
+  - id: e4
+    order: 4
+    actor: mark
+    type: action
+    verb: move
+    target: office_door
+    description: "Mark leaves the office without a word."
+    effects:
+      - { subject: mark, attribute: position, value: office_door }
+  - id: e5
+    order: 5
+    actor: mark
+    type: action
+    verb: move
+    target: kitchen
+    description: "That evening, Mark sits down at the kitchen table at home."
+    effects:
+      - { subject: mark, attribute: position, value: kitchen }
+  - id: e6
+    order: 6
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Mark tells Sarah."
+    dialogue: "I lost my job today. One month's notice."
+    voice: "flat, tired"
+    effects:
+      - { subject: scene, attribute: sarah_knows, value: true }
+  - id: e7
+    order: 7
+    actor: sarah
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Sarah responds."
+    dialogue: "We'll get through this. But what about rent, and Florence's money?"
+
+scopes:
+  - { n: 1, id: actor,         title: "Claire",                          short: "Claire" }
+  - { n: 2, id: participants,  title: "Mark and Sarah",                  short: "Mark & Sarah" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Family and friends",              short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [claire, mark]
+      description: "The company's restructuring ends Mark's job."
+      evidence: [e2]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: business, affected: [claire, job], description: "Claire completes one step of the restructuring.", goal: "Carry out the restructuring", evidence: [e2, e3], status: stated, effect: { claire: mixed }, horizon: immediate }
+    - { id: c2, scope: participants, layer: business, affected: [mark, sarah, job], description: "The household loses its main income after one month; severance applies.", goal: "Keep the household afloat", evidence: [e2], status: stated, effect: { mark: negative, sarah: negative }, horizon: later }
+    - { id: c3, scope: participants, layer: human_social, affected: [mark], description: "Mark is hit hard by the news.", evidence: [e4, e6], status: possible, effect: { mark: negative }, horizon: immediate }
+    - { id: c4, scope: participants, layer: perception, affected: [sarah], description: "Sarah hears the news from Mark that evening.", evidence: [e6], status: stated, horizon: immediate }
+    - { id: c5, scope: physical, layer: physical, affected: [letter], description: "The termination letter passes from Claire to Mark; Mark leaves the office.", evidence: [e3, e4], status: stated, horizon: immediate }
+    - { id: c6, scope: relationships, layer: human_social, affected: [mark, sarah, debt], description: "Repaying Florence's €5,000 becomes harder; the friendship may feel the strain.", evidence: [e7], status: possible, effect: { mark: negative, sarah: negative }, horizon: later }
+    - { id: c7, scope: city, layer: digital, affected: [mark], description: "Mark registers online with the unemployment service and updates his job profiles.", status: possible, horizon: later, assumptions: ["Mark registers for benefits."] }
+    - { id: c8, scope: society, layer: society, affected: [mark], description: "Mark becomes eligible for unemployment benefit, paid by the social insurance system.", status: possible, horizon: later }
+    - { id: c9, scope: economy, layer: society, description: "One more person counts as unemployed; one layoff has no measurable national effect.", evidence: [e2], status: possible, horizon: later }
+    - { id: c10, scope: world, layer: planetary, description: "No specific environmental impact is established.", status: not_identified }
+
+  branches:
+    - id: A
+      title: "A plan together"
+      parent: job_loss
+      source: authored_demo
+      assumptions: ["Mark is ready to talk it through tonight."]
+      summary: "Mark and Sarah draw up a budget and a job-search plan, and decide to tell Florence."
+      plausibility: "Sarah asked about rent and the debt directly; a plan answers both."
+      events:
+        - { id: a1, order: 8, actor: mark, type: dialogue, verb: speak, target: sarah, description: "Mark proposes a plan.", dialogue: "Let's cut what we can, I'll apply everywhere, and we tell Florence the truth." }
+      goal_changes:
+        - { actor: mark,  change: "Turns the shock into a plan.", effect: mixed }
+        - { actor: sarah, change: "Gets a shared plan.", effect: positive }
+      consequences:
+        - { id: ca1, scope: relationships, layer: human_social, affected: [mark, sarah], description: "Facing it together may strengthen the couple.", evidence: [a1], status: possible, effect: { mark: positive, sarah: positive }, horizon: later }
+      unknowns: ["Will Florence agree to wait?"]
+
+    - id: B
+      title: "Mark withdraws"
+      parent: job_loss
+      source: authored_demo
+      assumptions: ["Mark needs time before talking."]
+      summary: "Mark goes quiet and leaves the table; the plan waits."
+      plausibility: "He left Claire's office without a word; withdrawing again is consistent."
+      events:
+        - { id: b1, order: 8, actor: mark, type: action, verb: gesture, description: "Mark shakes his head and leaves the table." }
+      goal_changes:
+        - { actor: sarah, change: "Has to wait to plan together.", effect: negative }
+      consequences:
+        - { id: cb1, scope: relationships, layer: human_social, affected: [mark, sarah], description: "Not talking may add stress for both.", evidence: [b1], status: possible, effect: { mark: negative, sarah: negative }, horizon: later }
+      unknowns: ["How long before Mark is ready to talk?"]

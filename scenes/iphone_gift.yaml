@@ -1,0 +1,215 @@
+# ACM scene: The iPhone 18. Schema: acm.scene/1 (src/acm/scene/schema.py).
+#
+# The Butterfly Model: 1 actor (Mark), 1 action (he offers Sarah a new iPhone 18), WHERE: the
+# economy (a purchase on credit, handed over at a café). Facts given by the scenario carry
+# source scenario_fact; the script, analysis and branches are authored demo content, not
+# model predictions.
+
+schema: acm.scene/1
+id: iphone_gift
+title: "The iPhone 18: A Gift on Credit"
+description: >-
+  For Sarah's birthday, Mark offers her the new iPhone 18 at a café. He bought it on a
+  24-month instalment plan from their joint account. Sarah's sister Julie is with them.
+action: "Mark offers Sarah a new iPhone 18 for her birthday."
+location:
+  name: Café Lumière
+  city: Lyon
+  marks:
+    - { id: table,    label: "their table",      x: 2.0, y: 2.0 }
+    - { id: seat_mark,  label: "Mark's seat",  x: 1.2, y: 2.0 }
+    - { id: seat_sarah, label: "Sarah's seat", x: 2.8, y: 2.0 }
+    - { id: seat_julie, label: "Julie's seat", x: 2.0, y: 2.9 }
+    - { id: counter,  label: "the counter",      x: 5.0, y: 0.8 }
+    - { id: window,   label: "by the window",    x: 0.6, y: 2.0 }
+    - { id: entrance, label: "café entrance",    x: 6.0, y: 3.2 }
+time: "Saturday, 4:00 p.m. (a scenario label, not a calendar date)"
+context:
+  - It is Sarah's birthday.
+  - Mark bought an iPhone 18 on a 24-month instalment plan (€65 a month) from the joint account.
+  - Last month Sarah and Mark agreed to save money this year.
+  - Sarah's current phone is an old iPhone 12 with a cracked screen.
+status: "Gift in Sarah's hands; the payment plan is questioned, not refused"
+initial:
+  gift: not offered
+  payment_known_to_sarah: false
+unknowns:
+  - Whether Sarah will keep the phone.
+  - Whether the instalments fit the household budget.
+  - What happens to the old phone.
+caveats:
+  - The dialogue is illustrative demo content, not a recording or a model prediction.
+  - Prices and plan terms are scenario facts, not market data.
+
+actors:
+  - id: mark
+    name: Mark
+    role: Sarah's husband, the origin actor
+    relationships: { sarah: husband, julie: brother-in-law }
+    goals: ["Make Sarah happy on her birthday"]
+    preferences: ["Thinks her old phone is falling apart"]
+    position: seat_mark
+    knows: ["He bought the phone on a 24-month plan from the joint account", "They agreed to save this year"]
+    unknown: ["Whether he expected Sarah to object"]
+    inferences:
+      - { kind: thought,  text: "“She deserves a phone that works.”" }
+      - { kind: feeling,  text: "May feel proud, then defensive when money comes up." }
+  - id: sarah
+    name: Sarah
+    role: Birthday, receives the gift
+    relationships: { mark: wife, julie: sister }
+    goals: ["Save money this year"]
+    preferences: ["Agreed last month to cut spending"]
+    position: seat_sarah
+    knows: ["They agreed to save this year", "Her phone's screen is cracked"]
+    unknown: ["How she weighs the gift against the debt"]
+    inferences:
+      - { kind: thought,  text: "“It's lovely, but we said we'd save.”" }
+      - { kind: feeling,  text: "May feel touched and worried at the same time." }
+      - { kind: reaction, text: "May keep the phone and set a budget, or ask to return it." }
+  - id: julie
+    name: Julie
+    role: Sarah's sister, a witness
+    relationships: { sarah: sister, mark: sister-in-law }
+    position: seat_julie
+    knows: ["It is Sarah's birthday"]
+    inferences:
+      - { kind: reaction, text: "May stay out of it, or side with Sarah about the money." }
+
+objects:
+  - { id: iphone,    label: "iPhone 18",        description: "The new phone, in its gift box", owner: mark, holder: mark, attributes: { offered_to: null, price_eur: 1560 } }
+  - { id: old_phone, label: "Old iPhone 12",    description: "Sarah's phone, cracked screen", owner: sarah, holder: sarah }
+  - id: instalments
+    label: "24-month instalment plan"
+    kind: obligation
+    description: "€65 a month for 24 months, from the joint account"
+    attributes: { monthly_eur: 65, months: 24, debtors: [mark, sarah], status: active }
+
+events:
+  - id: e1
+    order: 1
+    type: observation
+    description: "Mark, Sarah and Julie sit at a table in the café, a gift box in front of Mark."
+  - id: e2
+    order: 2
+    actor: mark
+    type: action
+    verb: offer
+    target: sarah
+    object: iphone
+    description: "Mark slides the gift box across the table to Sarah."
+    animation: "push box across table"
+    effects:
+      - { subject: scene,  attribute: gift, value: offered }
+      - { subject: iphone, attribute: offered_to, value: sarah }
+  - id: e3
+    order: 3
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Mark wishes her happy birthday."
+    dialogue: "Happy birthday. It's the new iPhone 18 — your old one is falling apart."
+    voice: "warm, proud"
+  - id: e4
+    order: 4
+    actor: sarah
+    type: action
+    verb: take
+    target: iphone
+    description: "Sarah opens the box and takes the phone out."
+    effects:
+      - { subject: iphone, attribute: holder, value: sarah }
+  - id: e5
+    order: 5
+    actor: sarah
+    type: dialogue
+    verb: speak
+    target: mark
+    description: "Sarah asks how they paid for it."
+    dialogue: "It's beautiful… but how did we pay for this? We said we'd save this year."
+    voice: "soft, uneasy"
+  - id: e6
+    order: 6
+    actor: mark
+    type: dialogue
+    verb: speak
+    target: sarah
+    description: "Mark explains the instalment plan."
+    dialogue: "Don't worry, it's spread over 24 months on the joint account."
+    effects:
+      - { subject: scene, attribute: payment_known_to_sarah, value: true }
+  - id: e7
+    order: 7
+    actor: julie
+    type: action
+    verb: gesture
+    description: "Julie raises her eyebrows and looks at Sarah."
+
+scopes:
+  - { n: 1, id: actor,         title: "Mark",                            short: "Mark" }
+  - { n: 2, id: participants,  title: "Sarah and Julie",                 short: "Sarah & Julie" }
+  - { n: 3, id: physical,      title: "Immediate physical environment",  short: "Physical" }
+  - { n: 4, id: relationships, title: "Relationships and family",        short: "Relationships" }
+  - { n: 5, id: city,          title: "City and services",               short: "City · services" }
+  - { n: 6, id: society,       title: "Society",                         short: "Society" }
+  - { n: 7, id: economy,       title: "Economy and country",             short: "Economy" }
+  - { n: 8, id: world,         title: "World and planet",                short: "World" }
+
+demo:
+  conflicts:
+    - between: [mark, sarah]
+      description: "Mark's goal (make Sarah happy with the phone) clashes with the goal they share of saving money this year."
+      evidence: [e5, e6]
+      status: stated
+
+  consequences:
+    - { id: c1, scope: actor, layer: human_social, affected: [mark], description: "His gift is received with a question about money, not only joy.", goal: "Make Sarah happy on her birthday", evidence: [e5], status: stated, effect: { mark: mixed }, horizon: immediate }
+    - { id: c2, scope: participants, layer: human_social, affected: [sarah], description: "Sarah has a new phone, and a 24-month debt she did not agree to.", goal: "Save money this year", evidence: [e5, e6], status: stated, effect: { sarah: mixed }, horizon: immediate }
+    - { id: c3, scope: participants, layer: business, affected: [mark, sarah, instalments], description: "The household pays €65 a month for 24 months from the joint account.", evidence: [e6], status: stated, effect: { mark: negative, sarah: negative }, horizon: later }
+    - { id: c4, scope: physical, layer: physical, affected: [iphone, old_phone], description: "The new phone passes from Mark's hands to Sarah's; the cracked phone is still in her bag.", evidence: [e4], status: stated, horizon: immediate }
+    - { id: c5, scope: participants, layer: perception, affected: [julie], description: "Julie sees the gift and hears how it was paid for.", evidence: [e3, e6, e7], status: stated, horizon: immediate }
+    - { id: c6, scope: relationships, layer: human_social, affected: [mark, sarah], description: "Money decisions made alone may become a recurring disagreement.", evidence: [e5, e6], status: possible, effect: { mark: negative, sarah: negative }, horizon: later }
+    - { id: c7, scope: city, layer: digital, affected: [iphone, old_phone], description: "Setting up the phone moves Sarah's accounts and data to it; the old phone should be wiped.", status: possible, horizon: later, assumptions: ["Sarah keeps the phone."] }
+    - { id: c8, scope: economy, layer: society, description: "The purchase counts toward phone sales and consumer credit; one sale has no measurable national effect.", status: possible, horizon: later }
+    - { id: c9, scope: society, layer: society, description: "No specific societal impact is established.", status: not_identified }
+    - { id: c10, scope: world, layer: planetary, affected: [old_phone], description: "If the old phone is thrown away rather than recycled, its metals and battery become e-waste.", status: possible, horizon: later, assumptions: ["The old phone is not recycled."] }
+
+  branches:
+    - id: A
+      title: "Keep it, set a budget"
+      parent: iphone_gift
+      source: authored_demo
+      assumptions: ["Sarah wants to keep the phone.", "Mark accepts a spending rule."]
+      summary: "Sarah keeps the phone; they agree that purchases over €200 are decided together."
+      plausibility: "Sarah held the phone and asked about money rather than refusing; a budget rule answers her concern."
+      events:
+        - { id: a1, order: 8, actor: sarah, type: dialogue, verb: speak, target: mark, description: "Sarah proposes a rule.", dialogue: "I love it. But from now on, anything over €200 we decide together." }
+        - { id: a2, order: 9, actor: mark, type: dialogue, verb: speak, target: sarah, description: "Mark agrees.", dialogue: "Deal. I should have asked you first." , effects: [ { subject: scene, attribute: budget_rule, value: agreed } ] }
+      goal_changes:
+        - { actor: mark,  change: "His gift is accepted, with a rule attached.", effect: positive }
+        - { actor: sarah, change: "Keeps the phone and gets a say in future spending.", effect: positive }
+      inferences:
+        sarah: [ { kind: feeling, text: "Might feel relieved and happy with the gift." } ]
+      consequences:
+        - { id: ca1, scope: relationships, layer: human_social, affected: [mark, sarah], description: "A shared spending rule may prevent the next disagreement.", evidence: [a1, a2], status: possible, effect: { mark: positive, sarah: positive }, horizon: later }
+      unknowns: ["Will the rule hold?"]
+
+    - id: B
+      title: "Return it"
+      parent: iphone_gift
+      source: authored_demo
+      assumptions: ["Sarah puts saving first.", "The shop accepts returns within 14 days (not established)."]
+      summary: "Sarah puts the phone back in its box and asks Mark to return it."
+      plausibility: "Sarah's stated goal is to save; returning the phone serves it, at the cost of Mark's gesture."
+      events:
+        - { id: b1, order: 8, actor: sarah, type: action, verb: place, object: iphone, target: table, description: "Sarah puts the phone back in its box on the table.", effects: [ { subject: iphone, attribute: holder, value: null }, { subject: iphone, attribute: position, value: table } ] }
+        - { id: b2, order: 9, actor: sarah, type: dialogue, verb: speak, target: mark, description: "Sarah asks him to return it.", dialogue: "Thank you, really. But please take it back. My old one still works." }
+      goal_changes:
+        - { actor: mark,  change: "His gift is refused; the debt can be cancelled.", effect: mixed }
+        - { actor: sarah, change: "Protects the savings goal; keeps the cracked phone.", effect: mixed }
+      inferences:
+        mark: [ { kind: feeling, text: "Might feel hurt or embarrassed." } ]
+      consequences:
+        - { id: cb1, scope: participants, layer: business, affected: [instalments], description: "If the return is accepted, the instalment plan is cancelled.", evidence: [b2], status: possible, horizon: later, assumptions: ["The shop accepts the return."] }
+      unknowns: ["Does the shop accept the return?", "How does Mark take it?"]
