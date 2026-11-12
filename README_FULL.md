@@ -108,7 +108,7 @@ flowchart BT
    (physical), post *on Facebook* or send an email (digital), buy *at a shop* (economy), vote
    *at the polls* or protest *in the street* (politics, in society). *Routing by the WHERE is
    the design; today the router decides from each event's verb, type, objects and effects
-   ([rules below](#the-scene-engine)).*
+   ([rules below](#the-next-status-engine)).*
 3. **Each world predicts by its own laws.** Effects update the state event by event (in the car
    sale, the sale ends *disputed*, the car is still Sarah's, the debt unpaid); perception tracks
    who saw or heard what; the other worlds apply their rules.
@@ -127,10 +127,17 @@ consequence. Two engines share this model:
 
 | Engine | Input | Output | Where |
 |---|---|---|---|
-| **Scene engine** | a situation as a script: people, goals, objects, actions, dialogue | state after every event, routing to the worlds, consequences per world and ring, next scenes, scene directions | [`src/acm/scene/`](src/acm/scene/), [`scenes/`](scenes/), dashboard `/acm/scenario` |
+| **Next Status Engine** | a situation as a script: people, goals, objects, actions, dialogue | state after every event, routing to the worlds, consequences per world and ring, next scenes, scene directions | [`src/acm/scene/`](src/acm/scene/), [`scenes/`](scenes/), dashboard `/acm/scenario` |
 | **Rule engine** | one action sentence + context sentences | MLM parse → state changes → other actors' goals → the blast radius from YAML rule packs → a graph with vectors | [`src/acm/engine.py`](src/acm/engine.py), [`packs/`](packs/), dashboard `/acm` |
 
-### The scene engine
+### The Next Status Engine
+
+**What it is for:** playing a situation forward step by step, to see the **next status** of the world
+and of every actor before it happens. It keeps the facts straight over many steps (who owns
+what, who knows what), lets other actors react to what they actually saw and heard, checks an
+agent's proposed next action against the current status, and compares possible futures. The
+rule engine gives the full reach of one action; the Next Status Engine shows how a situation
+unfolds, which is what an agent needs to choose its next move.
 
 A scene is a **script**: where and when, who is there (relationships, goals, what they know),
 objects and who owns or holds them, and ordered actions and dialogue. The engine computes the
@@ -254,7 +261,7 @@ To analyse new text, also install MLM's parser: `pip install -e "../SLM[parse]"`
 | `/acm/tour` | four chapters with real outputs, including ACM next to a real local LLM |
 | `/acm/inference` | 53 scenarios and 280+ "what happens next to …?" questions, each with its reasoning |
 | `/acm` | the rule-engine demo: a phrase, an image and a video, each with its blast radius and a chat |
-| `/acm/scenario` | the scene engine, with a picker for the [eight scenes](#the-scene-engine) |
+| `/acm/scenario` | the Next Status Engine, with a picker for the [eight scenes](#the-next-status-engine) |
 | `/acm/scene` | the physics lab (mockup): recognise objects, simulate an action, see the consequences cascade |
 | `/multimodal`, `/mlm` | MLM's multimodal demo and playground |
 
@@ -265,7 +272,7 @@ acm graph "..."        # the action graph as Mermaid
 acm remember "..."     # store it in the graph vector DB;  acm similar "..." finds the nearest
 acm scene list | validate | show | analyze | layers | route | branches | select | export | bundle
 acm demo               # multimodal demo + docs/demo/tabletop_report.html
-pytest                 # 106 tests (33 for the scene engine), committed fixtures, no GPU or network
+pytest                 # 106 tests (33 for the Next Status Engine), committed fixtures, no GPU or network
 ```
 
 ---
@@ -410,7 +417,7 @@ that must beat the rule baseline.
 
 ### Build it with us
 
-The architecture, the meaning layer, the scene engine and the first worlds are in place. To
+The architecture, the meaning layer, the Next Status Engine and the first worlds are in place. To
 finish the Butterfly Model, we are looking for **top AI talent** to work together:
 
 | Help needed | On which world |
@@ -451,7 +458,7 @@ start.sh, dash.sh   launcher (dash.sh is an alias)
 scenes/             eight scene scripts (acm.scene/1)
 packs/              universal: states, concepts, impacts, places; <lang>: actions, categories
 src/acm/            engine, entities, graph, store, render, cli, multimodal, inference, ask, llm
-src/acm/scene/      scene engine: schema, validate, state, layers (router), providers, directions
+src/acm/scene/      Next Status Engine: schema, validate, state, layers (router), providers, directions
 src/acm/world/      transition interface, tabletop simulator, PyBullet / V-JEPA stubs
 scripts/            draw_vision, make_fixtures, make_inference_suite, make_llm_baseline
 examples/           inference suite (53 scenarios), recorded LLM baseline

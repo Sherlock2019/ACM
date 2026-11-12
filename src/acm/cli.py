@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     demo.add_argument("--report", type=Path, default=Path("docs/demo/tabletop_report.html"),
                       help="where to write the self-contained HTML report")
     demo.add_argument("--json", type=Path, default=None, help="also write the full demo result as JSON")
-    scene = sub.add_parser("scene", help="the scene engine: a structured script, its consequences, next scenes")
+    scene = sub.add_parser("scene", help="the Next Status Engine: a structured script, its consequences, next scenes")
     scene.add_argument("action", choices=["list", "validate", "show", "analyze", "layers", "route", "branches", "select",
                                           "export", "bundle"])
     scene.add_argument("scene", nargs="?", default="car_sale", help="scene id (scenes/<id>.yaml) or a path")
