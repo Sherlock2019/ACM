@@ -36,7 +36,7 @@ psychological laws for people and animals, economic laws in the economy, and so 
 the laws of the earth.
 
 <p align="center">
-  <img src="docs/world-layers.svg" alt="One action, many worlds: the action is parsed by MLM into Phrase DNA, passes through the atomic, physical and perception worlds, is routed by the consequence router, and is examined by the human and animal behaviour, digital systems, business, society and economy, and earth worlds, each with its own laws" width="900">
+  <img src="docs/world-layers.svg" alt="One action, many worlds: the action, written in text, seen in an image or video, or heard, is parsed by MLM into Phrase DNA; the consequence router just above it sends it to each world, from atomic and physical through perception, human and animal behaviour, digital systems, business, and society and economy up to earth, each with its own laws" width="900">
 </p>
 
 | Level | Layer | Its laws | What it examines |
