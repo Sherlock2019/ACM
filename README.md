@@ -36,7 +36,7 @@ psychological laws for people and animals, economic laws in the economy, and so 
 the laws of the earth.
 
 <p align="center">
-  <img src="docs/world-layers.svg" alt="One action, many worlds: the action, written in text, seen in an image or video, or heard, is parsed by MLM into Phrase DNA; the consequence router just above it sends it to each world, from atomic and physical through perception, human and animal behaviour, digital systems, business, and society and economy up to earth, each with its own laws" width="900">
+  <img src="docs/world-layers.svg" alt="One action, many worlds: the action, written in text, seen in an image or video, or heard, is parsed by MLM into Phrase DNA; prediction routing just above it sends it to each world, which predicts the consequence by its own laws and compares it with the desired outcome, from atomic and physical through perception, human and animal behaviour, digital systems, business, and society and economy up to earth, each with its own laws" width="900">
 </p>
 
 | Level | Layer | Its laws | What it examines |
@@ -115,32 +115,40 @@ in the same way, and the failure is harder to spot.
 
 ```mermaid
 flowchart BT
-    A["🎬 Action or event<br/>who acts, why, what happens"] --> P1["⚙️ 1 Physical world<br/>positions, holders, forces"]
-    P1 --> P2["👁️ 2 Perception<br/>who sees or hears it"]
-    P2 --> R["🧭 3 Consequence routing<br/>which layers, actors, systems"]
-    R --> H["🧠 4 Human and social"]
-    R --> D["💻 5 Digital"]
-    R --> B["🏭 6 Business"]
-    R --> S["🏛️ 7 Society"]
-    R --> E["🌍 8 Planetary"]
-    H & D & B & S & E --> C["Consequences<br/>layer · ring · status · evidence"]
-    C --> N["Possible next scenes<br/>and scene directions"]
+    A["🎬 Action<br/>written in text, seen in image or video, or heard<br/>who acts, what they do, and their desired outcome"] --> R["🧭 Prediction routing<br/>which worlds must examine this action?"]
+    R --> W1["⚛️ Atomic<br/>atomic and chemical laws"]
+    R --> W2["⚙️ Physical<br/>physical laws"]
+    R --> W3["👁️ Perception<br/>laws of vibration and signals"]
+    R --> W4["🧠 Human and animal<br/>behavioural and psychological laws"]
+    R --> W5["💻 Digital<br/>digital system laws"]
+    R --> W6["🏭 Business<br/>institutional laws"]
+    R --> W7["🏛️ Society and economy<br/>economic, legal and social laws"]
+    R --> W8["🌍 Earth<br/>earth laws"]
+    W1 & W2 & W3 & W4 & W5 & W6 & W7 & W8 --> C["Predicted consequence in each world<br/>world · ring · status · evidence"]
+    C --> G["Compared with the desired outcome<br/>goal advanced · blocked · unknown"]
+    G --> N["Possible next scenes<br/>and scene directions"]
 ```
 
-1. **The action as data.** A scene is a script (`acm.scene/1`): place, time, actors with
-   goals and stated positions, objects with owners and holders, and ordered events
-   (action, dialogue, observation). A single sentence is parsed by MLM into the same
-   who · does what · to whom · where · when · why.
-2. **Physical state, event by event.** Each event's effects (`keys.holder = mark`) update
-   the scene state, so ACM knows what is true before and after every step: in the Car Sale,
-   the sale ends *disputed*, the car is still Sarah's and the debt is unpaid.
-3. **Perception.** Who could see or hear each event: Florence hears Sarah's objection, so
-   her next question follows from what she perceived.
-4. **Routing.** The consequence router (`acm.scene.layers.route`) sends every event to the
-   layers, people and objects that should examine it, and lists the rule that fired:
-   dialogue goes to human and social; someone else's property brings its owner in; a debt
-   goes to business and digital; a consequence citing the event routes it to that layer.
-5. **Each layer reports.** Consequences carry their layer, their ring, a status (`stated` ·
+1. **The action and the desired outcome, as data.** The action arrives written in text,
+   seen in an image or video, or heard. A scene is a script (`acm.scene/1`): place, time,
+   actors with goals (their desired outcomes) and stated positions, objects with owners
+   and holders, and ordered events (action, dialogue, observation). A single sentence is
+   parsed by MLM into the same who · does what · to whom · where · when · why.
+2. **Prediction routing.** The consequence router (`acm.scene.layers.route`) sends every
+   event to the worlds, people and objects that should examine it, and lists the rule that
+   fired: dialogue goes to human and social; someone else's property brings its owner in;
+   a debt goes to business and digital; a consequence citing the event routes it to that
+   world.
+3. **Each world predicts by its own laws.** In the physical world, each event's effects
+   (`keys.holder = mark`) update the scene state, so ACM knows what is true before and
+   after every step: in the Car Sale, the sale ends *disputed*, the car is still Sarah's
+   and the debt is unpaid. In perception, ACM tracks who could see or hear each event:
+   Florence hears Sarah's objection, so her next question follows from what she perceived.
+   The worlds above apply their own laws in the same way.
+4. **Compared with the desired outcome.** Each actor's goal is checked against the
+   predicted state: Mark's goal is *blocked*, Sarah's is *advanced*. ACM shows whether the
+   action gets the actor what they wanted, and what else it changes.
+5. **Each world reports.** Consequences carry their world layer, their ring, a status (`stated` ·
    `possible` · `unknown` · `not identified`), the events that support them, and a source
    (`scenario fact` · `authored demo` · `generated inference`). Feelings and thoughts are
    only ever *possible*. A layer with nothing identified says so, never "no impact".
