@@ -80,6 +80,22 @@ STATUS_COLOUR = {
     RelationStatus.HINDERED: "#fb923c",
 }
 DIRECTION_MARK = {"+": "▲", "-": "▼", "0": "●"}
+ACT, REACT = "#ef4444", "#3b82f6"   # the action vector, and the reaction vectors it triggers
+
+
+def dummy(x: float, y: float, s: float, colour: str) -> str:
+    """A small mannequin centred on (x, y): head, body, arms, legs."""
+    w = 3 * s
+    return (
+        f'<g stroke="{colour}" stroke-width="{w:.1f}" stroke-linecap="round" fill="none">'
+        f'<circle cx="{x:.1f}" cy="{y - 17 * s:.1f}" r="{5.5 * s:.1f}" fill="{colour}" stroke="none"/>'
+        f'<line x1="{x:.1f}" y1="{y - 10 * s:.1f}" x2="{x:.1f}" y2="{y + 5 * s:.1f}"/>'
+        f'<line x1="{x:.1f}" y1="{y - 7 * s:.1f}" x2="{x - 9 * s:.1f}" y2="{y + 1 * s:.1f}"/>'
+        f'<line x1="{x:.1f}" y1="{y - 7 * s:.1f}" x2="{x + 9 * s:.1f}" y2="{y + 1 * s:.1f}"/>'
+        f'<line x1="{x:.1f}" y1="{y + 5 * s:.1f}" x2="{x - 7 * s:.1f}" y2="{y + 18 * s:.1f}"/>'
+        f'<line x1="{x:.1f}" y1="{y + 5 * s:.1f}" x2="{x + 7 * s:.1f}" y2="{y + 18 * s:.1f}"/>'
+        f'</g>'
+    )
 
 
 def text(x, y, body, *, size=12, fill=INK, anchor="middle", weight=400, family="sans") -> str:
@@ -135,6 +151,11 @@ def main() -> int:
             f'<marker id="arrow-{name}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
             f'<path d="M0,0 L10,5 L0,10 z" fill="{colour}"/></marker>'
         )
+    for name, colour in (("act", ACT), ("react", REACT)):
+        svg.append(
+            f'<marker id="vec-{name}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">'
+            f'<path d="M0,0 L10,5 L0,10 z" fill="{colour}"/></marker>'
+        )
     for colour in ("#4ade80", "#fb923c"):
         svg.append(
             f'<marker id="ripple-{colour[1:]}" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">'
@@ -153,8 +174,8 @@ def main() -> int:
                      "Generated from a real run - nothing hand-placed.",
              size=13, fill=MUTED, anchor="start")
     )
-    steps = ["actor (MLM: who)", "action (MLM: does what)", "impact spreads to each world by proximity",
-             "consequence by each world's laws", "vs desired outcome", "graph vector DB"]
+    steps = ["origin actor (MLM: who)", "action → red vector", "other actors react → blue vectors",
+             "impact spreads to each world by proximity", "vs desired outcome", "graph vector DB"]
     x = 40
     for i, step in enumerate(steps):
         width = 18 + len(step) * 6.3
@@ -230,21 +251,22 @@ def main() -> int:
                 return (inner + ring[3]) / 2 + 4, ring[4]
         raise KeyError(target)
 
-    placed: list[tuple[Target, str, list[str], str, str | None, str]] = []
+    # The other actors share the origin actor's space: each is drawn as a dummy next to it,
+    # reached by the action (red) and answering with a reaction (blue). In this scenario the
+    # impacted entities are people, so they are merged with the other actors by name.
+    people: dict[str, dict] = {}
     for who, texts in _group(report, Target.IMPACTED).items():
-        placed.append((Target.IMPACTED, who, texts, "e:" + who.lower(), None, "changes"))
+        p = people.setdefault(who, {"lines": [], "direct": False, "status": None, "reaction": None})
+        p["lines"] += texts
+        p["direct"] = True
     for relation in report.other_relations():
         verb = "wants to" if relation.intention.kind == "goal" else "did:"
-        placed.append(
-            (
-                Target.OTHER_ACTORS,
-                relation.intention.owner_label,
-                [f"{verb} {relation.intention.text}", status_word(relation)],
-                f"e:{relation.intention.owner}",
-                relation.status.value if relation.status in STATUS_COLOUR else None,
-                relation.status.value.replace("_", " "),
-            )
-        )
+        p = people.setdefault(relation.intention.owner_label, {"lines": [], "direct": False, "status": None, "reaction": None})
+        p["lines"].append(f"{verb} {relation.intention.text}")
+        p["status"] = relation.status
+        p["reaction"] = f"reaction: {status_word(relation)}"
+
+    placed: list[tuple[Target, str, list[str], str, str | None, str]] = []
     for where, texts in _group(report, Target.ENVIRONMENT).items():
         placed.append((Target.ENVIRONMENT, where, texts, "e:" + where.lower(), None, "acts upon"))
     for target in (Target.SOCIETY, Target.EARTH):
@@ -314,19 +336,65 @@ def main() -> int:
             strip_y = row + 6 if below > 0 else ty - 22
             svg.append(heat_strip(nx - len(vector) * 0.9, strip_y, vector, cell=1.8, height=6))
 
-    # -- the core: the actor and its action ---------------------------------
+    # -- the other actors in the same space: action in red, reactions in blue --------------
+    person_angles = [215, -35, 125, 305]
+    t_act, t_react = 0.10, 0.24
+    for i, (who, p) in enumerate(people.items()):
+        ang = math.radians(person_angles[i % len(person_angles)])
+        r_p = 200
+        px_, py_ = CX + r_p * math.cos(ang), CY + r_p * math.sin(ang)
+        ux, uy = math.cos(ang), math.sin(ang)
+        # red: the origin actor's action reaching this actor (dashed when it reaches them only
+        # through its consequences rather than acting on them directly)
+        sx, sy = CX + ux * 64, CY + uy * 64
+        ex, ey = px_ - ux * 30, py_ - uy * 30
+        dash = "" if p["direct"] else ' stroke-dasharray="7 5"'
+        svg.append(f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="{ACT}" stroke-width="3.2" '
+                   f'marker-end="url(#vec-act)"{dash}>{flash("stroke-width", 6, t_act, 3.2)}</line>')
+        svg.append(f'<line x1="{sx:.1f}" y1="{sy:.1f}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#fecaca" stroke-width="2" '
+                   f'stroke-linecap="round" stroke-dasharray="2 14"><animate attributeName="stroke-dashoffset" '
+                   f'from="16" to="0" dur="0.7s" repeatCount="indefinite"/></line>')
+        if i == 0:
+            mx, my = sx + (ex - sx) * 0.3, sy + (ey - sy) * 0.3
+            act_txt = f"action: {report.concept or report.predicate}"
+            svg.append(f'<rect x="{mx - len(act_txt) * 3.3 - 6:.1f}" y="{my - 10:.1f}" width="{len(act_txt) * 6.6 + 12:.1f}" '
+                       f'height="17" rx="8" fill="{BG}" stroke="{ACT}"/>')
+            svg.append(text(mx, my + 3, act_txt, size=10.5, fill="#fca5a5", weight=700, family="mono"))
+        # the actor as a dummy, pulsing when the action reaches it
+        colour = STATUS_COLOUR.get(p["status"], "#a78bfa") if p["status"] else "#a78bfa"
+        svg.append(f'<circle cx="{px_:.1f}" cy="{py_:.1f}" r="24" fill="none" stroke="{ACT}" stroke-width="2.5" '
+                   f'stroke-opacity="0">{flash("r", 38, t_act + 0.03, 24)}{flash("stroke-opacity", 0.9, t_act + 0.03)}</circle>')
+        svg.append(dummy(px_, py_, 1.0, REACT))
+        # blue: this actor's reaction, carrying the consequence onward
+        bx0, by0 = px_ + ux * 28, py_ + uy * 28
+        bx1, by1 = px_ + ux * 92, py_ + uy * 92
+        svg.append(f'<line x1="{bx0:.1f}" y1="{by0:.1f}" x2="{bx1:.1f}" y2="{by1:.1f}" stroke="{REACT}" stroke-width="3.2" '
+                   f'marker-end="url(#vec-react)">{flash("stroke-width", 6, t_react, 3.2)}</line>')
+        svg.append(f'<circle cx="{px_:.1f}" cy="{py_:.1f}" r="24" fill="none" stroke="{REACT}" stroke-width="2.5" '
+                   f'stroke-opacity="0">{flash("r", 40, t_react, 24)}{flash("stroke-opacity", 0.9, t_react)}</circle>')
+        # labels: name and consequences beside the dummy, the reaction at the tip of the blue vector
+        lab_y = py_ + 42
+        svg.append(text(px_, lab_y, who, size=12.5, fill="#93c5fd", weight=700))
+        for j, line in enumerate(p["lines"]):
+            svg.append(text(px_, lab_y + 14 + j * 13, line, size=10.5))
+        if p["reaction"]:
+            tip_x, tip_y = bx1 + ux * 10, by1 + uy * 10
+            anchor = "start" if ux > 0.2 else ("end" if ux < -0.2 else "middle")
+            svg.append(text(tip_x, tip_y - 4, p["reaction"], size=11, fill=colour, anchor=anchor, weight=700))
+
+    # -- the core: the origin actor, as a dummy ------------------------------
     svg.append(
-        f'<circle cx="{CX}" cy="{CY}" r="62" fill="none" stroke="#f5b942" stroke-width="3" stroke-opacity="0">'
+        f'<circle cx="{CX}" cy="{CY}" r="62" fill="none" stroke="{ACT}" stroke-width="3" stroke-opacity="0">'
         f'{flash("r", 80, 0.03, 62)}{flash("stroke-opacity", 1, 0.03)}</circle>'
     )
-    svg.append(f'<circle cx="{CX}" cy="{CY}" r="62" fill="#1c1608" stroke="#f5b942" stroke-width="2.4"/>')
-    svg.append(text(CX, CY - 22, "SELF" if report.self_view else (report.actor_label or "?"), size=15, fill="#f5b942", weight=800))
-    svg.append(text(CX, CY - 4, "the actor", size=12, weight=700))
+    svg.append(f'<circle cx="{CX}" cy="{CY}" r="62" fill="#1f0b0b" stroke="{ACT}" stroke-width="2.4"/>')
+    svg.append(dummy(CX, CY - 12, 1.0, ACT))
+    svg.append(text(CX, CY + 28, ("SELF" if report.self_view else (report.actor_label or "?")) + " · origin actor",
+                    size=11, fill="#fca5a5", weight=800))
     actor_lines = [c.text for c in report.for_target(Target.ACTOR)]
-    for i, line in enumerate(actor_lines[:2]):
-        svg.append(text(CX, CY + 13 + i * 13, line, size=10, fill=MUTED))
+    svg.append(text(CX, CY + 42, " · ".join(actor_lines[:2]), size=9, fill=MUTED))
     for relation in report.own_goals()[:1]:
-        svg.append(text(CX, CY - 84, f"desired outcome: {relation.intention.text} → {status_word(relation)}", size=11, fill="#22d3ee"))
+        svg.append(text(CX, CY - 110, f"desired outcome: {relation.intention.text} → {status_word(relation)}", size=11, fill="#22d3ee"))
 
     # -- right panel: the graph vector DB ------------------------------------
     px, pw = 1010, 430
@@ -382,6 +450,9 @@ def main() -> int:
     svg.append(text(60, ly, "proximity: the actor's action spreads its impact outward, world by world, and a consequence can also flow back   ·   "
                             "∿ synchronicity: worlds change together, down to the quantum level (correlation, not cause)   ·   "
                             "both are concepts, not yet modelled", size=11, fill="#f5d0fe", anchor="start"))
+    svg.append(text(40, ly - 20, "red dummy = the origin actor, red vector = its action (dashed: reaches that actor only through its consequences)   ·   "
+                                 "blue dummies = the other actors, blue vectors = their reactions: the consequence for their goal, from the engine; what they do next is not predicted here",
+                    size=11, fill="#cbd5e1", anchor="start"))
     svg.append(text(40, ly + 20, "Ring → world: the rule engine places each consequence on a ring; the world named on each ring "
                                  "is an explicit mapping for this picture, not engine output.", size=10.5, fill=MUTED, anchor="start"))
 
