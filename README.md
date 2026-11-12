@@ -1,4 +1,4 @@
-# <img src="docs/butterfly.svg" alt="Butterfly logo" width="64" align="absmiddle"> The Butterfly Model: the Action–Worlds Consequence prediction Model (ACM)
+# <img src="docs/logo.png" alt="Butterfly logo" height="64" align="absmiddle"> The Butterfly Model: the Action–Worlds Consequence prediction Model (ACM)
 
 **See what an action changes before taking it.**
 

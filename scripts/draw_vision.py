@@ -192,10 +192,12 @@ def main() -> int:
     svg.append("</defs>")
 
     # -- title and pipeline ---------------------------------------------------
-    # the butterfly logo, inlined (an SVG shown through <img> cannot load another file)
-    logo = (OUT.parent / "butterfly.svg").read_text(encoding="utf-8")
-    inner = logo[logo.index(">", logo.index("<svg")) + 1: logo.rindex("</svg>")]
-    svg.append(f'<svg x="28" y="16" width="64" height="64" viewBox="0 0 120 120">{inner}</svg>')
+    # the logo, inlined as data (an SVG shown through <img> cannot load another file)
+    import base64
+    logo = base64.b64encode((OUT.parent / "logo.png").read_bytes()).decode("ascii")
+    svg.append('<clipPath id="logo-clip"><rect x="24" y="20" width="70" height="46" rx="8"/></clipPath>')
+    svg.append(f'<image x="24" y="20" width="70" height="46" preserveAspectRatio="xMidYMid slice" clip-path="url(#logo-clip)" '
+               f'href="data:image/png;base64,{logo}"/>')
     svg.append(text(100, 52, "The Butterfly Model (ACM) · how the model sees its own action", size=26, anchor="start", weight=700))
     svg.append(
         text(100, 80, "Action–Worlds Consequence prediction Model, built on the Meaning Language Model. 1 actor, 1 action = consequences in cascade. "
