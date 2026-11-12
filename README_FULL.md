@@ -301,31 +301,62 @@ flowchart LR
 - **One graph back.** Every model's answer lands in the same consequence graph, so effects in one
   world can feed the next.
 
-| Benefit | Why it matters |
+### The benefits
+
+**1. Holistic prediction across interconnected worlds.** This is the core. One action → its
+consequences in every world at once (atomic, physical, perception, behaviour, digital, business,
+society and economy, earth) **and how the effects in one world trigger effects in the next**:
+the cup falls (physical) → the crash is heard (perception) → the owner is upset (behaviour) → a
+claim is filed (digital) → the café pays for it (business) → new glass is made (earth). Each
+specialist model sees one link; only the connected system sees the chain.
+
+**Better prediction**
+
+| Benefit | What it gives you |
 |---|---|
-| **The whole cascade, not one slice** | one action → physical, human, digital, financial, social and planetary effects, together |
+| **Second- and third-order effects** | the ripples behind the obvious result, which is where the real cost or risk often is |
+| **Every actor counted** | each person's goal checked (advanced, enabled, blocked, at risk, hindered), their reaction predicted |
+| **What-if before acting** | alternative actions compared against the desired outcome, before anything happens |
+| **Next actions, checked** | possible next actions are proposed as phrases and validated against the state before anything is done |
+| **Any input, one meaning** | text, image, video or audio reach the same Phrase DNA, so evidence from all of them adds up |
+| **Memory of similar cases** | the graph vector database finds past actions that played out the same way |
+
+**A better AI architecture**
+
+| Benefit | What it gives you |
+|---|---|
+| **All AI models working as one** | language, vision, physics, behaviour, economic and climate models connected through one meaning and one graph |
 | **The best model for each world** | no single model has to be good at everything |
-| **Plug and play** | swap in a better model for one world without retraining the others; rules stand in until a model exists |
-| **Explainable end to end** | every consequence says which world, which model or rule, which evidence |
-| **Safer AI agents** | an agent sees the full consequences of its own action ("I will…") before taking it |
-| **Better human decisions** | people, companies and governments see what a choice changes, for whom, and how far |
+| **Plug and play** | upgrade one world's model without retraining the others; rules stand in until a model exists |
+| **A shared language between models** | Phrase DNA is the interface every model reads and writes, so models from different teams fit together |
+| **A harness config for agents** | routing decides which worlds an action touches, so it configures the agent harness: which models and tools to call, in which order, with which context |
 
-### A phrase model for consequences and next actions
+**Savings**
 
-ACM is built on a **next-phrase** model: it predicts the next **consequence** or the next
-**action** as a unit of meaning (Phrase DNA: who · does what · to whom · where · why), not token
-by token. That changes how an AI system uses language models:
-
-| Benefit | How |
+| Saved | How |
 |---|---|
-| **Saves tokens** | a consequence or next action is one structured phrase, not paragraphs of generated text; the LLM only words the final answer |
-| **The best context** | instead of the whole history, an LLM or agent gets a compact, relevant context: the worlds the action touches, the actors and their goals, the current state, and the evidence |
-| **Harness configuration** | routing decides which worlds an action touches, so it can configure the agent harness: which specialist models and tools to call, in which order, with which context |
-| **Next actions, checked** | possible next actions (next scenes) are proposed as phrases and validated against the scene state before anything is done |
+| **Tokens** | the next consequence or action is one structured phrase, not paragraphs of generated text; the LLM only words the final answer |
+| **Compute and cost** | routing runs only the models of the worlds an action touches, not every model on every action; cheap rules cover what needs no model |
+| **Context** | a compact, relevant context (worlds, actors, goals, state, evidence) instead of the whole history, so smaller prompts and fewer invented details |
+| **Retraining** | new knowledge is a YAML edit or one world's model, not a new giant model |
+| **Costly mistakes** | harmful consequences are caught before the action, when changing course is cheapest |
+| **Repeated work** | same input, same answer, so results can be cached and reused |
 
-*Token savings and context quality are design goals: they follow from the architecture but are
-not yet benchmarked. Next scenes exist today in the scene engine; harness configuration is the
-next step.*
+**Trust and safety**
+
+| Benefit | What it gives you |
+|---|---|
+| **Explainable end to end** | every consequence says which world, which model or rule, and which evidence |
+| **Honest unknowns** | "not identified" is never "no impact"; unknown places and verbs are not guessed |
+| **An audit trail** | facts, guesses and simulations are labelled, so a decision can be reviewed later |
+| **Safer AI agents** | an agent sees the full consequences of its own action ("I will…") before taking it |
+
+**Who benefits:** AI agents and robots that act in the world; companies weighing a decision's
+effect on customers, staff and the business; governments testing a policy's ripple through
+society, the economy and the environment; and people facing a life decision.
+
+*Token, compute and cost savings follow from the architecture but are not yet benchmarked. Next
+scenes and the graph memory exist today; the harness config and inter-world propagation are next.*
 
 *Today:* the shared meaning, routing, the consequence graph, scenes and a 2D physics engine are
 in place, and rules stand in for most worlds' models (see [What](#what)). *Next:* plugging in the

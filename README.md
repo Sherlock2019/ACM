@@ -39,19 +39,35 @@ The Butterfly Model connects them into **one system**. MLM gives every model the
 the action, routing sends it to the right worlds, and in each world the best specialist model
 predicts by that world's laws. Their answers come back into one picture.
 
-| Benefit | Why it matters |
-|---|---|
-| **The whole cascade, not one slice** | one action → physical, human, digital, financial, social and planetary effects, together |
-| **The best model for each world** | a physics engine for motion, a vision model for perception, an economic model for markets |
-| **Plug and play** | swap in a better model for one world without retraining the others |
-| **Explainable end to end** | every consequence says which world, which model or rule, which evidence |
-| **Safer AI agents** | an agent sees the full consequences of its own action before taking it |
-| **Better human decisions** | people, companies and governments see what a choice changes, and for whom |
-| **Predicts in phrases, not tokens** | the next consequence or next action comes out as a unit of meaning (Phrase DNA), not word by word: fewer tokens |
-| **The best context for any LLM** | only what matters goes in: the worlds touched, the actors, their goals, the state, the evidence |
-| **A harness config for agents** | routing tells the agent harness which models and tools to call, with which context |
+**1. Holistic prediction across interconnected worlds.** One action → its consequences in every
+world at once (physical, human, digital, financial, social, planetary) **and how each world's
+effects trigger the next**: the cup falls → the crash is heard → the owner is upset → a claim is
+filed → glass is replaced. No single model sees that chain.
 
-*Token savings and context quality are design goals, not yet benchmarked.*
+| Benefit | What it gives you |
+|---|---|
+| **Second- and third-order effects** | the ripples behind the obvious result, where the real cost often is |
+| **Every actor counted** | each person's goal checked (advanced, blocked, at risk) and their reaction predicted |
+| **What-if before acting** | compare alternative actions against the desired outcome, before anything happens |
+| **Any input** | text, image, video or audio reach the same meaning |
+| **The best model per world, as one system** | physics engine, vision model, behaviour model, economic model, climate model, all connected |
+| **Plug and play** | upgrade one world's model without retraining the others; rules stand in until a model exists |
+| **Explainable and repeatable** | every consequence says which world, which model or rule, which evidence; same input, same answer |
+| **Safer AI agents** | an agent sees the full consequences of its own action before taking it |
+| **Better human decisions** | people, companies and governments see what a choice changes, for whom, how far |
+
+**The savings:**
+
+| Saved | How |
+|---|---|
+| **Tokens** | predicts in phrases (Phrase DNA), not token by token; the LLM only words the final answer |
+| **Compute and cost** | routing runs only the models of the worlds an action touches, not every model every time |
+| **Context** | a compact, relevant context (worlds, actors, goals, state, evidence) instead of the whole history |
+| **Retraining** | new knowledge is a YAML edit or one world's model, not a new giant model |
+| **Costly mistakes** | harmful consequences are caught before the action, not after |
+| **Agent setup** | routing doubles as the harness config: which models and tools to call, with which context |
+
+*Token, compute and cost savings follow from the design and are not yet benchmarked.*
 
 ```bash
 git clone git@github.com:Sherlock2019/NPLM-Next-Phrase-language-model-.git SLM
