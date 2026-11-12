@@ -192,9 +192,13 @@ def main() -> int:
     svg.append("</defs>")
 
     # -- title and pipeline ---------------------------------------------------
-    svg.append(text(40, 52, "ACM · how the model sees its own action", size=26, anchor="start", weight=700))
+    # the butterfly logo, inlined (an SVG shown through <img> cannot load another file)
+    logo = (OUT.parent / "butterfly.svg").read_text(encoding="utf-8")
+    inner = logo[logo.index(">", logo.index("<svg")) + 1: logo.rindex("</svg>")]
+    svg.append(f'<svg x="28" y="16" width="64" height="64" viewBox="0 0 120 120">{inner}</svg>')
+    svg.append(text(100, 52, "The Butterfly Model (ACM) · how the model sees its own action", size=26, anchor="start", weight=700))
     svg.append(
-        text(40, 80, "Action–Consequence Model, built on the Meaning Language Model. One action, many worlds, each with its own laws. "
+        text(100, 80, "Action–Worlds Consequence prediction Model, built on the Meaning Language Model. 1 actor, 1 action = consequences in cascade. "
                      "Generated from a real run - nothing hand-placed.", size=13, fill=MUTED, anchor="start")
     )
     steps = ["origin actor", "action → red vector", "other actors react → blue vectors",

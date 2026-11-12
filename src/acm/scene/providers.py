@@ -57,7 +57,7 @@ class DemoProvider:
         return branches
 
 
-SYSTEM = """You continue a scene script for ACM, the Action-Consequence Model.
+SYSTEM = """You continue a scene script for ACM, the Butterfly Model: the Action–Worlds Consequence prediction Model.
 You receive the scene as JSON. Propose up to 4 distinct, plausible next scenes.
 Rules:
 - Use only the actor ids, object ids and mark ids given. Do not invent people.

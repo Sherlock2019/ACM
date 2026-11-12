@@ -1,4 +1,4 @@
-"""Action–Consequence Model (ACM).
+"""The Butterfly Model: the Action–Worlds Consequence prediction Model (ACM).
 
 Built on the Meaning Language Model: MLM turns an action phrase into Universal
 Phrase DNA (who does what, to whom, where, when, why); ACM turns that frame into a

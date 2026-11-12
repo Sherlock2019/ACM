@@ -1,10 +1,10 @@
-# Action–Consequence Model (ACM)
+# <img src="docs/butterfly.svg" alt="Butterfly logo" width="64" align="absmiddle"> The Butterfly Model: the Action–Worlds Consequence prediction Model (ACM)
 
 **See what an action changes before taking it.**
 
 *About the name: the project started as ACM (Actions Consequential Model) and was
-called ARM (Action Reaction Model) for a while in the dashboard. It is now **ACM, the
-Action–Consequence Model**, everywhere in the user interface. Only the user-facing name
+called ARM (Action Reaction Model) for a while in the dashboard, then the Action–Consequence Model. It is now **the Butterfly Model: ACM, the
+Action–Worlds Consequence prediction Model**, everywhere in the user interface. The butterfly is for the butterfly effect: one actor, one action, consequences in cascade across every world. Only the user-facing name
 changed. The repository, the Python package, the `acm` command, the `/acm/...` routes
 and the `ACM_LLM_*` environment variables kept their names throughout.*
 

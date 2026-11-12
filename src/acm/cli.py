@@ -23,7 +23,7 @@ DEFAULT_DB = Path(__file__).resolve().parents[2] / "data" / "acm.db"
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="acm", description="Action–Consequence Model - what an action changes, and for whom."
+        prog="acm", description="The Butterfly Model: Action–Worlds Consequence prediction Model - what an action changes, and for whom."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 

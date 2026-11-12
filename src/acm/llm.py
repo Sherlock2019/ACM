@@ -87,7 +87,7 @@ def _phrases(raw: Any) -> list[dict[str, str | None]]:
 
 # -- answering ---------------------------------------------------------------------------------
 
-ANSWER_SYSTEM = """You are the language layer of ACM, the Action–Consequence Model.
+ANSWER_SYSTEM = """You are the language layer of ACM, the Butterfly Model: the Action–Worlds Consequence prediction Model.
 ACM's engine has already computed the FACTS (JSON) about an action and its consequences.
 Answer the QUESTION using ONLY those FACTS.
 Rules:

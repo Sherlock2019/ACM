@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <title>The Butterfly Model</title>
+  <defs>
+    <linearGradient id="bf-up" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a855f7"/>
+      <stop offset="0.5" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="bf-low" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="0.5" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#eab308"/>
+    </linearGradient>
+  </defs>
+  <!-- the butterfly effect: ripples spreading from the action -->
+  <g fill="none" stroke="#22d3ee">
+    <circle cx="60" cy="64" r="20" stroke-width="1.5" stroke-opacity="0">
+      <animate attributeName="r" values="20;58" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="0.7;0" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="64" r="20" stroke-width="1.5" stroke-opacity="0">
+      <animate attributeName="r" values="20;58" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-opacity" values="0.7;0" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- wings, flapping around the body's axis -->
+  <g transform="translate(60 0)">
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="1 1;0.72 1;1 1" dur="1.6s" repeatCount="indefinite"/>
+      <g transform="translate(-60 0)" stroke="#0d1117" stroke-width="1.2" stroke-linejoin="round">
+        <path d="M60 60 C 44 24, 10 16, 11 42 C 12 58, 34 66, 60 63 Z" fill="url(#bf-up)"/>
+        <path d="M60 66 C 42 66, 20 76, 26 94 C 32 106, 52 92, 60 70 Z" fill="url(#bf-low)"/>
+        <g transform="translate(120 0) scale(-1 1)">
+          <path d="M60 60 C 44 24, 10 16, 11 42 C 12 58, 34 66, 60 63 Z" fill="url(#bf-up)"/>
+          <path d="M60 66 C 42 66, 20 76, 26 94 C 32 106, 52 92, 60 70 Z" fill="url(#bf-low)"/>
+        </g>
+        <!-- wing eyes -->
+        <circle cx="30" cy="40" r="4.5" fill="#0d1117" fill-opacity="0.35" stroke="none"/>
+        <circle cx="90" cy="40" r="4.5" fill="#0d1117" fill-opacity="0.35" stroke="none"/>
+      </g>
+    </g>
+  </g>
+  <!-- body (the origin actor) and antennae -->
+  <path d="M59 47 C 54 36, 48 30, 44 27 M61 47 C 66 36, 72 30, 76 27" fill="none" stroke="#fca5a5" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="44" cy="27" r="2" fill="#fca5a5"/>
+  <circle cx="76" cy="27" r="2" fill="#fca5a5"/>
+  <ellipse cx="60" cy="66" rx="3.6" ry="19" fill="#ef4444"/>
+  <circle cx="60" cy="47" r="4" fill="#ef4444"/>
+</svg>
