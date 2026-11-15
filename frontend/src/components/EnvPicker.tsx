@@ -85,15 +85,50 @@ function TemplateCard({ t }: { t: SimTemplate }) {
   );
 }
 
+/** Real-project mode: the user's own local folder or public GitHub repository, tested on real results. */
+function RealProjectCard() {
+  return (
+    <article className="glass panel env-card real" aria-labelledby="tpl-real-project">
+      <div className="row between"><span className="hud-label real-label">Your use case · real code</span><ConnectionBadge status="connected" /></div>
+      <div className="row" style={{ alignItems: "flex-start", flexWrap: "nowrap" }}>
+        <span className="type-ico"><Icon name="play" /></span>
+        <div><h3 id="tpl-real-project">Your real project</h3><p className="small dim mt-s">A local folder or a public GitHub repository. ACFM predicts, you approve, real tests decide.</p></div>
+      </div>
+      <p className="faint tiny">Describe the change in plain words to your LLM; it drafts the code change, tests and predictions. ACFM works on a separate copy and runs only what you approve: baseline first, then after the change. Not a sandbox.</p>
+      <Capabilities c={{ inspect: true, simulate: false, execute: true }} />
+      <div className="row" style={{ marginTop: "auto" }}>
+        <button className="btn-primary" onClick={() => go("project")}><Icon name="play" size={14} /> Test on your project</button>
+      </div>
+    </article>
+  );
+}
+
 export function EnvPicker({ compact = false, withTemplates = false }: { compact?: boolean; withTemplates?: boolean }) {
-  const { envs } = useAFM();
+  const { envs, selected } = useAFM();
   const [tpls, setTpls] = useState<SimTemplate[]>([]);
+  const [sample, setSample] = useState<string>("");
   useEffect(() => { if (withTemplates) api.simTemplates().then((t) => setTpls(t.filter((x) => !x.adapter_id))).catch(() => {}); }, [withTemplates]);
   if (!envs.length) return <Empty>Loading playgrounds…</Empty>;
+  if (!withTemplates) {
+    return <div className="grid g3">{envs.map((d) => <EnvCard key={d.environment_id} d={d} compact={compact} />)}</div>;
+  }
+  // Overview: the real project (red) next to ONE sample project chosen from a dropdown
+  const current = sample || selected || "webapp-demo";
+  const env = envs.find((d) => d.environment_id === current);
+  const tpl = tpls.find((t) => t.template_id === current);
   return (
-    <div className={`grid ${withTemplates ? "g4" : "g3"}`}>
-      {envs.map((d) => <EnvCard key={d.environment_id} d={d} compact={compact} />)}
-      {tpls.map((t) => <TemplateCard key={t.template_id} t={t} />)}
+    <div className="grid g2">
+      <RealProjectCard />
+      <div className="sample-pick">
+        <label className="row" style={{ gap: 10, flexWrap: "nowrap" }}>
+          <span className="hud-label" style={{ whiteSpace: "nowrap" }}>Sample projects</span>
+          <select className="field" value={current} onChange={(e) => setSample(e.target.value)} aria-label="Sample project">
+            {envs.map((d) => <option key={d.environment_id} value={d.environment_id}>{d.name} · simulated</option>)}
+            {tpls.map((t) => <option key={t.template_id} value={t.template_id}>{t.title} · not connected</option>)}
+          </select>
+        </label>
+        {env ? <EnvCard d={env} compact={compact} /> : tpl ? <TemplateCard t={tpl} /> : <EnvCard d={envs[0]} compact={compact} />}
+      </div>
     </div>
   );
 }

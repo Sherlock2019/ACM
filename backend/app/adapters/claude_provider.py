@@ -23,7 +23,7 @@ from typing import Any
 
 from ..domain.errors import AFMError
 from ..domain.models import ObjectTypeExplanation
-from .llm import USECASE_FIELDS
+from .llm import USECASE_FIELDS, normalize_draft, normalize_overview, project_draft_prompt, project_overview_prompt
 
 DEFAULT_MODEL = "claude-opus-5-5"
 
@@ -195,3 +195,42 @@ class ClaudeProvider:
         data = self._ask_json(user, CHAT_SCHEMA, max_tokens=4000)
         data["proposed_fields"] = {k: v for k, v in data.get("proposed_fields", {}).items() if isinstance(v, str) and v.strip()}
         return data
+
+    def draft_project_plan(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        """Real-project mode: sends the Task Goal, test names, suggested commands and ONLY the files the human picked."""
+        return normalize_draft(self._ask_json(project_draft_prompt(ctx), DRAFT_SCHEMA, max_tokens=16000))
+
+    def describe_project(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        """Real-project mode: README, config and up to 10 source files (size-capped) are sent."""
+        return normalize_overview(self._ask_json(project_overview_prompt(ctx), OVERVIEW_SCHEMA, max_tokens=8000))
+
+
+OVERVIEW_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"}, "goal": {"type": "string"}, "features": _STR_LIST, "unknowns": _STR_LIST,
+        "suggestions": {"type": "array", "items": {"type": "object", "properties": {"title": {"type": "string"}, "change": {"type": "string"},
+                                                                                   "why": {"type": "string"}, "files": _STR_LIST},
+                                                   "required": ["title", "change", "why", "files"], "additionalProperties": False}},
+    },
+    "required": ["name", "goal", "features", "suggestions", "unknowns"], "additionalProperties": False,
+}
+
+
+_CHECK_PROPS = {"type": {"type": "string", "enum": ["command_exit", "test_outcome", "no_other_changes", "manual"]},
+                "command": {"type": "integer"}, "test": {"type": "string"}, "expect": {"type": "string"}}
+DRAFT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"}, "goal": {"type": "string"}, "desired_input": {"type": "string"}, "desired_output": {"type": "string"},
+        "patch": {"type": "string"},
+        "commands": {"type": "array", "items": _STR_LIST},
+        "predictions": {"type": "array", "items": {"type": "object", "properties": {"statement": {"type": "string"}, **_CHECK_PROPS},
+                                                   "required": ["statement", "type", "command", "test", "expect"], "additionalProperties": False}},
+        "criteria": {"type": "array", "items": {"type": "object", "properties": {"text": {"type": "string"}, **_CHECK_PROPS},
+                                                "required": ["text", "type", "command", "test", "expect"], "additionalProperties": False}},
+        "assumptions": _STR_LIST, "unknowns": _STR_LIST,
+    },
+    "required": ["summary", "goal", "desired_input", "desired_output", "patch", "commands", "predictions", "criteria", "assumptions", "unknowns"],
+    "additionalProperties": False,
+}

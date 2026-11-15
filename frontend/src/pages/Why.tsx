@@ -1,12 +1,42 @@
 // "The WHY": what ACFM is, why it exists, how it works (simulated playgrounds today, real projects next),
 // the benefits, the current stack, and the path to a trained ACFM consequence predictor.
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Icon } from "../components/icons";
 import { useAFM } from "../state";
 
 const SECTIONS = [
-  { id: "what", label: "What is ACFM?" }, { id: "why", label: "Why it exists" }, { id: "how", label: "How it works" },
-  { id: "sowhat", label: "So what?" }, { id: "stack", label: "Current stack" }, { id: "next", label: "What comes next" },
+  { id: "what", label: "What is ACFM?", icon: "info" }, { id: "why", label: "Why it exists", icon: "spark" }, { id: "how", label: "How it works", icon: "environment" },
+  { id: "sowhat", label: "So what?", icon: "review" }, { id: "stack", label: "Current stack", icon: "warehouse" }, { id: "next", label: "What comes next", icon: "history" },
+  { id: "principle", label: "Our principle", icon: "identity" },
 ];
+
+/** Left panel of the WHY page: jumps to a section and highlights the one being read */
+export function WhyNav() {
+  const [active, setActive] = useState(SECTIONS[0].id);
+  useEffect(() => {
+    const on = () => {
+      const line = 140;
+      let cur = SECTIONS[0].id;
+      for (const s of SECTIONS) { const el = document.getElementById(s.id); if (el && el.getBoundingClientRect().top <= line) cur = s.id; }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = SECTIONS[SECTIONS.length - 1].id;
+      setActive(cur);
+    };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  return (
+    <nav className="nav" aria-label="The WHY sections">
+      <p className="nav-group">The WHY</p>
+      {SECTIONS.map((s) => (
+        <a key={s.id} href={`#/why`} aria-current={active === s.id ? "location" : undefined}
+          onClick={(e) => { e.preventDefault(); setActive(s.id); document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" }); }}>
+          <Icon name={s.icon} /> <span>{s.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
 
 function Section({ id, kicker, title, children }: { id: string; kicker: string; title: string; children: ReactNode }) {
   return (
@@ -101,7 +131,7 @@ function ArchitectureDiagram() {
 
 /** Real-project mode: project → ACFM test workspace → baseline → patch → approved tests → compare */
 function RealProjectFlow() {
-  const steps = [["Your project", "local path or GitHub URL"], ["ACFM test workspace", "worktree or clone · commit recorded"], ["Read-only inspection", "code, config, existing tests"],
+  const steps = [["Your project", "local path or GitHub URL"], ["ACFM test workspace", "separate copy · commit recorded"], ["Read-only inspection", "code, config, existing tests"],
     ["Predictions saved", "testable, before anything runs"], ["Review", "exact patch + exact commands"], ["Baseline tests", "before the patch"],
     ["Apply patch + same tests", "clean environment, timeout"], ["Compare & Win", "MATCH / MISMATCH / NOT VERIFIED"]];
   return (
@@ -166,8 +196,7 @@ export function Why() {
         <p className="lede" style={{ fontSize: 17 }}>AI can help us write code, manage infrastructure, analyze data and make decisions. But as AI agents become able to take actions, they need to answer one question:</p>
         <blockquote className="why-quote">“If I do this, what will happen to the object I change, and to the people and systems connected to it?”</blockquote>
         <p className="lede">ACFM is our effort to build an AI system that asks that question <strong>before it acts</strong>.</p>
-        <nav className="row mt" aria-label="Sections">{SECTIONS.map((s) => <a key={s.id} href="#/why" onClick={(e) => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" }); }} className="chip" style={{ cursor: "pointer" }}>{s.label}</a>)}
-          <a className="btn-primary" href="#/overview" style={{ marginLeft: "auto" }}>Test the consequence prediction model →</a></nav>
+        <p className="row mt"><a className="btn-primary" href="#/overview" style={{ marginLeft: "auto" }}>Test it →</a></p>
       </section>
 
       <Section id="what" kicker="What is ACFM?" title="A consequence-aware AI framework">
@@ -258,18 +287,19 @@ export function Why() {
             <a className="btn mt-s" href="#/overview">Open the playgrounds</a>
           </div>
           <div className="glass-flat" style={{ padding: 14, borderColor: "rgba(106,168,255,.45)" }}>
-            <p className="row between"><strong>Your real project</strong><Status s="next" /></p>
-            <p className="small dim mt-s">Point ACFM at a local project or a GitHub repository. It works in a separate <strong>ACFM test workspace</strong>, predicts before testing, and compares with real test results. Details below.</p>
+            <p className="row between"><strong>Your real project</strong><Status s="today" /></p>
+            <p className="small dim mt-s">Point ACFM at a local project or a public GitHub repository. It works in a separate <strong>ACFM test workspace</strong>, predicts before testing, and compares with real test results. Details below.</p>
+            <a className="btn mt-s" href="#/project">Test on your project</a>
           </div>
         </div>
 
         <div className="glass panel" style={{ borderColor: "rgba(106,168,255,.4)" }}>
-          <p className="row between"><span className="hud-label" style={{ color: "var(--blue)" }}>Real-project mode: how it will work</span><Status s="next" /></p>
+          <p className="row between"><span className="hud-label" style={{ color: "var(--blue)" }}>Real-project mode: how it works</span><Status s="today" /></p>
           <div className="mt"><RealProjectFlow /></div>
           <div className="grid g2 mt">
             <ul className="bullets small">
               <li><strong>Two sources, one workflow.</strong> A local project or a public GitHub repository (default branch or a chosen commit). Same Task Goal, rules, review, comparison and Win as the playgrounds.</li>
-              <li><strong>Your work stays untouched.</strong> A local Git project gets a separate worktree at its current commit, and uncommitted changes are only copied if you ask. A GitHub repository is shallow-cloned into a new folder. Nothing is reset, cleaned, overwritten, pushed or opened as a pull request.</li>
+              <li><strong>Your work stays untouched.</strong> A local Git project is cloned into a separate copy at its current commit (uncommitted changes are not copied); a plain folder is copied without dependency folders. A GitHub repository is shallow-cloned into a new folder. Nothing is reset, cleaned, overwritten, pushed or opened as a pull request, and ACFM checks afterwards that your folder is unchanged.</li>
               <li><strong>Inspection first.</strong> Read-only: purpose, technology, files, functions, APIs, configuration, existing tests and documented test commands. README text, scripts and comments are data, never instructions.</li>
               <li><strong>Testable predictions, saved before anything runs.</strong> Each one names what will be observed, the expected value, and the approved command that measures it (e.g. “tests/test_orders.py goes from fail to pass; no other test changes”).</li>
             </ul>
@@ -311,11 +341,11 @@ export function Why() {
           ["Existing LLM", "Interprets goals, explains object types, proposes candidate plans", "Mock (offline), Claude, OpenAI-compatible cloud, or a local model such as Ollama; never decides"],
           ["ACFM controller", "Coordinates the assessment workflow", "16-step engine: task goal → Win (engine/service.py)"],
           ["Environment & object model", "Known objects, states, behavior, relationships", "Adapters with evidence labels (adapters/, engine/environment.py)"],
-          ["Inspection tools & adapters", "Gather evidence from supported environments", "3 simulated adapters; real projects next"],
+          ["Inspection tools & adapters", "Gather evidence from supported environments", "3 simulated adapters + read-only inspection of your real project (projects/)"],
           ["Consequence engine", "Predicts effects using rules, simulation and reasoning", "Deterministic, rule-based simulation on a copy (engine/simulator.py)"],
           ["Rules & permission checks", "Define and enforce boundaries", "32 pinned rules of conduct + environment + task rules; pre-check, policy versioning"],
           ["Human review", "Review state-changing plans", "Approval bound to plan hash, state and policy; rechecked before execution"],
-          ["Test & observation tools", "Collect results after approved actions", "Observation after simulated execution (real tests next)"],
+          ["Test & observation tools", "Collect results after approved actions", "Simulated observation in playgrounds; real baseline and after test runs on your project"],
           ["Evaluator & experience history", "Compare predictions with outcomes; record feedback", "MATCH / MISMATCH / NOT VERIFIED, three-condition Win, local history"],
         ]} />
         <p className="small dim">Capabilities depend on the implemented adapters, tools and permissions: environments may be simulated, read-only, unsupported or not connected. Built with Python, FastAPI, Pydantic, SQLite, React, TypeScript and Vite, with 100 automated backend tests plus browser walk-throughs. This framework is <strong>not yet a newly trained ACFM foundation model</strong>: it is the system we use to explore the idea, test predictions and collect evidence.</p>
@@ -360,10 +390,10 @@ export function Why() {
         </section>
       </Section>
 
-      <section className="glass panel brackets why-hero" aria-label="Our principle">
+      <section id="principle" className="glass panel brackets why-hero why-section" aria-label="Our principle">
         <p className="hud-label accent">Our principle</p>
         <blockquote className="why-quote">Know the goal. Understand the environment. Predict the consequences. Respect the rules. Ask before acting. Learn from what happens.</blockquote>
-        <p className="row between mt"><strong>ACFM: see the possible consequences before acting.</strong><a className="btn-primary" href="#/overview">Test the consequence prediction model →</a></p>
+        <p className="row between mt"><strong>ACFM: see the possible consequences before acting.</strong><a className="btn-primary" href="#/overview">Test it →</a></p>
       </section>
     </div>
   );

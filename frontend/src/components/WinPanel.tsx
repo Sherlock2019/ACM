@@ -1,7 +1,7 @@
 // Step 16: the AFM Result panel. All numbers come from the backend Win evaluation; the UI only displays them.
 import { useState } from "react";
 import { api } from "../services/api";
-import type { Rule, Run, WinCondition } from "../types/afm";
+import type { Rule, Run, WinCondition, WinEvaluation } from "../types/afm";
 import { ResultBadge } from "./ui";
 
 const TITLES: Record<WinCondition["condition"], string> = {
@@ -10,6 +10,37 @@ const TITLES: Record<WinCondition["condition"], string> = {
 const OVERALL: Record<string, [string, string, string]> = {
   WIN: ["st-pass", "✓", "WIN"], "NOT A WIN": ["st-fail", "✕", "NOT A WIN"], "NOT VERIFIED": ["st-unknown", "?", "NOT VERIFIED"],
 };
+
+/** Overall verdict + the three conditions with their checks (shared by playground runs and real-project tests). */
+export function WinBody({ w, label: head = "AFM Result" }: { w: WinEvaluation; label?: string }) {
+  const [cls, ico, label] = OVERALL[w.overall];
+  return (
+    <>
+      <div className="row between">
+        <p className="hud-label accent">{head}{w.simulated ? " · simulated" : " · real test results"}</p>
+        <span className={`badge ${cls}`} style={{ fontSize: 14, padding: ".35rem .8rem" }}><span className="ico" aria-hidden="true">{ico}</span>Overall: {label}</span>
+      </div>
+      <p className="small mt-s">{w.explanation}</p>
+      <div className="stack mt">
+        {w.conditions.map((c) => (
+          <details key={c.condition} className="glass-flat" style={{ padding: "10px 12px" }} open={c.status !== "PASS"}>
+            <summary className="row between" style={{ cursor: "pointer" }}>
+              <span><strong>{TITLES[c.condition]}</strong> <span className="faint small">· {c.question}</span></span>
+              <ResultBadge r={c.status} />
+            </summary>
+            <p className="faint tiny mt-s">{c.summary}</p>
+            <ul className="list mt-s">{c.checks.map((k, i) => (
+              <li key={i} className="small" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
+                <span className="row between"><span>{k.name}{k.phase && <span className="chip" style={{ marginLeft: 6 }}>{k.phase}</span>}</span><ResultBadge r={k.status} /></span>
+                <span className="faint tiny" style={{ overflowWrap: "anywhere" }}>{k.evidence}</span>
+              </li>
+            ))}</ul>
+          </details>
+        ))}
+      </div>
+    </>
+  );
+}
 
 export function WinPanel({ run, rules, onChange }: { run: Run; rules: Rule[]; onChange?: (r: Run) => void }) {
   const [form, setForm] = useState({ kind: "criterion" as "criterion" | "rule", ref: "", status: "PASS" as "PASS" | "FAIL" | "NOT VERIFIED", evidence: "", reviewer: "local human" });
@@ -33,31 +64,9 @@ export function WinPanel({ run, rules, onChange }: { run: Run; rules: Rule[]; on
     try { const r = await api.verify(run.run_id, form); onChange?.(r); setForm({ ...form, evidence: "" }); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
-  const [cls, ico, label] = OVERALL[w.overall];
   return (
     <section className="glass panel win-panel brackets" aria-label="AFM Result">
-      <div className="row between">
-        <p className="hud-label accent">AFM Result{w.simulated ? " · simulated" : ""}</p>
-        <span className={`badge ${cls}`} style={{ fontSize: 14, padding: ".35rem .8rem" }}><span className="ico" aria-hidden="true">{ico}</span>Overall: {label}</span>
-      </div>
-      <p className="small mt-s">{w.explanation}</p>
-      <div className="stack mt">
-        {w.conditions.map((c) => (
-          <details key={c.condition} className="glass-flat" style={{ padding: "10px 12px" }} open={c.status !== "PASS"}>
-            <summary className="row between" style={{ cursor: "pointer" }}>
-              <span><strong>{TITLES[c.condition]}</strong> <span className="faint small">· {c.question}</span></span>
-              <ResultBadge r={c.status} />
-            </summary>
-            <p className="faint tiny mt-s">{c.summary}</p>
-            <ul className="list mt-s">{c.checks.map((k, i) => (
-              <li key={i} className="small" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
-                <span className="row between"><span>{k.name}{k.phase && <span className="chip" style={{ marginLeft: 6 }}>{k.phase}</span>}</span><ResultBadge r={k.status} /></span>
-                <span className="faint tiny" style={{ overflowWrap: "anywhere" }}>{k.evidence}</span>
-              </li>
-            ))}</ul>
-          </details>
-        ))}
-      </div>
+      <WinBody w={w} />
       <details className="mt">
         <summary className="small dim" style={{ cursor: "pointer" }}>Record a human judgment (manual criterion or broad rule)</summary>
         <div className="grid g2 mt-s">

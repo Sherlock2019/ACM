@@ -16,6 +16,7 @@ from .api.routes import router
 from .domain.errors import AFMError
 from .engine.service import AFMService
 from .engine.usecases import UseCaseService
+from .projects.service import ProjectService
 
 log = logging.getLogger("afm")
 
@@ -25,6 +26,7 @@ def create_app(service: AFMService | None = None) -> FastAPI:
                   description="Think before acting. A generic local prototype over simulated environment adapters.")
     app.state.afm = service or AFMService()
     app.state.usecases = UseCaseService(app.state.afm)
+    app.state.projects = ProjectService(app.state.afm.db, lambda: app.state.afm.llm)
     origins = os.environ.get("AFM_CORS_ORIGINS", "http://localhost:5530,http://127.0.0.1:5530").split(",")
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
     app.include_router(router)

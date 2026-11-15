@@ -76,6 +76,36 @@ export type WinStatus = "PASS" | "FAIL" | "NOT VERIFIED";
 export interface WinCheck { name: string; status: WinStatus; evidence: string; phase: string }
 export interface WinCondition { condition: "prediction_accuracy" | "task_goal" | "rule_compliance"; question: string; status: WinStatus; checks: WinCheck[]; summary: string }
 export interface WinEvaluation { evaluated_at: string; simulated: boolean; conditions: WinCondition[]; overall: "WIN" | "NOT A WIN" | "NOT VERIFIED"; explanation: string }
+// ---- real-project mode
+export type PCheckType = "command_exit" | "test_outcome" | "no_other_changes" | "manual";
+export interface PCheck { type: PCheckType; command: number; test: string; expect: string }
+export interface PPrediction { id?: string; statement: string; check: PCheck; required?: boolean }
+export interface PCriterion { id?: string; text: string; check: PCheck; source?: "human" | "llm_proposed" }
+export interface PCommandResult { phase: "baseline" | "after"; argv: string[]; exit_code: number | null; timed_out: boolean; duration_ms: number; output_tail: string; tests: Record<string, string>; error: string }
+export interface PPrecheck { name: string; status: "PASS" | "FAIL"; detail: string }
+export interface PInspection {
+  file_count: number; languages: Record<string, number>; top_level: string[]; key_files: string[]; tests: string[]; test_count: number;
+  suggested_commands: { argv: string[]; why: string }[]; readme_excerpt: string; files: string[]; notes: string[]; unknowns: string[]; instruction_like_text: boolean;
+}
+export interface ProjectTest {
+  id: string; created_at: string; updated_at: string; name: string; source: "local" | "github"; origin: string; ref: string;
+  workspace: string; workspace_kind: "git_clone" | "folder_copy" | "github_clone"; commit: string; inspection: PInspection;
+  goal: string; desired_input: string; desired_output: string; criteria: PCriterion[]; patch: string; commands: string[][]; predictions: PPrediction[];
+  plan_source: "human" | "llm_draft_edited"; assumptions: string[]; unknowns: string[]; plan_hash: string; predictions_saved_at: string; precheck: PPrecheck[];
+  decision: { status: "approved" | "rejected" | "used" | "invalidated"; reviewer: string; at: string; plan_hash: string; policy_version: string; criteria_agreed: boolean; note: string } | null;
+  status: "inspected" | "planned" | "approved" | "rejected" | "executed" | "failed"; executed_at: string; patch_applied: boolean;
+  results: PCommandResult[]; comparison: { prediction_id: string; statement: string; expected: string; observed: string; result: "MATCH" | "MISMATCH" | "NOT VERIFIED"; required: boolean }[];
+  verifications: { kind: string; ref: string; status: string; evidence: string; reviewer: string; at: string }[];
+  win: WinEvaluation | null; log: { at: string; step: number; text: string }[];
+  chat: { role: "user" | "assistant"; content: string; at: string; files: string[]; provider: string; draft: ProjectDraft["draft"] | null }[];
+  overview: { name: string; goal: string; features: string[]; suggestions: { title: string; change: string; why: string; files: string[] }[]; unknowns: string[]; provider: string; files_read: string[]; at: string } | null;
+}
+export interface ProjectListItem { id: string; name: string; source: string; origin: string; status: string; updated_at: string; commit: string; win: string | null }
+export interface ProjectDraft {
+  draft: { summary: string; goal: string; desired_input: string; desired_output: string; patch: string; commands: string[][]; predictions: PPrediction[]; criteria: PCriterion[]; assumptions: string[]; unknowns: string[] };
+  sent: { provider: string; files: string[]; chars: number; also: string };
+}
+
 export interface HumanVerification { kind: "criterion" | "rule"; ref: string; status: WinStatus; evidence: string; reviewer: string; at: string }
 export type ExecutionStatus = "not_attempted" | "executed" | "rejected" | "not_approved" | "unsupported" | "failed";
 export interface TraceEvent { at: string; event: string; detail: string }

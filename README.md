@@ -116,6 +116,23 @@ Open **Create a use case** (top of the sidebar).
 - Examples to start from: Generic Object Playground, Web Application Port Change, Inventory Assistant, and Data Readiness Agent (not connected: that project is separate).
 - Use cases and their chat history are stored locally (SQLite) and can be deleted. **Saved chat is not model training.**
 
+## Test on your real project (local folder or GitHub)
+
+Open **TEST IT → Overview** and press **Test on your project** on the red card (or use **Your real project** in the side menu). Sample projects (the three simulated playgrounds and the not-connected Data Readiness Agent) are in the **Sample projects** dropdown next to it. Pick your LLM first with **Use your LLM model** in the Overview header (Claude, an OpenAI-compatible cloud, or a local model such as Ollama). The offline mock cannot write code.
+
+1. **Connect.** Give an absolute local path or a public GitHub URL (optional branch, tag or commit), then **Create test workspace & inspect**. ACFM makes a separate copy in `~/ACFM/workspaces/` (git-ignored): a `git clone` of a local Git project at its current commit (uncommitted changes are not copied), a file copy of a plain folder (dependency folders skipped), or a shallow clone from GitHub. Git hooks are disabled; nothing is installed and no project script runs. **Your folder is only read.**
+2. **Inspect (step 4–6).** Read-only: languages, files, key files, existing tests and suggested test commands (not run). README text is data, never instructions.
+3. **Project overview (step 4).** Right after the scan, your LLM reads the README, config and up to 10 main source files and lists the **project name, its goal, all features it can see and suggested improvements**. Labelled LLM-generated; it is a description, not evidence. **Use this change →** copies a suggestion into the step-8 box.
+4. **Describe the change in plain words (step 8).** e.g. *"Make add() in calc.py return the sum instead of the difference."* Files you name are sent automatically, with their test files (`calc.py` → `tests/test_calc.py`); pick more in step 7. Your LLM replies and drafts the Task Goal, the code change (patch), the test commands, testable predictions and success criteria. Ask again to refine it. **Use this plan** fills steps 1, 8, 10 and 11 and saves them. You can always review or edit the patch and commands by hand.
+5. **Pre-check (step 9)** on every save: the patch applies (`git apply --check`) and stays inside the workspace; commands are not shells, `sudo`, `curl`, `rm`, `git push/reset/clean`…. Predictions are saved before anything runs.
+6. **Review (step 12).** You approve the exact plan; the approval is bound to commit, patch, commands, predictions and policy. Any change cancels it.
+7. **Run once (steps 13–14).** Recheck, then the approved commands run **before** the patch (baseline), the patch is applied, and the same commands run **after**. Secrets are removed from the environment, `HOME` is temporary, each command has a time limit. **This is not a sandbox:** tests can still read your files and reach the network.
+8. **Compare and Win (steps 15–16).** MATCH / MISMATCH / NOT VERIFIED per prediction (missing tools or dependencies → NOT VERIFIED, never a pass), then prediction accuracy · Task Goal · rule compliance (including "your original folder was not modified").
+
+What is sent to the LLM: your message, the Task Goal, languages, test file names, suggested commands, the current plan, and only the files named, picked or listed under "Read" in the overview. Never your API key, other projects or files outside the workspace.
+
+Delete a test from the project list to remove its workspace copy. Not in Phase 1: private repositories, container isolation, applying the change back to your folder, exporting examples for training.
+
 ## Rules
 
 ### Permanent rules of conduct (R01–R32, global)
@@ -234,7 +251,7 @@ More detail: [docs/architecture.md](docs/architecture.md), [docs/object-model.md
 - Goal understanding covers a few phrasings per playground. Anything else is reported as unsupported.
 - Simulations know only their explicit rules. Real dependencies outside the catalog are unknown by design.
 - Approval has no login or users. It is a prototype workflow, not production-grade authentication or authorization.
-- No real-system adapters exist (AWS, SAP, real repositories, web servers, spreadsheets, mobile).
+- No real-system adapters exist for AWS, SAP, web servers, spreadsheets or mobile. Real code projects are supported through real-project mode (Phase 1: public GitHub or local folders, no container isolation).
 - The live Claude provider has not been exercised against the real API here.
 - Runs saved by the earlier single-environment version stay on disk but are not shown.
 

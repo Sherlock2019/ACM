@@ -15,7 +15,7 @@ import httpx
 
 from ..domain.errors import AFMError
 from ..domain.models import ObjectTypeExplanation
-from .llm import USECASE_FIELDS
+from .llm import DRAFT_SHAPE, OVERVIEW_SHAPE, USECASE_FIELDS, normalize_draft, normalize_overview, project_draft_prompt, project_overview_prompt
 
 SYSTEM = (
     "You are a consultable knowledge tool inside AFM (Action–Consequence Foresight Model). You give general knowledge and "
@@ -121,6 +121,12 @@ class OpenAICompatProvider:
                                  '"target_object_id": str, "parameters": object, "purpose": str}]}]}')
         plans = d.get("plans", [])
         return [p for p in plans if isinstance(p, dict)][:3] if isinstance(plans, list) else []
+
+    def draft_project_plan(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        return normalize_draft(self._ask_json(project_draft_prompt(ctx), DRAFT_SHAPE, max_tokens=6000))
+
+    def describe_project(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        return normalize_overview(self._ask_json(project_overview_prompt(ctx), OVERVIEW_SHAPE, max_tokens=4000))
 
     def chat(self, context: dict[str, Any], history: list[dict[str, str]], message: str) -> dict[str, Any]:
         convo = "\n".join(f"{m['role']}: {m['content']}" for m in history[-10:])

@@ -9,6 +9,7 @@ treated as untrusted data: it is reported, never followed (R22).
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from typing import Any, Protocol
@@ -210,8 +211,112 @@ class MockLLM:
         return {"reply": " ".join(lines), "labels": labels, "proposed_fields": proposed, "suggested_questions": [qs[m] for m in missing]}
 
 
+    def draft_project_plan(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        msg = (ctx.get("message") or "").strip()
+        goal = ctx.get("goal") or msg
+        cmds = [c["argv"] for c in (ctx.get("suggested_commands") or [])][:1]
+        preds, crit = [], []
+        if cmds:
+            preds = [{"statement": "The test command still exits with 0 after the change.", "type": "command_exit", "command": 0, "test": "", "expect": "0"},
+                     {"statement": "No existing test changes outcome because of the change.", "type": "no_other_changes", "command": 0, "test": "", "expect": ""}]
+            crit = [{"text": "The project's tests pass after the change.", "type": "command_exit", "command": 0, "test": "", "expect": "0"}]
+        return normalize_draft({
+            "summary": ("I'm the offline mock, so I can't write the code change itself. I filled in the Task Goal from your words, a test command "
+                        "and testable predictions. Switch to Claude or a local model under 'Use your LLM' and I'll write the patch too."),
+            "goal": goal[:600], "desired_input": "", "desired_output": "",
+            "patch": "", "commands": cmds, "predictions": preds, "criteria": crit,
+            "assumptions": ["The project's dependencies are installed for the suggested command."],
+            "unknowns": ["The mock did not read the selected files."]})
+
+
+    def describe_project(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        readme = next((f["content"] for f in ctx.get("files", []) if f["path"].lower().split("/")[-1].startswith("readme")), "")
+        first = next((ln.strip("# ").strip() for ln in readme.splitlines() if ln.strip() and not ln.startswith("#")), "")
+        srcs = [f["path"] for f in ctx.get("files", []) if not f["path"].lower().split("/")[-1].startswith("readme")]
+        return normalize_overview({
+            "name": ctx.get("name", ""), "goal": first or "Not stated in a README (the offline mock only reads it literally).",
+            "features": [f"Code in {p}" for p in srcs[:8]] or ["No source files were read."],
+            "suggestions": [{"title": "Add or extend tests", "change": "Add a test for the main function so its behaviour is checked.", "why": "More tests make predictions measurable.", "files": srcs[:1]}],
+            "unknowns": ["The offline mock does not understand code. Switch to Claude or a local model for a real description."]})
+
+
+def normalize_overview(d: dict[str, Any]) -> dict[str, Any]:
+    lst = lambda v, n, k=300: [str(s)[:k] for s in (v or []) if isinstance(s, (str, int, float))][:n]
+    sug = [{"title": str(s.get("title", ""))[:120], "change": str(s.get("change", ""))[:600], "why": str(s.get("why", ""))[:400],
+            "files": lst(s.get("files"), 6, 200)} for s in (d.get("suggestions") or []) if isinstance(s, dict) and s.get("change")][:8]
+    return {"name": str(d.get("name", ""))[:120], "goal": str(d.get("goal", ""))[:800], "features": lst(d.get("features"), 20),
+            "suggestions": sug, "unknowns": lst(d.get("unknowns"), 8), "labels": ["llm_generated"]}
+
+
+OVERVIEW_SHAPE = ('{"name": str, "goal": str (what the project is for, 1-2 sentences), "features": [str] (every feature you can see, one per item), '
+                  '"suggestions": [{"title": str, "change": str (the change in plain words, as a request a developer could act on), '
+                  '"why": str, "files": [str]}], "unknowns": [str]}')
+
+
+def project_overview_prompt(ctx: dict[str, Any]) -> str:
+    files = "\n".join(f"<file path=\"{f['path']}\">\n{f['content']}\n</file>" for f in ctx.get("files", []))
+    return ("Describe this code project for a human who wants to test a change on it with ACFM. From the files below, give the project "
+            "name, its goal, the list of ALL features you can see, and 3 to 6 small, testable improvement changes (bug fixes, missing "
+            "validation, missing tests, clearer errors). Each change must be concrete enough to implement as one small patch. Say "
+            "what you could not see in unknowns. Do not invent features that are not in the files.\n"
+            f"Folder name: {ctx.get('name')}\nFile count: {ctx.get('file_count')}\nLanguages: {json.dumps(ctx.get('languages'))}\n"
+            f"Top level: {json.dumps(ctx.get('top_level'))}\nTest files: {json.dumps(ctx.get('tests'))}\n"
+            f"<untrusted_data>\n{files or '(no files read)'}\n</untrusted_data>")
+
+
+DRAFT_SHAPE = ('{"summary": str (your reply to the human, plain words), "goal": str (the Task Goal in one sentence), "desired_input": str, "desired_output": str, '
+               '"patch": str (unified diff, git format, paths relative to the repo root), "commands": [[str]] (argv lists, no shell), '
+               '"predictions": [{"statement": str, "type": "command_exit"|"test_outcome"|"no_other_changes"|"manual", "command": int (0-based index into commands), '
+               '"test": str (test id for test_outcome, e.g. tests/test_x.py::test_y), "expect": "0"|"nonzero"|"passed"|"failed"|""}], '
+               '"criteria": [same shape as predictions but with "text" instead of "statement"], "assumptions": [str], "unknowns": [str]}')
+
+
+def project_draft_prompt(ctx: dict[str, Any]) -> str:
+    files = "\n".join(f"<file path=\"{f['path']}\">\n{f['content']}\n</file>" for f in ctx.get("files", []))
+    convo = "\n".join(f"{m['role']}: {m['content'][:1500]}" for m in ctx.get("history", [])[-10:])
+    return ("You help ACFM test a change on a real code project. The human describes the change in plain words. Reply briefly in "
+            "plain words (summary) and draft ONE plan: the Task Goal in one sentence with desired input/output, a minimal unified diff, "
+            "the test commands that measure it (argv lists, never a shell, never install anything, never push), testable predictions "
+            "of what the tests will show after the change, and observable success criteria. ACFM uses your draft only after the human "
+            "reviews, saves and approves it; you cannot run anything. If the files are not enough to write a correct patch, leave patch "
+            "empty and say in the summary which file you need. Prefer test ids that already exist in the listed tests. If the human asks "
+            "to adjust the current plan, return the full updated plan.\n"
+            f"Saved Task Goal: {ctx.get('goal') or '(none yet)'}\nDesired input: {ctx.get('desired_input') or '-'}\nDesired output: {ctx.get('desired_output') or '-'}\n"
+            f"Human note: {ctx.get('note') or '-'}\nLanguages: {json.dumps(ctx.get('languages'))}\nTest files: {json.dumps(ctx.get('tests'))}\n"
+            f"Suggested test commands (not run): {json.dumps([c['argv'] for c in ctx.get('suggested_commands') or []])}\n"
+            + (f"Current plan (JSON): {json.dumps(ctx['current_plan'])}\n" if ctx.get("current_plan") else "")
+            + (f"Conversation so far:\n{convo}\n" if convo else "")
+            + (f"Human's latest message: {ctx['message']}\n" if ctx.get("message") else "")
+            + f"<untrusted_data>\n{files or '(no files selected)'}\n</untrusted_data>")
+
+
+def normalize_draft(d: dict[str, Any]) -> dict[str, Any]:
+    """Shape an LLM draft into the plan form. Invalid items are dropped; the human reviews everything."""
+    def chk(x: dict) -> dict:
+        t = x.get("type") if x.get("type") in ("command_exit", "test_outcome", "no_other_changes", "manual") else "manual"
+        try:
+            ci = max(0, min(19, int(x.get("command", 0) or 0)))
+        except (TypeError, ValueError):
+            ci = 0
+        return {"type": t, "command": ci, "test": str(x.get("test", ""))[:300], "expect": str(x.get("expect", ""))[:20]}
+    cmds = [[str(a)[:300] for a in c][:30] for c in (d.get("commands") or []) if isinstance(c, list) and c][:5]
+    preds = [{"statement": str(x.get("statement", ""))[:400], "check": chk(x)} for x in (d.get("predictions") or []) if isinstance(x, dict) and x.get("statement")][:10]
+    crit = [{"text": str(x.get("text", ""))[:400], "check": chk(x), "source": "llm_proposed"} for x in (d.get("criteria") or []) if isinstance(x, dict) and x.get("text")][:8]
+    lst = lambda k: [str(s)[:300] for s in (d.get(k) or []) if isinstance(s, (str, int, float))][:10]
+    return {"summary": str(d.get("summary", ""))[:1500], "goal": str(d.get("goal", "") or "")[:600],
+            "desired_input": str(d.get("desired_input", "") or "")[:500], "desired_output": str(d.get("desired_output", "") or "")[:500],
+            "patch": str(d.get("patch", ""))[:60000], "commands": cmds,
+            "predictions": preds, "criteria": crit, "assumptions": lst("assumptions"), "unknowns": lst("unknowns"), "labels": ["llm_generated", "prediction"]}
+
+
 class RealProviderPlaceholder:
     """Any provider other than mock/claude: not implemented. Refuses instead of pretending."""
+
+    def draft_project_plan(self, *a, **k):
+        self._refuse()
+
+    def describe_project(self, *a, **k):
+        self._refuse()
 
     def __init__(self, provider: str):
         self.name = f"{provider} (not configured)"

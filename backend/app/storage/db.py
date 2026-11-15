@@ -27,7 +27,36 @@ class Database:
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS usecases (id TEXT PRIMARY KEY, updated_at TEXT NOT NULL, payload TEXT NOT NULL)"
         )
+        self._conn.execute(
+            "CREATE TABLE IF NOT EXISTS project_tests (id TEXT PRIMARY KEY, updated_at TEXT NOT NULL, payload TEXT NOT NULL)"
+        )
         self._conn.commit()
+
+    # real-project tests (local only) -------------------------------------------------------------
+    def save_project(self, pid: str, updated_at: str, payload: dict[str, Any]) -> None:
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO project_tests (id, updated_at, payload) VALUES (?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, payload = excluded.payload",
+                (pid, updated_at, json.dumps(payload)),
+            )
+            self._conn.commit()
+
+    def get_project(self, pid: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._conn.execute("SELECT payload FROM project_tests WHERE id = ?", (pid,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def list_projects(self) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._conn.execute("SELECT payload FROM project_tests ORDER BY updated_at DESC").fetchall()
+        return [json.loads(r[0]) for r in rows]
+
+    def delete_project(self, pid: str) -> bool:
+        with self._lock:
+            cur = self._conn.execute("DELETE FROM project_tests WHERE id = ?", (pid,))
+            self._conn.commit()
+        return cur.rowcount > 0
 
     # use cases (builder + chat history; local only, never used for training) ------------------
     def save_usecase(self, uc_id: str, updated_at: str, payload: dict[str, Any]) -> None:

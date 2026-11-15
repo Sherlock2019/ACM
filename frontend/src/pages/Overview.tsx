@@ -19,9 +19,17 @@ export function Overview() {
             <p className="lede">Explore a digital environment, understand possible actions, predict their consequences, and review the result before acting.</p>
             <p className="faint small mt-s">Purpose: {p.purpose}</p>
           </div>
+        </div>
+        <div className="row mt" style={{ alignItems: "stretch", gap: 16 }}>
           <div className="stack" style={{ alignItems: "stretch" }}>
             <button className="btn-primary btn-lg" onClick={() => go(env ? "goals" : "environments")}><Icon name="workspace" /> {env ? "Start an assessment" : "Choose a playground"}</button>
             <a className="btn" href="#/builder"><Icon name="brain" size={15} /> Create a use case</a>
+          </div>
+          <div className="glass-flat llm-hero" aria-label="Your LLM model">
+            <p className="hud-label">LLM tool in use</p>
+            <p className="small mt-s"><strong>{llm?.provider ?? "…"}</strong>{llm?.mock ? " · offline, cannot write code" : llm?.local ? " · local model" : ""}</p>
+            <a className="btn mt-s" href="#/llm"><Icon name="brain" size={14} /> Use your LLM model</a>
+            <p className="tiny faint mt-s">Claude, a cloud provider (OpenAI-compatible) or a local model such as Ollama. Your key stays on the backend.</p>
           </div>
         </div>
         <div className="row mt">
@@ -33,8 +41,8 @@ export function Overview() {
 
       <div>
         <div className="row between" style={{ marginBottom: 10 }}>
-          <h2>{env ? `Selected playground: ${env.name}` : "Choose a playground to begin."}</h2>
-          <span className="faint small">All playgrounds are local simulations. Selecting one never changes AFM's identity or rules.</span>
+          <h2>Test your real project, or try a sample project</h2>
+          <span className="faint small">Sample projects are local simulations. Your real project runs real tests on a separate copy.</span>
         </div>
         <EnvPicker withTemplates />
       </div>

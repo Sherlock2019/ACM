@@ -1,6 +1,6 @@
 import type {
   Decision, EnvironmentDescription, EnvironmentView, EnvObject, FutureAdapter, GoalSpec, LLMPreset, LLMSettingsIn, LLMSettingsView, LLMStatus, ObjectTypeExplanation, PrepareResult,
-  ProfileResponse, Relationship, Review, Run, RunSummary, SimTemplate, UseCase, UseCaseFields, UseCaseListItem, UseCaseSummary,
+  ProfileResponse, ProjectDraft, ProjectListItem, ProjectTest, Relationship, Review, Run, RunSummary, SimTemplate, UseCase, UseCaseFields, UseCaseListItem, UseCaseSummary,
 } from "../types/afm";
 
 export class ApiError extends Error {
@@ -61,4 +61,19 @@ export const api = {
   proposal: (id: string, index: number, decision: "accept" | "dismiss", fields?: Record<string, string>) =>
     send<UseCase>("POST", `/usecases/${e(id)}/proposals/${index}`, { decision, fields }),
   prepare: (id: string) => send<PrepareResult>("POST", `/usecases/${e(id)}/prepare`),
+  // real-project mode
+  projects: () => call<{ projects: ProjectListItem[] }>("/projects"),
+  createProject: (body: { source: "local" | "github"; path?: string; url?: string; ref?: string }) => send<ProjectTest>("POST", "/projects", body),
+  project: (id: string) => call<ProjectTest>(`/projects/${e(id)}`),
+  saveProjectPlan: (id: string, body: unknown) => send<ProjectTest>("PUT", `/projects/${e(id)}/plan`, body),
+  draftProjectPlan: (id: string, body: { files: string[]; note: string; goal: string; desired_input: string; desired_output: string }) =>
+    send<ProjectDraft>("POST", `/projects/${e(id)}/draft`, body),
+  describeProject: (id: string) => send<ProjectTest>("POST", `/projects/${e(id)}/overview`),
+  chatProject:(id: string, message: string, files: string[]) => send<ProjectTest>("POST", `/projects/${e(id)}/chat`, { message, files }),
+  decideProject:(id: string, body: { decision: "approve" | "reject"; reviewer: string; plan_hash: string; criteria_agreed: boolean; note?: string }) =>
+    send<ProjectTest>("POST", `/projects/${e(id)}/decision`, body),
+  executeProject: (id: string) => send<ProjectTest>("POST", `/projects/${e(id)}/execute`),
+  verifyProject: (id: string, body: { kind: "prediction" | "criterion" | "rule"; ref: string; status: "PASS" | "FAIL"; evidence: string; reviewer: string }) =>
+    send<ProjectTest>("POST", `/projects/${e(id)}/verify`, body),
+  deleteProject: (id: string) => send<{ deleted: string; workspace_removed: boolean }>("DELETE", `/projects/${e(id)}`),
 };

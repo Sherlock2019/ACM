@@ -12,11 +12,14 @@ import { Overview } from "./pages/Overview";
 import { ReviewPage } from "./pages/Review";
 import { Simulate } from "./pages/Simulate";
 import { LlmSettings } from "./pages/LlmSettings";
-import { Why } from "./pages/Why";
+import { Project } from "./pages/Project";
+import { Why, WhyNav } from "./pages/Why";
 import { useAFM, useRoute } from "./state";
 
 const NAV = [
   { id: "overview", label: "Overview", icon: "overview", step: "1" },
+  { id: "builder", label: "Create a use case", icon: "brain", step: "" },
+  { id: "project", label: "Your real project", icon: "play", step: "" },
   { id: "identity", label: "Identity & Rules", icon: "identity", step: "2" },
   { id: "environments", label: "Environments", icon: "warehouse", step: "3" },
   { id: "objects", label: "Objects & Relationships", icon: "environment", step: "4" },
@@ -31,21 +34,46 @@ export function App() {
   const { error, refresh, llm, envs, selected } = useAFM();
   const page = route[0];
   const env = envs.find((e) => e.environment_id === selected);
+  const isWhy = page === "why";
+  const topbar = (
+    <header className="topbar">
+      <a href="#/why" className="brand" aria-label="ACFM: The WHY">
+        <Mark />
+        <span><span className="brand-name">ACFM</span><span className="brand-tag">Action–Consequence Foresight Model</span></span>
+      </a>
+      <nav className="top-tabs" aria-label="Sections">
+        <a href="#/why" aria-current={isWhy ? "page" : undefined}><Icon name="info" size={15} /> The WHY</a>
+        <a href="#/overview" aria-current={!isWhy ? "page" : undefined}><Icon name="spark" size={15} /> TEST IT</a>
+      </nav>
+      <span className="faint tiny top-note" style={{ marginLeft: "auto" }}>Think before acting.</span>
+    </header>
+  );
+  if (isWhy) {
+    return (
+      <div className="app">
+        <a href="#main" className="sr-only">Skip to content</a>
+        {topbar}
+        <div className="shell">
+          <aside className="sidebar" aria-label="The WHY sections"><WhyNav /></aside>
+          <main className="main" id="main">
+            {error && <div style={{ marginBottom: 16 }}><ErrorBox error={error} onRetry={refresh} /></div>}
+            <Why />
+          </main>
+        </div>
+      </div>
+    );
+  }
   return (
+    <div className="app">
+    <a href="#main" className="sr-only">Skip to content</a>
+    {topbar}
     <div className="shell">
-      <a href="#main" className="sr-only">Skip to content</a>
-      <aside className="sidebar" aria-label="AFM navigation">
-        <a href="#/why" className="brand" aria-label="AFM: The WHY">
-          <Mark />
-          <span><span className="brand-name">AFM</span><span className="brand-tag">Action–Consequence Foresight Model</span></span>
-        </a>
-        <nav className="nav" aria-label="Main">
-          <a href="#/why" aria-current={page === "why" ? "page" : undefined}><Icon name="info" /> <span>The WHY</span></a>
-          <p className="nav-group" id="nav-test">Test the consequence prediction model</p>
-          <a href="#/builder" aria-current={page === "builder" ? "page" : undefined} aria-describedby="nav-test"><Icon name="brain" /> <span>Create a use case</span></a>
+      <aside className="sidebar" aria-label="Test the consequence prediction model">
+        <nav className="nav" aria-label="Test it">
+          <p className="nav-group">Test the consequence prediction model</p>
           {NAV.map((n) => (
             <a key={n.id} href={`#/${n.id}`} aria-current={page === n.id ? "page" : undefined}>
-              <Icon name={n.icon} /> <span>{n.label}</span><span className="step">{n.step}</span>
+              <Icon name={n.icon} /> <span>{n.label}</span>{n.step && <span className="step">{n.step}</span>}
             </a>
           ))}
         </nav>
@@ -59,12 +87,11 @@ export function App() {
             <a href="#/llm" className="btn mt-s" style={{ width: "100%" }} aria-current={page === "llm" ? "page" : undefined}><Icon name="brain" size={14} /> Use your LLM model</a>
           </div>
           <ResetButton />
-          <p className="faint tiny">Think before acting. Local prototype: simulated environments only, no real systems connected.</p>
+          <p className="faint tiny">Think before acting. Playgrounds are simulated; real-project tests run only the commands you approve, in a separate copy.</p>
         </div>
       </aside>
       <main className="main" id="main">
         {error && <div style={{ marginBottom: 16 }}><ErrorBox error={error} onRetry={refresh} /></div>}
-        {page === "why" && <Why />}
         {page === "overview" && <Overview />}
         {page === "identity" && <Identity />}
         {page === "environments" && <Environments />}
@@ -76,8 +103,10 @@ export function App() {
         {page === "builder" && <Builder usecaseId={route[1]} />}
         {page === "simulate" && <Simulate usecaseId={route[1]} />}
         {page === "llm" && <LlmSettings />}
-        {![...NAV.map((n) => n.id), "why", "builder", "simulate", "llm"].includes(page) && <ErrorBox error={`Page "${page}" does not exist.`} />}
+        {page === "project" && <Project id={route[1]} />}
+        {![...NAV.map((n) => n.id), "builder", "simulate", "llm"].includes(page) && <ErrorBox error={`Page "${page}" does not exist.`} />}
       </main>
+    </div>
     </div>
   );
 }

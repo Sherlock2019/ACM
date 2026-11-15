@@ -242,10 +242,139 @@ def llm_status(request: Request):
 
 # ---------------------------------------------------------------- "Use your LLM model" (local requests only)
 
-def _local_only(request: Request) -> None:
+def _local_only(request: Request, what: str = "LLM settings can only be changed") -> None:
     host = request.client.host if request.client else ""
     if host not in {"127.0.0.1", "::1", "localhost", "testclient"}:
-        raise AFMError("forbidden", "LLM settings can only be changed from this machine.", 403)
+        raise AFMError("forbidden", f"{what} from this machine.", 403)
+
+
+# ---------------------------------------------------------------------- real-project mode (local only)
+def prj(request: Request):
+    _local_only(request, "Real-project tests can only be used")
+    return request.app.state.projects
+
+
+class ProjectIn(_In):
+    source: Literal["local", "github"]
+    path: str = Field(default="", max_length=1000)
+    url: str = Field(default="", max_length=300)
+    ref: str = Field(default="", max_length=200)
+
+
+class CheckIn(_In):
+    type: Literal["command_exit", "test_outcome", "no_other_changes", "manual"]
+    command: int = Field(default=0, ge=0, le=19)
+    test: str = Field(default="", max_length=300)
+    expect: str = Field(default="", max_length=20)
+
+
+class PredictionIn(_In):
+    statement: str = Field(min_length=1, max_length=400)
+    check: CheckIn
+    required: bool = True
+
+
+class CriterionIn(_In):
+    text: str = Field(min_length=1, max_length=400)
+    check: CheckIn
+    source: Literal["human", "llm_proposed"] = "human"
+
+
+class PlanIn(_In):
+    goal: str = Field(min_length=1, max_length=600)
+    desired_input: str = Field(default="", max_length=500)
+    desired_output: str = Field(default="", max_length=500)
+    criteria: list[CriterionIn] = Field(default=[], max_length=8)
+    patch: str = Field(default="", max_length=60000)
+    commands: list[list[str]] = Field(default=[], max_length=5)
+    predictions: list[PredictionIn] = Field(default=[], max_length=12)
+    assumptions: list[str] = Field(default=[], max_length=12)
+    unknowns: list[str] = Field(default=[], max_length=12)
+    plan_source: Literal["human", "llm_draft_edited"] = "human"
+
+
+class DraftIn(_In):
+    files: list[str] = Field(default=[], max_length=12)
+    note: str = Field(default="", max_length=600)
+    goal: str = Field(default="", max_length=600)  # the goal as currently typed (may be unsaved)
+    desired_input: str = Field(default="", max_length=500)
+    desired_output: str = Field(default="", max_length=500)
+
+
+@router.post("/projects/{pid}/overview")
+def describe_project(pid: str, request: Request):
+    return prj(request).describe(pid)
+
+
+class ProjectChatIn(_In):
+    message: str = Field(min_length=1, max_length=2000)
+    files: list[str] = Field(default=[], max_length=12)
+
+
+@router.post("/projects/{pid}/chat")
+def chat_project(pid: str, body: ProjectChatIn, request: Request):
+    return prj(request).chat(pid, body.message, body.files)
+
+
+class ProjectDecisionIn(_In):
+    decision: Literal["approve", "reject"]
+    reviewer: str = Field(min_length=1, max_length=80)
+    plan_hash: str = Field(min_length=1, max_length=64)
+    criteria_agreed: bool = False
+    note: str = Field(default="", max_length=500)
+
+
+class ProjectVerifyIn(_In):
+    kind: Literal["prediction", "criterion", "rule"]
+    ref: str = Field(min_length=1, max_length=64)
+    status: Literal["PASS", "FAIL"]
+    evidence: str = Field(min_length=1, max_length=500)
+    reviewer: str = Field(min_length=1, max_length=80)
+
+
+@router.get("/projects")
+def list_projects(request: Request):
+    return {"projects": prj(request).list()}
+
+
+@router.post("/projects")
+def create_project(body: ProjectIn, request: Request):
+    return prj(request).create(body.source, body.path, body.url, body.ref)
+
+
+@router.get("/projects/{pid}")
+def get_project(pid: str, request: Request):
+    return prj(request).get(pid)
+
+
+@router.put("/projects/{pid}/plan")
+def save_project_plan(pid: str, body: PlanIn, request: Request):
+    return prj(request).save_plan(pid, body.model_dump())
+
+
+@router.post("/projects/{pid}/draft")
+def draft_project_plan(pid: str, body: DraftIn, request: Request):
+    return prj(request).draft(pid, body.files, body.note, body.goal, body.desired_input, body.desired_output)
+
+
+@router.post("/projects/{pid}/decision")
+def decide_project(pid: str, body: ProjectDecisionIn, request: Request):
+    return prj(request).decide(pid, body.decision, body.reviewer, body.plan_hash, body.criteria_agreed, body.note)
+
+
+@router.post("/projects/{pid}/execute")
+def execute_project(pid: str, request: Request):
+    return prj(request).execute(pid)
+
+
+@router.post("/projects/{pid}/verify")
+def verify_project(pid: str, body: ProjectVerifyIn, request: Request):
+    return prj(request).verify(pid, body.kind, body.ref, body.status, body.evidence, body.reviewer)
+
+
+@router.delete("/projects/{pid}")
+def delete_project(pid: str, request: Request):
+    return prj(request).delete(pid)
 
 
 class LLMSettingsIn(_In):
