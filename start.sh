@@ -71,12 +71,33 @@ public_ip() {
     [[ "$ip" =~ ^[0-9.]+$ ]] && echo "$ip"
 }
 
-wait_ports_free() {
-    for _ in $(seq 1 20); do  # let stopped servers release their ports
-        curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$WEB_PORT/" \
-            || curl -s -o /dev/null --max-time 1 "http://127.0.0.1:8001/health" || return 0
+stop_mlm_servers() {
+    # Stop MLM's API and dashboard left by an earlier run. They are found by their working folder
+    # (this MLM checkout), not by port or name alone, so other apps on the host (other Next.js
+    # sites, a container on 8001) are left alone. Each server runs in its own process group
+    # (setsid in MLM's scripts/dev.sh); stopping the group also stops Next.js's "next-server"
+    # child, which otherwise keeps the port and makes the next start fail with
+    # "Another next dev server is already running".
+    local pid cwd g own alive groups=()
+    own="$(ps -o pgid= -p $$ | tr -d ' ')"
+    for pid in $(pgrep -f 'splm\.api\.main|next dev|next-server' || true); do
+        cwd="$(readlink "/proc/$pid/cwd" 2>/dev/null || true)"
+        [[ "$cwd" == "$MLM" || "$cwd" == "$MLM/"* ]] || continue
+        g="$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ' || true)"
+        [[ -n "$g" && "$g" != "$own" ]] && groups+=("$g")
+    done
+    rm -f "$MLM/logs/api.pid" "$MLM/logs/web.pid"
+    [[ ${#groups[@]} -eq 0 ]] && return 0
+    mapfile -t groups < <(printf '%s\n' "${groups[@]}" | sort -u)
+    echo "   stopping the previous MLM API/dashboard (process groups: ${groups[*]})"
+    for g in "${groups[@]}"; do kill -- "-$g" 2>/dev/null || true; done
+    for _ in $(seq 1 20); do
+        alive=0
+        for g in "${groups[@]}"; do kill -0 -- "-$g" 2>/dev/null && alive=1; done
+        [[ $alive -eq 0 ]] && return 0
         sleep 1
     done
+    for g in "${groups[@]}"; do kill -9 -- "-$g" 2>/dev/null || true; done
 }
 
 start_poc() {
@@ -103,10 +124,8 @@ start_poc() {
 
     echo "== 4/4 MLM API + dashboard (ACM mode: / opens the ACM demo)"
     # The mode is fixed when the dashboard starts, so a running one is restarted in ACM mode.
-    if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$WEB_PORT/"; then
-        "$MLM/start.sh" stop > /dev/null
-        wait_ports_free
-    fi
+    # Found by process, not by "does it answer": a busy or hung dashboard must be stopped too.
+    stop_mlm_servers
     # Let the dev server serve its client code to this machine's public IP and LAN address too.
     local origins
     origins="$(public_ip || true),$(hostname -I 2>/dev/null | tr ' ' ',')"
@@ -159,13 +178,18 @@ update() {
 }
 
 case "${1:-start}" in
-    stop | status)
-        exec "$MLM/start.sh" "$1"
+    stop)
+        stop_mlm_servers
+        echo stopped
+        exit 0
+        ;;
+    status)
+        exec "$MLM/start.sh" status
         ;;
     update)
         # Pull ACM and MLM, then restart with the new code (re-exec: this script may have changed).
         update || exit 1
-        "$MLM/start.sh" stop
+        stop_mlm_servers
         exec "$ROOT/start.sh" start
         ;;
 esac
@@ -188,9 +212,7 @@ case "${1:-start}" in
         start_poc
         ;;
     restart)
-        "$MLM/start.sh" stop
-        wait_ports_free
-        start_poc
+        start_poc  # step 4 stops the previous API and dashboard first
         ;;
     setup)
         setup
