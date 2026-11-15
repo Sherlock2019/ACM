@@ -5,7 +5,7 @@ import { ErrorBox, Loading, ResultBadge } from "../components/ui";
 import { WinBody } from "../components/WinPanel";
 import { api } from "../services/api";
 import { go, useAFM } from "../state";
-import type { PCheck, PCheckType, PCriterion, PPrediction, ProjectDraft, ProjectListItem, ProjectTest } from "../types/afm";
+import type { PCheck, PCheckType, PConsequence, PCriterion, PPrecheck, PPrediction, ProjectDraft, ProjectListItem, ProjectTest } from "../types/afm";
 
 type S = "completed" | "waiting_info" | "waiting_review" | "approved" | "rejected" | "ready" | "failed" | "not_started" | "optional" | "not_verified" | "in_progress";
 const ST: Record<S, [string, string, string]> = {
@@ -47,7 +47,7 @@ function CheckEditor({ c, onChange, commands, id }: { c: PCheck; onChange: (c: P
       {c.type === "test_outcome" && <input className="field" style={{ flex: 1, minWidth: 180 }} aria-label="Test id" placeholder="tests/test_x.py::test_y" value={c.test} onChange={(e) => onChange({ ...c, test: e.target.value })} list={`${id}-tests`} />}
       {c.type === "command_exit" && (
         <select className="field" style={{ width: "auto" }} aria-label="Expected exit" value={c.expect} onChange={(e) => onChange({ ...c, expect: e.target.value })}>
-          <option value="0">exits 0 (success)</option><option value="nonzero">exits non-zero</option></select>
+          <option value="0">exits 0 (success)</option><option value="nonzero">exits non-zero</option><option value="same">same as before the change</option></select>
       )}
       {c.type === "test_outcome" && (
         <select className="field" style={{ width: "auto" }} aria-label="Expected outcome" value={c.expect} onChange={(e) => onChange({ ...c, expect: e.target.value })}>
@@ -57,18 +57,83 @@ function CheckEditor({ c, onChange, commands, id }: { c: PCheck; onChange: (c: P
   );
 }
 
-interface Form { goal: string; desired_input: string; desired_output: string; patch: string; commands: string; predictions: PPrediction[]; criteria: PCriterion[]; assumptions: string; unknowns: string; plan_source: "human" | "llm_draft_edited" }
+interface Form { goal: string; desired_input: string; desired_output: string; patch: string; commands: string; predictions: PPrediction[]; criteria: PCriterion[]; assumptions: string; unknowns: string; plan_source: "human" | "llm_draft_edited";
+  plan_title: string; consequences: PConsequence[]; alternatives: { title: string; applies: boolean; risks: number; files: number }[] }
 const toForm = (p: ProjectTest): Form => ({
   goal: p.goal, desired_input: p.desired_input, desired_output: p.desired_output, patch: p.patch,
   commands: p.commands.map((a) => a.join(" ")).join("\n") || (p.inspection.suggested_commands[0]?.argv.join(" ") ?? ""),
   predictions: p.predictions.map((x) => ({ statement: x.statement, check: x.check, required: x.required })),
   criteria: p.criteria.map((c) => ({ text: c.text, check: c.check, source: c.source })),
   assumptions: p.assumptions.join("\n"), unknowns: p.unknowns.join("\n"), plan_source: p.plan_source,
+  plan_title: p.plan_title ?? "", consequences: p.consequences ?? [], alternatives: p.alternatives ?? [],
 });
+const KIND: Record<PConsequence["kind"], [string, string]> = { benefit: ["st-pass", "benefit"], risk: ["st-fail", "risk"], neutral: ["st-unknown", "neutral"], unknown: ["st-review", "unknown"] };
+const REL: Record<PConsequence["relation"], string> = { target: "direct · target", connected: "connected", environment: "whole project" };
+
+/** Drafts saved before multi-plan support become a single plan. */
+const withPlans = (d: ProjectDraft["draft"]): ProjectDraft["draft"] => d.plans?.length ? d : {
+  ...d, recommended: 0, recommended_why: "",
+  plans: [{ title: "Plan A", approach: "", edits: [], patch: d.patch ?? "", consequences: [], predictions: d.predictions ?? [], risks: [],
+    applies: undefined, patch_check: (d as { patch_check?: PPrecheck[] }).patch_check }],
+};
+
+/** Step 8: the alternative plans side by side, each with its predicted consequences, and ACFM's recommendation. */
+function PlanCompare({ draft, canUse, onUse }: { draft: ProjectDraft["draft"]; canUse: boolean; onUse: (i: number) => void }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const plans = draft.plans;
+  return (
+    <div className="mt-s">
+      <p className="tiny faint">{plans.length} plan(s) · {draft.commands.length} test command(s) · {draft.criteria.length} success criteria <span className="ev ev-inferred">LLM-generated</span></p>
+      {plans.length > 1 && draft.recommended_why && <p className="small mt-s"><strong>ACFM recommends {plans[draft.recommended]?.title}:</strong> {draft.recommended_why}</p>}
+      <div className={`grid ${plans.length > 2 ? "g3" : plans.length === 2 ? "g2" : ""} mt-s`}>
+        {plans.map((pl, k) => {
+          const risks = pl.consequences.filter((c) => c.kind === "risk").length, benefits = pl.consequences.filter((c) => c.kind === "benefit").length;
+          const rec = plans.length > 1 && k === draft.recommended;
+          const st = pl.applies === undefined ? (pl.patch ? "not checked" : "no code change") : pl.applies ? "applies cleanly" : pl.patch ? "does not apply" : "no code change";
+          return (
+            <div key={k} className="glass-flat plan-card" style={{ padding: 10, borderColor: rec ? "rgba(52,209,196,.6)" : undefined }}>
+              <p className="row between" style={{ flexWrap: "nowrap", gap: 6 }}><strong className="small">{pl.title}</strong>{rec && <span className="badge st-pass">recommended</span>}</p>
+              {pl.approach && <p className="tiny dim mt-s">{pl.approach}</p>}
+              <p className="tiny mt-s"><span className={`badge ${pl.applies ? "st-pass" : pl.patch ? "st-fail" : "st-unknown"}`}>{st}</span> {pl.changed_files?.length ? pl.changed_files.join(", ") : ""}</p>
+              {pl.edit_problems && pl.edit_problems.length > 0 && <ul className="bullets tiny mt-s" style={{ color: "var(--fail)" }}>{pl.edit_problems.map((x) => <li key={x}>{x}</li>)}</ul>}
+              <p className="tiny mt-s">Predicted consequences: <strong>{pl.consequences.length}</strong> · <span style={{ color: "var(--pass)" }}>{benefits} benefit(s)</span> · <span style={{ color: "var(--fail)" }}>{risks} risk(s)</span> · {pl.predictions.length} testable prediction(s)</p>
+              {pl.risks.length > 0 && <ul className="bullets tiny mt-s">{pl.risks.slice(0, 4).map((x) => <li key={x}>{x}</li>)}</ul>}
+              <div className="row mt-s"><button className="btn" onClick={() => setOpen(open === k ? null : k)}>{open === k ? "Hide details" : "Consequences & code"}</button>
+                {canUse && <button className={rec || plans.length === 1 ? "btn-primary" : "btn"} onClick={() => onUse(k)}><Icon name="check" size={14} /> Use {plans.length > 1 ? `plan ${String.fromCharCode(65 + k)}` : "this plan"}</button>}</div>
+            </div>
+          );
+        })}
+      </div>
+      {open !== null && plans[open] && (
+        <div className="glass-flat mt-s" style={{ padding: 10 }}>
+          <p className="hud-label">{plans[open].title} · predicted consequences per object</p>
+          <div className="mt-s"><ConsequenceTable items={plans[open].consequences} /></div>
+          {plans[open].patch && <><p className="hud-label mt">Exact code change (built by ACFM from the edits)</p><pre className="code tiny">{plans[open].patch}</pre></>}
+        </div>
+      )}
+      {canUse && <p className="tiny faint mt-s">“Use” fills steps 1, 8, 10 and 11 with that plan and runs the pre-check. Nothing runs until you approve in step 12.</p>}
+    </div>
+  );
+}
+
+function ConsequenceTable({ items }: { items: PConsequence[] }) {
+  if (!items.length) return <p className="tiny faint">No consequences predicted.</p>;
+  const order = { target: 0, connected: 1, environment: 2 } as const;
+  return (
+    <div className="table-wrap"><table className="tbl"><thead><tr><th scope="col">Object</th><th scope="col">Relation</th><th scope="col">Predicted effect</th><th scope="col">Kind</th><th scope="col">Source</th></tr></thead>
+      <tbody>{[...items].sort((a, b) => order[a.relation] - order[b.relation]).map((c, i) => (
+        <tr key={i}><td className="mono tiny" style={{ overflowWrap: "anywhere" }}>{c.object}</td><td className="tiny">{REL[c.relation]}</td>
+          <td className="tiny">{c.effect}{c.why && <div className="faint">{c.why}</div>}</td>
+          <td><span className={`badge ${KIND[c.kind][0]}`}>{KIND[c.kind][1]}</span><div className="tiny faint">{c.likelihood}</div></td>
+          <td>{c.source === "acfm_search" ? <span className="ev ev-observed">found by ACFM</span> : c.source === "human" ? <span className="ev ev-configured">human</span> : <span className="ev ev-inferred">LLM-inferred</span>}</td></tr>
+      ))}</tbody></table></div>
+  );
+}
 const parseCommands = (t: string) => t.split("\n").map((l) => l.trim().split(/\s+/).filter(Boolean)).filter((a) => a.length);
 const lines = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
 const toBody = (f: Form) => ({ goal: f.goal, desired_input: f.desired_input, desired_output: f.desired_output, patch: f.patch, commands: parseCommands(f.commands),
-  predictions: f.predictions.filter((x) => x.statement.trim()), criteria: f.criteria.filter((c) => c.text.trim()), assumptions: lines(f.assumptions), unknowns: lines(f.unknowns), plan_source: f.plan_source });
+  predictions: f.predictions.filter((x) => x.statement.trim()), criteria: f.criteria.filter((c) => c.text.trim()), assumptions: lines(f.assumptions), unknowns: lines(f.unknowns), plan_source: f.plan_source,
+  plan_title: f.plan_title, consequences: f.consequences, alternatives: f.alternatives });
 
 function ProjectFlow({ id }: { id: string }) {
   const { llm } = useAFM();
@@ -119,13 +184,16 @@ function ProjectFlow({ id }: { id: string }) {
     setAsk("");
     setP(x);  // keep the user's unsaved form edits; only the chat changes
   });
-  const applyDraft = (x: ProjectDraft["draft"]) => {
-    const next: Form = { ...f, goal: f.goal.trim() || x.goal || f.goal, desired_input: f.desired_input || x.desired_input || "",
-      desired_output: f.desired_output || x.desired_output || "", patch: x.patch || f.patch,
+  const applyDraft = (x: ProjectDraft["draft"], i: number) => {
+    const pl = x.plans[i];
+    // the latest plain-words request is the newest intent: its goal replaces the saved one (still editable in step 1)
+    const next: Form = { ...f, goal: x.goal || f.goal, desired_input: x.desired_input || f.desired_input,
+      desired_output: x.desired_output || f.desired_output, patch: pl?.patch || f.patch,
       commands: x.commands.length ? x.commands.map((a) => a.join(" ")).join("\n") : f.commands,
-      predictions: x.predictions.length ? x.predictions : f.predictions, criteria: x.criteria.length ? x.criteria : f.criteria,
+      predictions: pl?.predictions.length ? pl.predictions : f.predictions, criteria: x.criteria.length ? x.criteria : f.criteria,
       assumptions: x.assumptions.length ? x.assumptions.join("\n") : f.assumptions, unknowns: x.unknowns.length ? x.unknowns.join("\n") : f.unknowns,
-      plan_source: "llm_draft_edited" };
+      plan_source: "llm_draft_edited", plan_title: pl?.title ?? "", consequences: pl?.consequences ?? [],
+      alternatives: x.plans.filter((_, j) => j !== i).map((o) => ({ title: o.title, applies: !!o.applies, risks: o.consequences.filter((c) => c.kind === "risk").length, files: o.changed_files?.length ?? 0 })) };
     setF(next);
     if (!next.goal.trim()) { setErr("Write the Task Goal in step 1, then press “Use this plan” again."); return; }
     void act("save", () => api.saveProjectPlan(p.id, toBody(next)));
@@ -138,7 +206,7 @@ function ProjectFlow({ id }: { id: string }) {
   const after = p.results.filter((r) => r.phase === "after");
   const s = {
     1: p.goal ? "completed" : "waiting_info", 8: p.patch && p.commands.length ? "completed" : "waiting_info",
-    9: !p.precheck.length ? "not_started" : preFail ? "failed" : "completed", 10: p.predictions.length ? "completed" : "waiting_info",
+    9: !p.precheck.length ? "not_started" : preFail ? "failed" : "completed", 10: p.predictions.length ? "completed" : "waiting_info", // consequences alone are not measurable
     11: p.criteria.length ? "completed" : "waiting_info",
     12: d?.status === "approved" || d?.status === "used" ? "approved" : d?.status === "rejected" ? "rejected" : p.precheck.length && !preFail ? "waiting_review" : "not_started",
     13: ran ? "completed" : p.status === "approved" ? "ready" : "not_started", 14: !p.results.length ? "not_started" : p.patch_applied ? "completed" : "failed",
@@ -251,16 +319,7 @@ function ProjectFlow({ id }: { id: string }) {
               <div key={i} className={`pmsg pmsg-${m.role}`}>
                 <p className="tiny faint">{m.role === "user" ? "You" : m.provider}{m.files.length ? ` · sent ${m.files.join(", ")}` : ""}</p>
                 <p className="small" style={{ whiteSpace: "pre-wrap" }}>{m.content}</p>
-                {m.draft && (
-                  <div className="mt-s">
-                    <p className="tiny">{m.draft.patch ? `Code change: ${m.draft.patch.split("\n").length} lines` : "No code change"} · {m.draft.commands.length} test command(s) · {m.draft.predictions.length} prediction(s) · {m.draft.criteria.length} success criteria <span className="ev ev-inferred">LLM-generated</span></p>
-                    {m.draft.patch && <details className="mt-s"><summary className="tiny dim" style={{ cursor: "pointer" }}>Show the code change</summary><pre className="code tiny">{m.draft.patch}</pre></details>}
-                    {!ran && i === p.chat.length - 1 && (
-                      <div className="row mt-s"><button className="btn-primary" disabled={!!busy} onClick={() => applyDraft(m.draft!)}><Icon name="check" size={14} /> Use this plan</button>
-                        <span className="tiny faint">Fills steps 1, 8, 10 and 11 and runs the pre-check. Nothing runs until you approve in step 12.</span></div>
-                    )}
-                  </div>
-                )}
+                {m.draft && <PlanCompare draft={withPlans(m.draft)} canUse={!ran && i === p.chat.length - 1 && !busy} onUse={(k) => applyDraft(withPlans(m.draft!), k)} />}
               </div>
             ))}
           </div>
@@ -296,6 +355,11 @@ function ProjectFlow({ id }: { id: string }) {
         </Step>
 
         <Step n={10} title="Predict the consequences (saved before anything runs)" s={s[10]} open={!!p.patch && !p.predictions.length}>
+          <p className="hud-label">Predicted consequences per object{f.plan_title ? ` · ${f.plan_title}` : ""}</p>
+          <p className="tiny faint mt-s">What this plan changes directly, what is connected to it, and the effect on the whole project. Part of what you approve.</p>
+          <div className="mt-s"><ConsequenceTable items={f.consequences} /></div>
+          {f.alternatives.length > 0 && <p className="tiny faint mt-s">Compared with: {f.alternatives.map((a) => `${a.title} (${a.applies ? "applies" : "does not apply"}, ${a.risks} risk(s), ${a.files} file(s))`).join(" · ")}</p>}
+          <p className="hud-label mt">Testable predictions (measured by the test run)</p>
           <datalist id="pred-tests">{[...ins.tests, ...testIds].map((t) => <option key={t} value={t} />)}</datalist>
           <ul className="list">{f.predictions.map((x, i) => (
             <li key={i} className="glass-flat" style={{ padding: 10, flexDirection: "column", alignItems: "stretch", gap: 6 }}>
@@ -367,6 +431,11 @@ function ProjectFlow({ id }: { id: string }) {
           {!p.comparison.length ? <p className="small faint">Comparison appears after the test runs.</p> :
             <div className="table-wrap"><table className="tbl"><thead><tr><th scope="col">Prediction</th><th scope="col">Expected</th><th scope="col">Observed</th><th scope="col">Result</th></tr></thead>
               <tbody>{p.comparison.map((c) => <tr key={c.prediction_id}><td className="small"><span className="mono accent">{c.prediction_id}</span> {c.statement}</td><td className="tiny">{c.expected}</td><td className="tiny">{c.observed}</td><td><ResultBadge r={c.result} /></td></tr>)}</tbody></table></div>}
+          {p.comparison.length > 0 && p.consequences.length > 0 && (
+            <details className="mt"><summary className="small dim" style={{ cursor: "pointer" }}>Predicted consequences without their own test ({p.consequences.length}): not verified</summary>
+              <p className="tiny faint mt-s">Only the testable predictions above were measured. These per-object consequences stay <strong>unknown</strong> until a test or a human checks them; untested never means “no effect”.</p>
+              <div className="mt-s"><ConsequenceTable items={p.consequences} /></div></details>
+          )}
         </Step>
 
         <Step n={16} title="ACFM Win: prediction accuracy · Task Goal · rule compliance" s={s[16]} open={!!p.win}>

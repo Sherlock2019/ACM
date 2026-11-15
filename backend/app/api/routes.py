@@ -265,7 +265,7 @@ class CheckIn(_In):
     type: Literal["command_exit", "test_outcome", "no_other_changes", "manual"]
     command: int = Field(default=0, ge=0, le=19)
     test: str = Field(default="", max_length=300)
-    expect: str = Field(default="", max_length=20)
+    expect: Literal["0", "nonzero", "same", "passed", "failed", ""] = ""
 
 
 class PredictionIn(_In):
@@ -280,6 +280,23 @@ class CriterionIn(_In):
     source: Literal["human", "llm_proposed"] = "human"
 
 
+class ConsequenceIn(_In):
+    object: str = Field(min_length=1, max_length=200)
+    relation: Literal["target", "connected", "environment"]
+    effect: str = Field(min_length=1, max_length=400)
+    kind: Literal["benefit", "risk", "neutral", "unknown"]
+    likelihood: Literal["expected", "possible", "unknown"] = "unknown"
+    why: str = Field(default="", max_length=400)
+    source: Literal["llm", "acfm_search", "human"] = "human"
+
+
+class AlternativeIn(_In):
+    title: str = Field(max_length=120)
+    applies: bool = False
+    risks: int = 0
+    files: int = 0
+
+
 class PlanIn(_In):
     goal: str = Field(min_length=1, max_length=600)
     desired_input: str = Field(default="", max_length=500)
@@ -291,6 +308,9 @@ class PlanIn(_In):
     assumptions: list[str] = Field(default=[], max_length=12)
     unknowns: list[str] = Field(default=[], max_length=12)
     plan_source: Literal["human", "llm_draft_edited"] = "human"
+    plan_title: str = Field(default="", max_length=120)
+    consequences: list[ConsequenceIn] = Field(default=[], max_length=40)
+    alternatives: list[AlternativeIn] = Field(default=[], max_length=3)
 
 
 class DraftIn(_In):

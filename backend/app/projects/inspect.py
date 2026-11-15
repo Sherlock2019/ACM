@@ -100,6 +100,68 @@ def inspect(ws: str, uncommitted: int = 0) -> dict[str, Any]:
             "files": pickable, "notes": notes, "unknowns": unknowns, "instruction_like_text": bool(flags)}
 
 
+def find_references(ws: str, files: list[str], targets: list[str], limit: int = 12) -> dict[str, list[str]]:
+    """Read-only text search: which project files import or require each changed file (by module name).
+    Evidence label: found by search; dynamic or indirect use can be missed."""
+    import posixpath
+    import re
+
+    js_ext = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"}
+    js_spec = re.compile(r"""(?:\bfrom\s*|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]""")
+    py_imp = re.compile(r"^\s*(?:from\s+(\.*[\w.]*)\s+import\s+([\w, ]+)|import\s+([\w.]+))", re.MULTILINE)
+    root = Path(ws)
+    out: dict[str, list[str]] = {}
+    for t in targets:
+        tp = Path(t)
+        no_ext = posixpath.splitext(t)[0]
+        module = no_ext.replace("/", ".")
+        if tp.stem == "__init__":
+            module = module.rsplit(".", 1)[0]
+        hits = []
+        for f in files:
+            ext = Path(f).suffix.lower()
+            if f == t or ext not in LANG or ext in (".md", ".json", ".yml", ".yaml", ".toml"):
+                continue
+            p = root / f
+            try:
+                if p.is_symlink() or p.stat().st_size > MAX_TEXT_BYTES:
+                    continue
+                text = p.read_text(errors="replace")
+            except OSError:
+                continue
+            found = False
+            if ext in js_ext and tp.suffix.lower() in js_ext:
+                for spec in js_spec.findall(text):  # only relative specifiers can be resolved to a file
+                    if spec.startswith("."):
+                        r = posixpath.normpath(posixpath.join(posixpath.dirname(f), spec))
+                        if r in (no_ext, t) or r == posixpath.dirname(t) and tp.stem == "index":
+                            found = True
+                            break
+            elif ext == ".py" and tp.suffix.lower() == ".py":
+                for frm, names, imp in py_imp.findall(text):
+                    if frm.startswith("."):  # relative import: resolve against the importer's package
+                        up = len(frm) - len(frm.lstrip("."))
+                        base = posixpath.dirname(f)
+                        for _ in range(up - 1):
+                            base = posixpath.dirname(base)
+                        mods = [posixpath.join(base, frm.lstrip(".").replace(".", "/")).strip("/").replace("/", ".")]
+                    else:
+                        mods = [frm or imp]
+                    mods += [f"{m}.{n.strip()}" for m in list(mods) for n in names.split(",") if n.strip()]
+                    if any(m and (module == m or module.endswith("." + m)) for m in mods):
+                        found = True
+                        break
+            elif tp.suffix.lower() not in js_ext | {".py"} and len(tp.stem) >= 3:
+                found = bool(re.search(rf"(?:\bimport\b|\binclude\b|\buse\b)[^\n]{{0,160}}\b{re.escape(tp.stem)}\b", text))
+            if found:
+                hits.append(f)
+            if len(hits) >= limit:
+                break
+        if hits:
+            out[t] = hits
+    return out
+
+
 def read_files(ws: str, rels: list[str], per_file: int = 30_000, total: int = 120_000) -> list[dict[str, str]]:
     """Contents of files the human picked to send to the LLM (inside the workspace only, size-capped)."""
     root = Path(ws).resolve()

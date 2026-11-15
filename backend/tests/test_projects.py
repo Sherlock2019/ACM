@@ -249,6 +249,89 @@ def test_project_overview_lists_name_goal_features_and_suggestions(client, proje
     assert p["patch"] == "" and p["goal"] == ""  # a description never changes the plan
 
 
+def test_acfm_builds_the_exact_diff_from_edits(project, tmp_path):
+    from app.projects import runner
+    src, _ = project
+    ws = tmp_path / "ws-copy"
+    sh(["git", "clone", "-q", str(src), str(ws)], tmp_path)
+    patch, problems = runner.edits_to_patch(str(ws), [{"path": "calc.py", "old": "    return a - b", "new": "    return a + b"}])
+    assert problems == [] and "@@ -1," in patch
+    assert all(i.status == "PASS" for i in runner.check_patch(str(ws), patch))
+    _, problems = runner.edits_to_patch(str(ws), [{"path": "calc.py", "old": "return a / b", "new": "x"}])
+    assert "not found" in problems[0]
+    _, problems = runner.edits_to_patch(str(ws), [{"path": "calc.py", "old": "    return a", "new": "x"}])
+    assert "appears 2 times" in problems[0]
+    _, problems = runner.edits_to_patch(str(ws), [{"path": "../evil.py", "old": "", "new": "x"}])
+    assert "not a path inside" in problems[0]
+    patch, problems = runner.edits_to_patch(str(ws), [{"path": "new_mod.py", "old": "", "new": "X = 1"}])  # new file, no final newline
+    assert problems == [] and "No newline at end of file" in patch
+    assert all(i.status == "PASS" for i in runner.check_patch(str(ws), patch))
+
+
+def test_connected_files_follow_real_import_paths(tmp_path):
+    from app.projects.inspect import find_references
+    files = {"mobile/App.tsx": "export default function App() {}\n", "mobile/index.ts": "import App from './App';\n",
+             "frontend/src/App.tsx": "export default 1\n", "frontend/src/main.tsx": "import App from './App';\n",
+             "backend/app/analytics.py": "X = 1\n", "backend/app/api.py": "from .analytics import X\n",
+             "backend/tests/test_a.py": "from app.analytics import X\n", "backend/app/other.py": "import json\n"}
+    for k, v in files.items():
+        (tmp_path / k).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / k).write_text(v)
+    refs = find_references(str(tmp_path), list(files), ["mobile/App.tsx", "backend/app/analytics.py"])
+    assert refs["mobile/App.tsx"] == ["mobile/index.ts"]  # not frontend/src/main.tsx, which imports a different App
+    assert sorted(refs["backend/app/analytics.py"]) == ["backend/app/api.py", "backend/tests/test_a.py"]
+
+
+def test_llm_wording_slips_are_coerced_not_rejected():
+    from app.adapters.llm import normalize_draft
+    d = normalize_draft({"plans": [{"title": "A", "predictions": [
+        {"statement": "same as before", "type": "command_exit", "command": 0, "expect": "same exit code as before"},
+        {"statement": "t", "type": "test_outcome", "command": 0, "test": "x::y", "expect": "should pass"},
+        {"statement": "n", "type": "no_other_changes", "command": 1, "expect": "1 file changed"}]}]})
+    assert [x["check"]["expect"] for x in d["plans"][0]["predictions"]] == ["same", "passed", ""]
+
+
+class _FakeLLM:
+    name = "fake-llm"
+
+    def draft_project_plan(self, ctx):
+        from app.adapters.llm import normalize_draft
+        return normalize_draft({"summary": "two plans", "goal": "Fix add()", "commands": [PYTEST],
+            "criteria": [{"text": "tests pass", "type": "command_exit", "command": 0, "expect": "0"}],
+            "plans": [
+                {"title": "Broken edit", "approach": "wrong text", "edits": [{"path": "calc.py", "old": "nope", "new": "x"}],
+                 "consequences": [], "predictions": [], "risks": []},
+                {"title": "Minimal fix", "approach": "one line", "edits": [{"path": "calc.py", "old": "    return a - b", "new": "    return a + b"}],
+                 "consequences": [{"object": "calc.add", "relation": "target", "effect": "returns the sum", "kind": "benefit", "likelihood": "expected", "why": "edit"}],
+                 "predictions": [{"statement": "test_add passes", "type": "test_outcome", "command": 0, "test": "tests/test_calc.py::test_add", "expect": "passed"},
+                                 {"statement": "suite exit changes vs before", "type": "command_exit", "command": 0, "expect": "same"}],
+                 "risks": []}]})
+
+
+def test_multiple_plans_with_consequences_and_acfm_recommendation(client, svc, project):
+    src, _ = project
+    svc.llm = _FakeLLM()
+    p = create(client, src)
+    p = client.post(f"/api/projects/{p['id']}/chat", json={"message": "fix add in calc.py"}).json()
+    dr = p["chat"][-1]["draft"]
+    a, b = dr["plans"]
+    assert not a["applies"] and "not found" in a["edit_problems"][0]
+    assert b["applies"] and b["changed_files"] == ["calc.py"]
+    assert any(c["source"] == "acfm_search" and c["object"] == "tests/test_calc.py" for c in b["consequences"])  # importer found by ACFM
+    assert dr["recommended"] == 1 and "applies cleanly" in dr["recommended_why"]
+    body = plan(b["patch"], predictions=b["predictions"])
+    body.update(plan_title=b["title"], consequences=b["consequences"], alternatives=[{"title": a["title"], "applies": False, "risks": 0, "files": 0}])
+    p = client.put(f"/api/projects/{p['id']}/plan", json=body).json()
+    assert p["plan_title"] == "Minimal fix" and len(p["consequences"]) == 2 and all(i["status"] == "PASS" for i in p["precheck"])
+    h = p["plan_hash"]
+    body["consequences"] = body["consequences"][:1]
+    assert client.put(f"/api/projects/{p['id']}/plan", json=body).json()["plan_hash"] != h  # consequences are part of what is approved
+    p = approve(client, client.put(f"/api/projects/{p['id']}/plan", json=body).json()).json()
+    p = client.post(f"/api/projects/{p['id']}/execute").json()
+    res = {c["prediction_id"]: c["result"] for c in p["comparison"]}
+    assert res["P1"] == "MATCH" and res["P2"] == "MISMATCH"  # exit code went 1 → 0, so "same as before" was wrong
+
+
 def test_draft_uses_the_unsaved_goal(client, project):
     src, _ = project
     p = create(client, src)

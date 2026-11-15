@@ -217,20 +217,24 @@ OVERVIEW_SCHEMA = {
 }
 
 
+_S = {"type": "string"}
 _CHECK_PROPS = {"type": {"type": "string", "enum": ["command_exit", "test_outcome", "no_other_changes", "manual"]},
-                "command": {"type": "integer"}, "test": {"type": "string"}, "expect": {"type": "string"}}
-DRAFT_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "summary": {"type": "string"}, "goal": {"type": "string"}, "desired_input": {"type": "string"}, "desired_output": {"type": "string"},
-        "patch": {"type": "string"},
-        "commands": {"type": "array", "items": _STR_LIST},
-        "predictions": {"type": "array", "items": {"type": "object", "properties": {"statement": {"type": "string"}, **_CHECK_PROPS},
-                                                   "required": ["statement", "type", "command", "test", "expect"], "additionalProperties": False}},
-        "criteria": {"type": "array", "items": {"type": "object", "properties": {"text": {"type": "string"}, **_CHECK_PROPS},
-                                                "required": ["text", "type", "command", "test", "expect"], "additionalProperties": False}},
-        "assumptions": _STR_LIST, "unknowns": _STR_LIST,
-    },
-    "required": ["summary", "goal", "desired_input", "desired_output", "patch", "commands", "predictions", "criteria", "assumptions", "unknowns"],
-    "additionalProperties": False,
-}
+                "command": {"type": "integer"}, "test": _S, "expect": {"type": "string", "enum": ["0", "nonzero", "same", "passed", "failed", ""]}}
+_obj = lambda props: {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+_PLAN = _obj({
+    "title": _S, "approach": _S,
+    "edits": {"type": "array", "items": _obj({"path": _S, "old": _S, "new": _S})},
+    "consequences": {"type": "array", "items": _obj({
+        "object": _S, "relation": {"type": "string", "enum": ["target", "connected", "environment"]}, "effect": _S,
+        "kind": {"type": "string", "enum": ["benefit", "risk", "neutral", "unknown"]},
+        "likelihood": {"type": "string", "enum": ["expected", "possible", "unknown"]}, "why": _S})},
+    "predictions": {"type": "array", "items": _obj({"statement": _S, **_CHECK_PROPS})},
+    "risks": _STR_LIST,
+})
+DRAFT_SCHEMA = _obj({
+    "summary": _S, "goal": _S, "desired_input": _S, "desired_output": _S,
+    "commands": {"type": "array", "items": _STR_LIST},
+    "criteria": {"type": "array", "items": _obj({"text": _S, **_CHECK_PROPS})},
+    "plans": {"type": "array", "items": _PLAN},
+    "assumptions": _STR_LIST, "unknowns": _STR_LIST,
+})

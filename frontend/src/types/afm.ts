@@ -91,7 +91,7 @@ export interface ProjectTest {
   id: string; created_at: string; updated_at: string; name: string; source: "local" | "github"; origin: string; ref: string;
   workspace: string; workspace_kind: "git_clone" | "folder_copy" | "github_clone"; commit: string; inspection: PInspection;
   goal: string; desired_input: string; desired_output: string; criteria: PCriterion[]; patch: string; commands: string[][]; predictions: PPrediction[];
-  plan_source: "human" | "llm_draft_edited"; assumptions: string[]; unknowns: string[]; plan_hash: string; predictions_saved_at: string; precheck: PPrecheck[];
+  plan_source: "human" | "llm_draft_edited"; plan_title: string; consequences: PConsequence[]; alternatives: { title: string; applies: boolean; risks: number; files: number }[]; assumptions: string[]; unknowns: string[]; plan_hash: string; predictions_saved_at: string; precheck: PPrecheck[];
   decision: { status: "approved" | "rejected" | "used" | "invalidated"; reviewer: string; at: string; plan_hash: string; policy_version: string; criteria_agreed: boolean; note: string } | null;
   status: "inspected" | "planned" | "approved" | "rejected" | "executed" | "failed"; executed_at: string; patch_applied: boolean;
   results: PCommandResult[]; comparison: { prediction_id: string; statement: string; expected: string; observed: string; result: "MATCH" | "MISMATCH" | "NOT VERIFIED"; required: boolean }[];
@@ -101,8 +101,14 @@ export interface ProjectTest {
   overview: { name: string; goal: string; features: string[]; suggestions: { title: string; change: string; why: string; files: string[] }[]; unknowns: string[]; provider: string; files_read: string[]; at: string } | null;
 }
 export interface ProjectListItem { id: string; name: string; source: string; origin: string; status: string; updated_at: string; commit: string; win: string | null }
+export interface PConsequence { object: string; relation: "target" | "connected" | "environment"; effect: string; kind: "benefit" | "risk" | "neutral" | "unknown"; likelihood: "expected" | "possible" | "unknown"; why: string; source: "llm" | "acfm_search" | "human" }
+export interface PPlan {
+  title: string; approach: string; edits: { path: string; old: string; new: string }[]; patch: string; consequences: PConsequence[]; predictions: PPrediction[]; risks: string[];
+  edit_problems?: string[]; patch_check?: PPrecheck[]; changed_files?: string[]; applies?: boolean;
+}
 export interface ProjectDraft {
-  draft: { summary: string; goal: string; desired_input: string; desired_output: string; patch: string; commands: string[][]; predictions: PPrediction[]; criteria: PCriterion[]; assumptions: string[]; unknowns: string[] };
+  draft: { summary: string; goal: string; desired_input: string; desired_output: string; patch: string; commands: string[][]; predictions: PPrediction[]; criteria: PCriterion[]; assumptions: string[]; unknowns: string[];
+    plans: PPlan[]; recommended: number; recommended_why: string };
   sent: { provider: string; files: string[]; chars: number; also: string };
 }
 

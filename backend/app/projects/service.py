@@ -34,7 +34,7 @@ def policy_version() -> str:
 
 def _describe(c: Check, commands: list[list[str]]) -> str:
     cmd = " ".join(commands[c.command]) if c.command < len(commands) else f"command {c.command + 1}"
-    return {"command_exit": f"`{cmd}` exits {'with 0' if c.expect == '0' else 'non-zero'}",
+    return {"command_exit": f"`{cmd}` exits " + {"0": "with 0", "same": "with the same code as before the change"}.get(c.expect, "non-zero"),
             "test_outcome": f"{c.test} {c.expect} (via `{cmd}`)",
             "no_other_changes": f"no other test changes outcome between baseline and after (via `{cmd}`)",
             "manual": "checked by a human"}[c.type]
@@ -87,7 +87,8 @@ class ProjectService:
     # ------------------------------------------------------------------ steps 1, 8-11: goal + plan + predictions + pre-check
     def _hash(self, p: ProjectTest) -> str:
         raw = json.dumps({"commit": p.commit, "goal": p.goal, "criteria": [c.model_dump() for c in p.criteria], "patch": p.patch,
-                          "commands": p.commands, "predictions": [x.model_dump() for x in p.predictions]}, sort_keys=True)
+                          "commands": p.commands, "predictions": [x.model_dump() for x in p.predictions],
+                          "plan_title": p.plan_title, "consequences": p.consequences}, sort_keys=True)
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def save_plan(self, pid: str, data: dict[str, Any]) -> ProjectTest:
@@ -102,6 +103,9 @@ class ProjectService:
         p.assumptions = list(data.get("assumptions", []))
         p.unknowns = list(data.get("unknowns", []))
         p.plan_source = data.get("plan_source", "human")
+        p.plan_title = data.get("plan_title", "")
+        p.consequences = list(data.get("consequences", []))
+        p.alternatives = list(data.get("alternatives", []))
         p.criteria = [Criterion(id=f"C{i + 1}", text=c["text"], check=Check(**c["check"]), source=c.get("source", "human"))
                       for i, c in enumerate(data.get("criteria", []))]
         p.predictions = [Prediction(id=f"P{i + 1}", statement=x["statement"], check=Check(**x["check"]), required=x.get("required", True))
@@ -113,8 +117,8 @@ class ProjectService:
                 raise AFMError("invalid_input", f"{item.id} refers to command {item.check.command + 1}, which does not exist.", 400)
             if item.check.type == "test_outcome" and (not item.check.test or item.check.expect not in ("passed", "failed")):
                 raise AFMError("invalid_input", f"{item.id}: a test outcome needs a test id and 'passed' or 'failed'.", 400)
-            if item.check.type == "command_exit" and item.check.expect not in ("0", "nonzero"):
-                raise AFMError("invalid_input", f"{item.id}: a command result must expect '0' or 'nonzero'.", 400)
+            if item.check.type == "command_exit" and item.check.expect not in ("0", "nonzero", "same"):
+                raise AFMError("invalid_input", f"{item.id}: a command result must expect '0', 'nonzero' or 'same' (as the baseline).", 400)
         new_hash = self._hash(p)
         if p.decision and p.decision.status == "approved" and p.decision.plan_hash != new_hash:
             p.decision.status = "invalidated"
@@ -143,8 +147,8 @@ class ProjectService:
                "languages": ins.get("languages"), "tests": ins.get("tests", [])[:40], "suggested_commands": ins.get("suggested_commands"),
                "files": contents}
         llm = self._llm()
-        d = llm.draft_project_plan(ctx)
-        sent = {"provider": llm.name, "files": [f["path"] for f in contents], "chars": sum(len(f["content"]) for f in contents),
+        d = self._finish_draft(p, llm.draft_project_plan(ctx))
+        sent ={"provider": llm.name, "files": [f["path"] for f in contents], "chars": sum(len(f["content"]) for f in contents),
                 "also": "Task Goal, desired input/output, languages, test file names and suggested commands."}
         return {"draft": d, "sent": sent}
 
@@ -154,13 +158,7 @@ class ProjectService:
         p = self.get(pid)
         if p.status in ("executed", "failed"):
             raise AFMError("conflict", "This test already ran. Start a new project test to try another change.", 409)
-        known = set(p.inspection.get("files", []))
-        low = message.lower()
-        mentioned = [f for f in known if f.lower() in low or (len(f.rsplit("/", 1)[-1]) > 3 and re.search(rf"\b{re.escape(f.rsplit('/', 1)[-1].lower())}\b", low))]
-        # also send the tests that belong to a mentioned file (calc.py → tests/test_calc.py), so test ids are not guessed
-        stems = {Path(f).stem.lower() for f in mentioned if not Path(f).name.startswith("test_")}
-        related = [t for t in p.inspection.get("tests", []) if t in known and any(s and s in Path(t).stem.lower() for s in stems)]
-        chosen = list(dict.fromkeys([*files, *sorted(mentioned), *sorted(related)]))[:12]
+        chosen = self._files_for(p, message, files)
         contents = insp.read_files(p.workspace, chosen)
         ins = p.inspection
         history = [{"role": m.role, "content": m.content} for m in p.chat[-10:]]
@@ -172,10 +170,68 @@ class ProjectService:
         llm = self._llm()
         now = now_iso()
         p.chat.append(ChatMessage(role="user", content=message, at=now, files=[f["path"] for f in contents]))
-        d = llm.draft_project_plan(ctx)
+        d = self._finish_draft(p, llm.draft_project_plan(ctx))
         p.chat.append(ChatMessage(role="assistant", content=d.get("summary") or "Here is a draft plan.", at=now_iso(), provider=llm.name, draft=d))
         self._log(p, 7, f"Asked {llm.name} in plain words; draft received (proposal only). Files sent: {', '.join(f['path'] for f in contents) or 'none'}.")
         return self._save(p)
+
+    @staticmethod
+    def _files_for(p: ProjectTest, message: str, picked: list[str]) -> list[str]:
+        """Files to send with a chat message: picked ones, files named in the message (a full path wins over a
+        bare file name) and the tests that belong to them in the same part of the project."""
+        known = set(p.inspection.get("files", []))
+        low = message.lower()
+        full = [f for f in known if f.lower() in low]
+        full_names = {f.rsplit("/", 1)[-1].lower() for f in full}
+        by_name = [f for f in known if f not in full and len(f.rsplit("/", 1)[-1]) > 3
+                   and f.rsplit("/", 1)[-1].lower() not in full_names
+                   and re.search(rf"(?<![\w/.-]){re.escape(f.rsplit('/', 1)[-1].lower())}\b", low)]
+        mentioned = sorted(set(full) | set(by_name))
+        top = lambda f: f.split("/", 1)[0] if "/" in f else ""
+        related = []
+        for src in mentioned:
+            if Path(src).name.startswith("test_"):
+                continue
+            stem = Path(src).stem.lower()
+            for t in p.inspection.get("tests", []):
+                same_part = top(t) == top(src) or (top(src) == "" and top(t) in ("tests", "test"))
+                if t in known and same_part and stem and stem in Path(t).stem.lower():
+                    related.append(t)
+        return list(dict.fromkeys([*picked, *mentioned, *sorted(set(related))]))[:12]
+
+    def _finish_draft(self, p: ProjectTest, d: dict[str, Any]) -> dict[str, Any]:
+        """For each proposed plan, ACFM (not the LLM) writes the exact diff from the edits, pre-checks it, searches the copy for
+        files that use what changes (connected objects, read-only), and recommends a plan with its reasons."""
+        scores = []
+        for i, pl in enumerate(d.get("plans", [])):
+            if pl.get("edits"):
+                pl["patch"], pl["edit_problems"] = runner.edits_to_patch(p.workspace, pl["edits"])
+            else:
+                pl.setdefault("edit_problems", [])
+            pl["patch_check"] = [x.model_dump() for x in runner.check_patch(p.workspace, pl["patch"])] if pl.get("patch") else []
+            changed = runner.patch_paths(pl["patch"]) if pl.get("patch") else []
+            pl["changed_files"] = changed
+            refs = insp.find_references(p.workspace, p.inspection.get("files", []), changed)
+            seen = {c["object"] for c in pl["consequences"]}
+            for target, users in refs.items():
+                for u in users:
+                    if u not in seen:
+                        pl["consequences"].append({"object": u, "relation": "connected", "effect": f"Imports or uses {target}; may be affected by this change.",
+                                                   "kind": "unknown", "likelihood": "possible", "why": "Found by ACFM's text search of the copy (may miss dynamic use).",
+                                                   "source": "acfm_search"})
+                        seen.add(u)
+            applies = bool(pl.get("patch")) and all(x["status"] == "PASS" for x in pl["patch_check"]) and not pl["edit_problems"]
+            pl["applies"] = applies
+            risks = sum(1 for c in pl["consequences"] if c["kind"] == "risk")
+            scores.append(((not applies, risks, len(changed), i), i, applies, risks, len(changed)))
+        if scores:
+            _, best, applies, risks, files = min(scores)
+            d["recommended"] = best
+            d["recommended_why"] = (("Its code change applies cleanly; " if applies else "No plan's code change applies yet; ")
+                                    + f"{risks} predicted risk(s) and {files} changed file(s), the lowest among the plans that apply."
+                                    if len(scores) > 1 else ("Its code change applies cleanly." if applies else "Its code change does not apply yet."))
+            d["patch"], d["predictions"] = d["plans"][best]["patch"], d["plans"][best]["predictions"]
+        return d
 
     def describe(self, pid: str) -> ProjectTest:
         """Ask the LLM to read the README, config and main source files and list the project's name, goal,
@@ -286,6 +342,11 @@ class ProjectService:
             return None, "the command did not run after the patch"
         if after.error:
             return None, after.error
+        if c.type == "command_exit" and c.expect == "same":
+            base = self._result(p, "baseline", c.command)
+            if base is None or base.error:
+                return None, "the baseline run gave no usable exit code" + (f" ({base.error})" if base and base.error else "")
+            return after.exit_code == base.exit_code, f"exit code {base.exit_code} before, {after.exit_code} after"
         if c.type == "command_exit":
             return (after.exit_code == 0) == (c.expect == "0"), f"exit code {after.exit_code}"
         if c.type == "test_outcome":

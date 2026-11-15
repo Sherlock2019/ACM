@@ -220,11 +220,15 @@ class MockLLM:
             preds = [{"statement": "The test command still exits with 0 after the change.", "type": "command_exit", "command": 0, "test": "", "expect": "0"},
                      {"statement": "No existing test changes outcome because of the change.", "type": "no_other_changes", "command": 0, "test": "", "expect": ""}]
             crit = [{"text": "The project's tests pass after the change.", "type": "command_exit", "command": 0, "test": "", "expect": "0"}]
+        target = next((f["path"] for f in ctx.get("files", [])), "the project")
         return normalize_draft({
             "summary": ("I'm the offline mock, so I can't write the code change itself. I filled in the Task Goal from your words, a test command "
-                        "and testable predictions. Switch to Claude or a local model under 'Use your LLM' and I'll write the patch too."),
-            "goal": goal[:600], "desired_input": "", "desired_output": "",
-            "patch": "", "commands": cmds, "predictions": preds, "criteria": crit,
+                        "and testable predictions. Switch to Claude or a local model under 'Use your LLM' and I'll propose real plans."),
+            "goal": goal[:600], "desired_input": "", "desired_output": "", "commands": cmds, "criteria": crit,
+            "plans": [{"title": "Plan A (mock): no code change written", "approach": "The mock cannot write code; add the patch by hand.",
+                       "edits": [], "predictions": preds, "risks": [],
+                       "consequences": [{"object": target, "relation": "target", "effect": "Unknown: the offline mock cannot read code.",
+                                         "kind": "unknown", "likelihood": "unknown", "why": "No LLM reasoning available."}]}],
             "assumptions": ["The project's dependencies are installed for the suggested command."],
             "unknowns": ["The mock did not read the selected files."]})
 
@@ -264,23 +268,39 @@ def project_overview_prompt(ctx: dict[str, Any]) -> str:
             f"<untrusted_data>\n{files or '(no files read)'}\n</untrusted_data>")
 
 
-DRAFT_SHAPE = ('{"summary": str (your reply to the human, plain words), "goal": str (the Task Goal in one sentence), "desired_input": str, "desired_output": str, '
-               '"patch": str (unified diff, git format, paths relative to the repo root), "commands": [[str]] (argv lists, no shell), '
-               '"predictions": [{"statement": str, "type": "command_exit"|"test_outcome"|"no_other_changes"|"manual", "command": int (0-based index into commands), '
-               '"test": str (test id for test_outcome, e.g. tests/test_x.py::test_y), "expect": "0"|"nonzero"|"passed"|"failed"|""}], '
-               '"criteria": [same shape as predictions but with "text" instead of "statement"], "assumptions": [str], "unknowns": [str]}')
+_CHECK_DOC = ('Prediction/criterion check types: "command_exit" with expect "0" (the command succeeds), "nonzero" (it fails) or "same" '
+              '(same exit code as the baseline run before the change); "test_outcome" with test = the exact test id the runner prints '
+              '(pytest: path::test_name, using test files you were shown) and expect "passed" or "failed"; "no_other_changes" (expect "") '
+              'meaning no test other than those named in test_outcome predictions changes outcome between baseline and after (needs a runner '
+              'that lists individual tests, e.g. pytest -rA); "manual" (expect "") when only a human can judge it. "command" is the 0-based '
+              'index into commands. Never use git or other non-test programs as test commands, and do not predict which files change: the '
+              'human sees the exact diff.')
+_EDITS_SHAPE = ('[{"path": str (relative to the repo root), "old": str (text copied EXACTLY from the file, including indentation, unique in the '
+                'file, 2-8 lines; empty only to create a new file), "new": str (the replacement text)}]')
+_CONSEQ_SHAPE = ('[{"object": str (a file, function, component, API, data or user group), "relation": "target"|"connected"|"environment", '
+                 '"effect": str, "kind": "benefit"|"risk"|"neutral"|"unknown", "likelihood": "expected"|"possible"|"unknown", "why": str}]')
+_PRED_SHAPE = ('[{"statement": str, "type": "command_exit"|"test_outcome"|"no_other_changes"|"manual", "command": int, "test": str, '
+               '"expect": "0"|"nonzero"|"same"|"passed"|"failed"|""}]')
+DRAFT_SHAPE = ('{"summary": str (your reply to the human, plain words), "goal": str (the Task Goal in one sentence), "desired_input": str, '
+               '"desired_output": str, "commands": [[str]] (argv lists, no shell), "criteria": [same shape as a prediction but "text" instead of '
+               f'"statement"], "plans": [{{"title": str, "approach": str, "edits": {_EDITS_SHAPE}, "consequences": {_CONSEQ_SHAPE}, '
+               f'"predictions": {_PRED_SHAPE}, "risks": [str]}}], "assumptions": [str], "unknowns": [str]}}')
 
 
 def project_draft_prompt(ctx: dict[str, Any]) -> str:
     files = "\n".join(f"<file path=\"{f['path']}\">\n{f['content']}\n</file>" for f in ctx.get("files", []))
     convo = "\n".join(f"{m['role']}: {m['content'][:1500]}" for m in ctx.get("history", [])[-10:])
-    return ("You help ACFM test a change on a real code project. The human describes the change in plain words. Reply briefly in "
-            "plain words (summary) and draft ONE plan: the Task Goal in one sentence with desired input/output, a minimal unified diff, "
-            "the test commands that measure it (argv lists, never a shell, never install anything, never push), testable predictions "
-            "of what the tests will show after the change, and observable success criteria. ACFM uses your draft only after the human "
-            "reviews, saves and approves it; you cannot run anything. If the files are not enough to write a correct patch, leave patch "
-            "empty and say in the summary which file you need. Prefer test ids that already exist in the listed tests. If the human asks "
-            "to adjust the current plan, return the full updated plan.\n"
+    return ("You help ACFM (Action–Consequence Foresight Model) test a change on a real code project. The human describes the change in "
+            "plain words. Reply briefly in plain words (summary) and give: the Task Goal in one sentence with desired input/output; the "
+            "test commands that measure it (argv lists, never a shell, never install anything, never push); observable success criteria; "
+            "and 2 to 3 ALTERNATIVE plans that reach the goal in different ways (e.g. minimal fix, fix + validation, fix + new test). "
+            "For EACH plan give: the code edits as exact search/replace pairs (ACFM builds the diff itself); its predicted consequences "
+            "for each affected object: the target it changes, the connected objects that use it (callers, importers, API clients, tests, "
+            "UI) and the whole environment (behaviour users see, contracts, performance, security), each marked benefit / risk / neutral "
+            "/ unknown with a reason; its testable predictions; and its risks. Say 'unknown' when you cannot know. If the files are not "
+            "enough to write correct edits, leave edits empty and say which file you need. If the human asks to adjust a plan, return "
+            "the full updated set of plans. ACFM uses a plan only after the human chooses, saves and approves it; you cannot run anything.\n"
+            + _CHECK_DOC + "\n"
             f"Saved Task Goal: {ctx.get('goal') or '(none yet)'}\nDesired input: {ctx.get('desired_input') or '-'}\nDesired output: {ctx.get('desired_output') or '-'}\n"
             f"Human note: {ctx.get('note') or '-'}\nLanguages: {json.dumps(ctx.get('languages'))}\nTest files: {json.dumps(ctx.get('tests'))}\n"
             f"Suggested test commands (not run): {json.dumps([c['argv'] for c in ctx.get('suggested_commands') or []])}\n"
@@ -290,23 +310,63 @@ def project_draft_prompt(ctx: dict[str, Any]) -> str:
             + f"<untrusted_data>\n{files or '(no files selected)'}\n</untrusted_data>")
 
 
+def _coerce_expect(t: str, e: str) -> str:
+    """Small wording slips ('same exit code as before', 'pass') become the allowed value instead of failing the save."""
+    e = (e or "").strip().lower()
+    if t == "command_exit":
+        return e if e in ("0", "nonzero", "same") else "same" if "same" in e or "baseline" in e or "before" in e else \
+            "nonzero" if any(w in e for w in ("non", "fail", "error", "1")) else "0"
+    if t == "test_outcome":
+        return e if e in ("passed", "failed") else "failed" if "fail" in e else "passed"
+    return ""
+
+
+def _norm_check(x: dict) -> dict:
+    t = x.get("type") if x.get("type") in ("command_exit", "test_outcome", "no_other_changes", "manual") else "manual"
+    try:
+        ci = max(0, min(19, int(x.get("command", 0) or 0)))
+    except (TypeError, ValueError):
+        ci = 0
+    return {"type": t, "command": ci, "test": str(x.get("test", ""))[:300], "expect": _coerce_expect(t, str(x.get("expect", "")))}
+
+
+def _norm_preds(items: Any) -> list[dict]:
+    return [{"statement": str(x.get("statement", ""))[:400], "check": _norm_check(x.get("check") if isinstance(x.get("check"), dict) else x)}
+            for x in (items or []) if isinstance(x, dict) and x.get("statement")][:10]
+
+
+def _norm_conseq(items: Any) -> list[dict]:
+    pick = lambda v, ok, d: v if v in ok else d
+    return [{"object": str(c.get("object", ""))[:200], "relation": pick(c.get("relation"), ("target", "connected", "environment"), "connected"),
+             "effect": str(c.get("effect", ""))[:400], "kind": pick(c.get("kind"), ("benefit", "risk", "neutral", "unknown"), "unknown"),
+             "likelihood": pick(c.get("likelihood"), ("expected", "possible", "unknown"), "unknown"), "why": str(c.get("why", ""))[:400],
+             "source": c.get("source") if c.get("source") in ("llm", "acfm_search", "human") else "llm"}
+            for c in (items or []) if isinstance(c, dict) and c.get("object") and c.get("effect")][:20]
+
+
 def normalize_draft(d: dict[str, Any]) -> dict[str, Any]:
-    """Shape an LLM draft into the plan form. Invalid items are dropped; the human reviews everything."""
-    def chk(x: dict) -> dict:
-        t = x.get("type") if x.get("type") in ("command_exit", "test_outcome", "no_other_changes", "manual") else "manual"
-        try:
-            ci = max(0, min(19, int(x.get("command", 0) or 0)))
-        except (TypeError, ValueError):
-            ci = 0
-        return {"type": t, "command": ci, "test": str(x.get("test", ""))[:300], "expect": str(x.get("expect", ""))[:20]}
+    """Shape an LLM draft: shared goal/commands/criteria + 1-3 alternative plans, each with edits, per-object
+    consequences and testable predictions. Invalid items are dropped; the human reviews and chooses."""
     cmds = [[str(a)[:300] for a in c][:30] for c in (d.get("commands") or []) if isinstance(c, list) and c][:5]
-    preds = [{"statement": str(x.get("statement", ""))[:400], "check": chk(x)} for x in (d.get("predictions") or []) if isinstance(x, dict) and x.get("statement")][:10]
-    crit = [{"text": str(x.get("text", ""))[:400], "check": chk(x), "source": "llm_proposed"} for x in (d.get("criteria") or []) if isinstance(x, dict) and x.get("text")][:8]
-    lst = lambda k: [str(s)[:300] for s in (d.get(k) or []) if isinstance(s, (str, int, float))][:10]
+    crit = [{"text": str(x.get("text", ""))[:400], "check": _norm_check(x.get("check") if isinstance(x.get("check"), dict) else x), "source": "llm_proposed"}
+            for x in (d.get("criteria") or []) if isinstance(x, dict) and x.get("text")][:8]
+    lst = lambda v, n=10: [str(s)[:300] for s in (v or []) if isinstance(s, (str, int, float))][:n]
+    raw_plans = [x for x in (d.get("plans") or []) if isinstance(x, dict)][:3]
+    if not raw_plans:  # older single-plan shape
+        raw_plans = [{"title": "Plan A", "approach": "", "edits": d.get("edits") or [], "patch": d.get("patch", ""),
+                      "predictions": d.get("predictions") or [], "consequences": d.get("consequences") or [], "risks": []}]
+    plans = []
+    for i, x in enumerate(raw_plans):
+        edits = [{"path": str(e.get("path", ""))[:300], "old": str(e.get("old", ""))[:20000], "new": str(e.get("new", ""))[:20000]}
+                 for e in (x.get("edits") or []) if isinstance(e, dict) and e.get("path")][:20]
+        plans.append({"title": str(x.get("title") or f"Plan {chr(65 + i)}")[:120], "approach": str(x.get("approach", ""))[:600], "edits": edits,
+                      "patch": str(x.get("patch", "") or "")[:60000], "consequences": _norm_conseq(x.get("consequences")),
+                      "predictions": _norm_preds(x.get("predictions")), "risks": lst(x.get("risks"), 8)})
     return {"summary": str(d.get("summary", ""))[:1500], "goal": str(d.get("goal", "") or "")[:600],
             "desired_input": str(d.get("desired_input", "") or "")[:500], "desired_output": str(d.get("desired_output", "") or "")[:500],
-            "patch": str(d.get("patch", ""))[:60000], "commands": cmds,
-            "predictions": preds, "criteria": crit, "assumptions": lst("assumptions"), "unknowns": lst("unknowns"), "labels": ["llm_generated", "prediction"]}
+            "commands": cmds, "criteria": crit, "plans": plans, "recommended": 0, "recommended_why": "",
+            "patch": plans[0]["patch"], "predictions": plans[0]["predictions"],
+            "assumptions": lst(d.get("assumptions")), "unknowns": lst(d.get("unknowns")), "labels": ["llm_generated", "prediction"]}
 
 
 class RealProviderPlaceholder:

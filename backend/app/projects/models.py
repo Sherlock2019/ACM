@@ -119,6 +119,9 @@ class ProjectTest(_M):
     commands: list[list[str]] = []
     predictions: list[Prediction] = []
     plan_source: Literal["human", "llm_draft_edited"] = "human"
+    plan_title: str = ""
+    consequences: list[dict[str, Any]] = []  # predicted per-object consequences of the chosen plan (LLM-inferred or ACFM search)
+    alternatives: list[dict[str, Any]] = []  # the other plans that were compared (title, applies, risks, files)
     assumptions: list[str] = []
     unknowns: list[str] = []
     plan_hash: str = ""

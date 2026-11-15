@@ -76,6 +76,68 @@ def check_patch(ws: str, patch: str) -> list[PrecheckItem]:
     return items
 
 
+def edits_to_patch(ws: str, edits: list[dict]) -> tuple[str, list[str]]:
+    """Build an exact unified diff from LLM edits {path, old, new}: ACFM writes the diff, not the LLM.
+    Reads files in the workspace only; nothing is written. Returns (patch, problems)."""
+    import difflib
+    from pathlib import Path
+
+    root = Path(ws).resolve()
+    orig: dict[str, str | None] = {}
+    cur: dict[str, str] = {}
+    problems: list[str] = []
+    for e in edits:
+        rel = str(e.get("path", "")).strip().replace("\\", "/")
+        while rel.startswith("./"):
+            rel = rel[2:]
+        old, new = str(e.get("old", "")), str(e.get("new", ""))
+        if not rel or rel.startswith("/") or ".." in rel.split("/") or rel == ".git" or rel.startswith(".git/"):
+            problems.append(f"'{rel}': not a path inside the project.")
+            continue
+        p = (root / rel).resolve()
+        if root not in p.parents:
+            problems.append(f"'{rel}': outside the project.")
+            continue
+        if rel not in orig:
+            if p.is_file():
+                try:
+                    with open(p, encoding="utf-8", newline="") as fh:
+                        orig[rel] = fh.read()
+                except UnicodeDecodeError:
+                    problems.append(f"{rel}: not a UTF-8 text file.")
+                    continue
+            else:
+                orig[rel] = None
+            cur[rel] = orig[rel] or ""
+        text = cur[rel]
+        if orig[rel] is None and not old.strip():
+            cur[rel] = text + new  # new file
+            continue
+        if not old:
+            problems.append(f"{rel}: the text to replace is empty.")
+            continue
+        if text.count(old) == 0 and "\r\n" in text:
+            old, new = old.replace("\r\n", "\n").replace("\n", "\r\n"), new.replace("\r\n", "\n").replace("\n", "\r\n")
+        n = text.count(old)
+        if n == 0:
+            problems.append(f"{rel}: the text to replace was not found (it must be copied exactly from the file).")
+        elif n > 1:
+            problems.append(f"{rel}: the text to replace appears {n} times; it needs more surrounding lines to be unique.")
+        else:
+            cur[rel] = text.replace(old, new, 1)
+    out: list[str] = []
+    for rel, new_text in cur.items():
+        before = orig.get(rel)
+        if before == new_text or (before is None and not new_text):
+            continue
+        lines = difflib.unified_diff((before or "").splitlines(keepends=True), new_text.splitlines(keepends=True),
+                                     fromfile=f"a/{rel}" if before is not None else "/dev/null", tofile=f"b/{rel}", n=3)
+        out.append(f"diff --git a/{rel} b/{rel}\n" + ("new file mode 100644\n" if before is None else ""))
+        for ln in lines:
+            out.append(ln if ln.endswith("\n") else ln + "\n\\ No newline at end of file\n")
+    return "".join(out), problems
+
+
 def apply_patch(ws: str, patch: str) -> tuple[bool, str]:
     p = git(["-C", ws, "apply", "--whitespace=nowarn", "-"], input_text=patch if patch.endswith("\n") else patch + "\n")
     return p.returncode == 0, (p.stderr or "").strip()[:300]
