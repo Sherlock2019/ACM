@@ -1,0 +1,227 @@
+{
+  "environment_id": "object-playground",
+  "name": "Generic Object Playground",
+  "summary": "See how one change flows through connected objects: Input A → Processor B (×2) → Display C.",
+  "simulation": {
+    "title": "Generic Object Playground",
+    "purpose": "Show the basic concept: changing one object can change the output of connected objects.",
+    "role": "Teaching assistant",
+    "agent_purpose": "Predict and explain the consequences of changes before acting.",
+    "target_name": "Object A (Input)",
+    "target_type": "input",
+    "proposed_action": "Change Object A from 5 to 10",
+    "goal": "Change Object A's value to 10 and show me what will happen.",
+    "constraints": "",
+    "benefit": "The human can see the change propagate.",
+    "negative": "Other objects using B's output may also change; if none are known, AFM says what it inspected rather than assume none exist.",
+    "unknown": "Consumers of B's output outside this model are not known.",
+    "thinking": [
+      "Task goal: “{goal}”. I capture the desired input, the desired output and observable success criteria. If the goal is broad I help define criteria, but I never present my proposals as human-approved.",
+      "I am AFM. My purpose is to predict and explain the consequences of changes before acting. I must be honest, report unknowns and ask for human approval before changing the playground.",
+      "I am in a simulated environment containing three connected objects.",
+      "The target is Object A. Nothing essential is missing: its new value is in the goal. If it were missing I would stop and ask.",
+      "I know Object A, Object B and Object C. A provides input to B; B provides output to C.",
+      "Object A holds a value, B processes it, and C displays the result. I may ask the LLM to explain these object types. The simulator reports A's value, B's rule (multiply by 2) and what C displays.",
+      "I can inspect the objects and simulate an update. A real change to the playground requires approval.",
+      "Simulate changing A, then predict B and C.",
+      "set_value on an input object is registered and allowed with approval; delete_object is prohibited, so any plan using it is rejected before prediction.",
+      "Predict A's new value, B's new output and what C will display.",
+      "Check that the simulated plan meets the goal and violates no configured rule. Execution requires approval.",
+      "Present the prediction: if I change A, what will B and C output? Ask: do you approve changing A in the simulated playground?",
+      "If approved and the playground has not changed, apply the reviewed action.",
+      "Inspect A, B and C and compare their observed values with the prediction.",
+      "Record whether A, B and C matched 10, 20 and 20; mismatches become lessons, not automatic retraining.",
+      "WIN only if my predictions matched (A=10, B=20, C=20), the agreed criterion (A holds 10) was observed, and every rule was respected."
+    ]
+  },
+  "demo_goals": [
+    "Change Object A's value to 10 and show me what will happen.",
+    "Change Object A's value to 7",
+    "Change Object B's output to 50"
+  ],
+  "goal_forms": [
+    "Change Object A's value to <N>"
+  ],
+  "definitions": [
+    "Only Object A can be set directly. B's output and C's display are derived by configured behavior: B = A × 2, C shows B."
+  ],
+  "limitations": [
+    "A three-object teaching model; every behavior is explicitly configured.",
+    "There are no unknown dependencies here on purpose, so it is the simplest example. Real environments are never this complete."
+  ],
+  "rules": [
+    {
+      "id": "P1",
+      "text": "Only the input object can be set directly; derived values (processor output, display) must not be edited.",
+      "enforcement": "enforced",
+      "how": "set_value accepts only an input object as target."
+    },
+    {
+      "id": "P2",
+      "text": "Values must be whole numbers between -1000 and 1000.",
+      "enforcement": "enforced",
+      "how": "The simulator rejects other values."
+    },
+    {
+      "id": "P3",
+      "text": "Do not delete objects.",
+      "enforcement": "enforced",
+      "how": "delete_object is prohibited and cannot be simulated or executed."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read_value",
+      "operation": "read",
+      "description": "Read an object's current value.",
+      "permission": "allowed",
+      "modifies_state": false,
+      "executable": true
+    },
+    {
+      "name": "set_value",
+      "operation": "set",
+      "description": "Set the value of an input object.",
+      "permission": "requires_approval",
+      "modifies_state": true,
+      "executable": true,
+      "parameters": {
+        "value": "int (-1000 to 1000)"
+      },
+      "target_types": [
+        "input"
+      ],
+      "reversible": true,
+      "reversible_note": "The previous value can be set again."
+    },
+    {
+      "name": "delete_object",
+      "operation": "delete",
+      "description": "Delete an object. Prohibited by rule P3.",
+      "permission": "prohibited",
+      "modifies_state": true,
+      "executable": false,
+      "parameters": {},
+      "target_types": [
+        "input",
+        "processor",
+        "display"
+      ],
+      "reversible": false
+    }
+  ],
+  "layout": {
+    "obj-a": [
+      170,
+      110
+    ],
+    "obj-b": [
+      480,
+      110
+    ],
+    "obj-c": [
+      790,
+      110
+    ]
+  },
+  "mock_llm_proposals": [
+    {
+      "title": "Delete Object B to simplify the chain",
+      "actions": [
+        {
+          "action_id": "l-a1",
+          "tool": "delete_object",
+          "operation": "delete",
+          "target_object_id": "obj-b",
+          "parameters": {},
+          "purpose": "Fewer moving parts."
+        }
+      ]
+    },
+    {
+      "title": "Set the display directly",
+      "code": "objects['obj-c'].state['shown'] = 20"
+    },
+    {
+      "title": "Malformed",
+      "actions": [
+        {
+          "tool": "set_value",
+          "parameters": {
+            "value": "ten"
+          }
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj-a",
+      "type": "input",
+      "name": "Object A (Input)",
+      "purpose": "Holds a number that feeds the processor.",
+      "state": {
+        "value": 5
+      },
+      "accepted_actions": [
+        "set_value"
+      ],
+      "outputs": [
+        "value → Object B"
+      ],
+      "behavior": "Holds the value it is set to.",
+      "constraints": [
+        "-1000 ≤ value ≤ 1000"
+      ],
+      "evidence": "configured"
+    },
+    {
+      "id": "obj-b",
+      "type": "processor",
+      "name": "Object B (Processor)",
+      "purpose": "Receives A's value and multiplies it by 2.",
+      "state": {
+        "input": 5,
+        "factor": 2,
+        "output": 10
+      },
+      "outputs": [
+        "output → Object C"
+      ],
+      "behavior": "output = input × factor, recomputed whenever its input changes (configured).",
+      "evidence": "configured"
+    },
+    {
+      "id": "obj-c",
+      "type": "display",
+      "name": "Object C (Display)",
+      "purpose": "Receives and displays B's output.",
+      "state": {
+        "shown": 10
+      },
+      "outputs": [
+        "displayed value"
+      ],
+      "behavior": "Shows the processor's output; refreshes immediately (configured).",
+      "evidence": "configured"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "p-rel-1",
+      "source": "obj-a",
+      "target": "obj-b",
+      "type": "feeds",
+      "description": "A's value is B's input.",
+      "evidence": "configured"
+    },
+    {
+      "id": "p-rel-2",
+      "source": "obj-b",
+      "target": "obj-c",
+      "type": "feeds",
+      "description": "B's output is what C displays.",
+      "evidence": "configured"
+    }
+  ]
+}
