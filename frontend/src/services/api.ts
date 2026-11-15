@@ -10,7 +10,7 @@ export class ApiError extends Error {
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, { headers: { "Content-Type": "application/json" }, ...init });
+    res = await fetch(`${import.meta.env.BASE_URL}api${path}`, { headers: { "Content-Type": "application/json" }, ...init });
   } catch {
     throw new ApiError("offline", "Cannot reach the AFM backend. Is it running on port 8530?", 0);
   }

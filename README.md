@@ -46,6 +46,19 @@ Requires Python 3.11+ and Node 18+. Tested with Python 3.12 and Node 24 on WSL U
 
 `./start.sh test` runs the backend tests (`pytest`) and the frontend type-check plus production build.
 
+**Other ports:** `AFM_FRONTEND_PORT=3010 ./start.sh` (and `AFM_BACKEND_PORT=…`), or put `AFM_FRONTEND_PORT=3010` in `backend/.env` once. `start.sh` stops every ACFM server started from this folder whatever its port, never stops another program, and if another program (another app, another user, Docker) holds a port it says so right away instead of waiting. The app lives under `/acm/` and its home page is **`/acm/home`** (e.g. `http://127.0.0.1:3010/acm/home`; the bare address redirects there). Change it with `AFM_BASE_PATH`.
+
+By default the UI listens on `127.0.0.1` only: from another machine use an SSH tunnel, e.g. `ssh -L 3010:127.0.0.1:3010 ubuntu@your-server`, then open `http://127.0.0.1:3010/acm/home`.
+
+**Public mode (e.g. EC2):** put these lines in `backend/.env` on the server, open the port in the security group, and run `./start.sh`:
+
+```
+AFM_FRONTEND_PORT=3010
+AFM_HOST=0.0.0.0
+```
+
+The app is then at `http://<server-public-ip>:3010/acm/home`. The backend stays on `127.0.0.1` and is reached only through the UI server. **There is no login in public mode:** anyone who reaches the address can use everything, including real-project mode (which clones repositories and runs approved commands on that server) and your LLM credits. This was the owner's choice for this deployment; `start.sh` prints the public address and this warning on every start.
+
 ### Run a simulation: the 16-step workflow, from Task Goal to AFM Win
 
 Every card on the Overview has **Run simulation**. It opens a timeline of the 16 steps for that use case: Generic Object Playground, Web Application Port Change, Inventory Assistant, or Data Readiness Agent.
