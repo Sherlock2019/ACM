@@ -1,6 +1,6 @@
 # ACM · Action–Consequence Foresight Model
 
-**Think before acting.**
+**Think before acting.** · ⏱️ [30-second version](README-30s.md)
 
 > ### 👋 To Y Combinator and investors
 >
