@@ -10,7 +10,7 @@
 > foresee what its action changes cannot be trusted to act.
 >
 > **2 · Our solution and where it stands.** Two working proofs of concept:
-> - **ACM** (this repository) predicts the consequences of an AI agent's action inside its digital world.
+> - **ACM AI consequence Prediction Model ** (this repository) predicts the consequences of an AI agent's action inside its digital world.
 >   It simulates each plan on a copy, checks it against the goal and 32 permanent rules, and asks a human
 >   to approve one exact plan. It then acts once and compares the prediction with what happened.
 > - **[ACMP](https://github.com/Sherlock2019/Butterfly-effect-AImodel)** extends it to a ten-layer world
