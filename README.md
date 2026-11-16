@@ -1,4 +1,4 @@
-# AFM — Action–Consequence Foresight Model
+# ACM — Action–Consequence Foresight Model
 
 **Think before acting.**
 
