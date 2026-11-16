@@ -497,3 +497,5 @@ To finish it, we need **top AI talent**: world models and simulation, AI agents 
 ---
 
 © 2026 Dzoan Nguyen Tran
+
+**Made with love by [DzoanNguyentran@gmail.com](mailto:DzoanNguyentran@gmail.com) · A better World Builder**
