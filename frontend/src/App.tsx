@@ -39,10 +39,16 @@ export function App() {
   const isProblem = page === "problem" || page === "why";
   const topbar = (
     <header className="topbar">
-      <a href="#/problem" className="brand" aria-label="ACFM: The Problem">
-        <Mark />
-        <span><span className="brand-name">ACFM</span><span className="brand-tag">Action–Consequence Foresight Model</span></span>
-      </a>
+      <div className="brand-block">
+        <a href="#/problem" className="brand" aria-label="ACFM: The Problem">
+          <Mark size={56} />
+          <span><span className="brand-name">ACFM</span><span className="brand-tag">Action–Consequence Foresight Model</span></span>
+        </a>
+        <p className="brand-credit">
+          Made with <span className="credit-love">love</span> by{" "}
+          <a href="mailto:DzoanNguyentran@gmail.com">DzoanNguyentran@gmail.com</a> · <span className="credit-builder">A better World Builder</span>
+        </p>
+      </div>
       <nav className="top-tabs" aria-label="Sections">
         <a href="#/problem" aria-current={isProblem ? "page" : undefined}><Icon name="unknown" size={15} /> The Problem</a>
         <a href="#/overview" aria-current={!isProblem ? "page" : undefined}><Icon name="spark" size={15} /> Test it</a>
