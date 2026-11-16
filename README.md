@@ -4,6 +4,47 @@
 
 ---
 
+## WHY
+
+### The problem: language models predict the next word, not the next consequence
+
+AI is starting to act in the world. AI agents edit code, change server settings, move stock and place orders. But a language model only predicts the **next word**: it is trained to continue text plausibly, not to work out what an action **changes**. So it:
+
+- doesn't track the state of an environment before and after an action;
+- can't show why it says what it says: there is no rule and no evidence behind the answer;
+- almost never says "I don't know": it answers fluently even when the facts are missing.
+
+> *Mark wants John's car. John sold it to Sarah.* **What happens to Mark?**
+> A language model: "Mark buys a car." Plausible words, the wrong consequence, and it can't tell.
+
+Acting safely needs a different prediction: not the next word, but the **next state of the environment**. After this change, what is true about the target, about every object connected to it, and about the whole environment? Does that still meet the goal and the rules?
+
+### LLM prediction vs ACM prediction: same request, different output
+
+*The LLM answers are typical, illustrative examples. The ACM outputs are what this prototype predicts in its simulated playgrounds and in real-project mode.*
+
+| Request | LLM prediction: the next words | ACM prediction: the next consequences |
+|---|---|---|
+| “Change the application to port 9000 while keeping it accessible.” | “Change the port in the app config to 9000.” Sounds right, but says nothing about what else changes. | Changing only the app port: the web server still forwards to 8000, users may lose access, the monitor reports unhealthy, the database is unchanged → **goal FAIL**. Recommends updating the app, the web server and the monitor, then testing, and asks you before running it. |
+| “Fulfill Order A while avoiding a shortage for Order B.” | “Ship Order A from Warehouse 1.” | Warehouse 1: 100 → 70 leaves Order B short. **Recommends Warehouse 2** (50 → 20). |
+| “Change Object A's value to 10.” | “Object A is now 10.” | A 5 → 10 (direct); B 10 → 20 and C 10 → 20 (connected), each citing the rule that causes it. |
+| “Make add() in calc.py return the sum.” | A diff. | 2–3 alternative diffs, each with predicted consequences on callers, importers and tests; the tests run before and after the change, and each prediction is checked. |
+| A fact it cannot see (the firewall) | Assumes something and answers fluently. | Marks the firewall **unverified**; an unknown is never counted as a pass. |
+| After the change | No check. | Observes the result and compares it with the prediction: **MATCH / MISMATCH / NOT VERIFIED**. |
+
+The LLM still has a place in ACM: it explains object types, helps describe a use case and proposes plans. But ACM's deterministic engine predicts the consequences, checks the rules and asks the human. The LLM never decides.
+
+### Why today's tools are not enough
+
+- **Scripts and automation** execute exactly what they are told, without predicting what else will change.
+- **LLM chatbots and AI agents** predict words, present general knowledge as if it were a fact about *your* environment, and can act without a clear, enforced approval step.
+- **Human review** often approves a description rather than an exact plan, and the approval keeps applying after the plan or the environment has changed.
+
+*Without foresight:* “I changed the port. The application is now unreachable.”
+*With ACM:* “I predicted the dependency problem, proposed a complete plan, and asked the human to review it.”
+
+People and AI agents need a way to ask “if I do this, what else changes, does it still meet the goal and the rules, and may I go ahead?”, and then to act once and check whether the prediction was right. ACM is built to answer that question.
+
 ## WHAT
 
 ACM is a generic decision-support system. Before anything is changed, it:
@@ -38,21 +79,6 @@ It works through *environment adapters*. Three local, fictional, **simulated** p
 - **Observation:** looking again after an approved execution.
 - **Human approval:** a person's yes to one exact plan for one exact environment state.
 
-## WHY
-
-A single change rarely stays on one object. For example, someone moves an application to port 9000. The web server still forwards to port 8000, so users lose access, and the health monitor starts reporting the service as down.
-
-*Without foresight:* “I changed the port. The application is now unreachable.”
-*With ACM:* “I predicted the dependency problem, proposed a complete plan, and asked the human to review it.”
-
-Today these changes are made with tools that do not look ahead:
-
-- **Scripts and automation** execute exactly what they are told, without predicting what else will change.
-- **LLM chatbots and AI agents** give fluent answers, but present general knowledge as if it were a fact about *your* environment, and can act without a clear, enforced approval step.
-- **Human review** often approves a description rather than an exact plan, and the approval keeps applying after the plan or the environment has changed.
-
-People and AI agents need a way to ask “if I do this, what else changes, does it still meet the goal and the rules, and may I go ahead?”, and then to act once and check whether the prediction was right.
-
 ## SO WHAT: benefits and business value
 
 **Benefits**
@@ -65,6 +91,8 @@ People and AI agents need a way to ask “if I do this, what else changes, does 
 - **Rules that cannot drift.** The 32 rules of conduct are pinned by a SHA-256 hash: if they are edited without updating the pin, the backend refuses to start.
 - **Works on real code.** Real-project mode predicts the effect of a code change, runs your tests before and after, and compares, all on a copy of your project.
 - **Bring your own model.** Claude, any OpenAI-compatible cloud, a local model (Ollama, LM Studio, vLLM, llama.cpp) or an offline mock.
+- **Safer AI agents.** An agent sees the consequences of its own action before taking it, and cannot act without approval.
+- **Costly mistakes caught early.** Harmful consequences are predicted before the change, not discovered after it.
 
 **Business value (target users, to be validated with design partners)**
 
@@ -394,6 +422,16 @@ The app is then at `http://<server-public-ip>:3010/acm/home`. The backend stays 
 3. **Later**
    - A "think before acting" gate for AI agents and automation: every state-changing action is predicted, checked against rules and approved by a human before it runs once.
    - Prediction accuracy tracked over time from the experience history, shown only where the evidence supports it.
+
+### Build it with us
+
+Built today: the generic consequence engine, three simulated environments, the 16-step workflow with the approval gate, and real-project mode for code. Real-system adapters are the next step, and everything not built yet is labelled.
+
+To finish it, we need **top AI talent**: world models and simulation, AI agents and tool use, infrastructure and DevOps, and AI safety and security. Each real environment needs an adapter behind it.
+
+**Let's work together:**
+- Profile and projects: **[dzoannguyentran.jobsmatchnow.com](https://dzoannguyentran.jobsmatchnow.com/#projects)**
+- WhatsApp: **[+84 908 618 075](https://wa.me/84908618075)**
 
 ---
 
