@@ -91,7 +91,7 @@ function PlanCompare({ draft, canUse, onUse }: { draft: ProjectDraft["draft"]; c
           const rec = plans.length > 1 && k === draft.recommended;
           const st = pl.applies === undefined ? (pl.patch ? "not checked" : "no code change") : pl.applies ? "applies cleanly" : pl.patch ? "does not apply" : "no code change";
           return (
-            <div key={k} className="glass-flat plan-card" style={{ padding: 10, borderColor: rec ? "rgba(52,209,196,.6)" : undefined }}>
+            <div key={k} className="glass-flat plan-card" style={{ padding: 10, borderColor: rec ? "rgba(var(--accent-rgb),.6)" : undefined }}>
               <p className="row between" style={{ flexWrap: "nowrap", gap: 6 }}><strong className="small">{pl.title}</strong>{rec && <span className="badge st-pass">recommended</span>}</p>
               {pl.approach && <p className="tiny dim mt-s">{pl.approach}</p>}
               <p className="tiny mt-s"><span className={`badge ${pl.applies ? "st-pass" : pl.patch ? "st-fail" : "st-unknown"}`}>{st}</span> {pl.changed_files?.length ? pl.changed_files.join(", ") : ""}</p>

@@ -1,17 +1,20 @@
-// "The WHY": what ACFM is, why it exists, how it works (simulated playgrounds today, real projects next),
-// the benefits, the current stack, and the path to a trained ACFM consequence predictor.
+// "The Problem": the problem ACFM solves (AI agents act without seeing the domino effect of their actions),
+// who feels it, why now, what ACFM does, how it works, the benefits, the current stack and what comes next.
 import { useEffect, useState, type ReactNode } from "react";
+import { ConsequenceCascade } from "../components/ConsequenceCascade";
 import { Icon } from "../components/icons";
+import { Personas } from "../components/Personas";
 import { useAFM } from "../state";
 
 const SECTIONS = [
-  { id: "what", label: "What is ACFM?", icon: "info" }, { id: "why", label: "Why it exists", icon: "spark" }, { id: "how", label: "How it works", icon: "environment" },
-  { id: "sowhat", label: "So what?", icon: "review" }, { id: "stack", label: "Current stack", icon: "warehouse" }, { id: "next", label: "What comes next", icon: "history" },
-  { id: "principle", label: "Our principle", icon: "identity" },
+  { id: "problem", label: "The problem", icon: "unknown" }, { id: "who", label: "Who feels it", icon: "identity" }, { id: "whynow", label: "Why now", icon: "history" },
+  { id: "solution", label: "What ACFM does", icon: "info" }, { id: "how", label: "How it works", icon: "environment" },
+  { id: "sowhat", label: "So what?", icon: "review" }, { id: "stack", label: "Current stack", icon: "warehouse" }, { id: "next", label: "What comes next", icon: "arrow" },
+  { id: "principle", label: "Our principle", icon: "spark" },
 ];
 
-/** Left panel of the WHY page: jumps to a section and highlights the one being read */
-export function WhyNav() {
+/** Left panel of the Problem page: jumps to a section and highlights the one being read */
+export function ProblemNav() {
   const [active, setActive] = useState(SECTIONS[0].id);
   useEffect(() => {
     const on = () => {
@@ -26,10 +29,10 @@ export function WhyNav() {
     return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <nav className="nav" aria-label="The WHY sections">
-      <p className="nav-group">The WHY</p>
+    <nav className="nav" aria-label="The Problem sections">
+      <p className="nav-group">The Problem</p>
       {SECTIONS.map((s) => (
-        <a key={s.id} href={`#/why`} aria-current={active === s.id ? "location" : undefined}
+        <a key={s.id} href={`#/problem`} aria-current={active === s.id ? "location" : undefined}
           onClick={(e) => { e.preventDefault(); setActive(s.id); document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" }); }}>
           <Icon name={s.icon} /> <span>{s.label}</span>
         </a>
@@ -119,7 +122,7 @@ function ArchitectureDiagram() {
         {box(320, 20, 260, "ACFM tools & adapters", "inspect, simulate, test", "var(--blue)")}
         {box(620, 20, 260, "ACFM consequence engine", "predicts, checks rules", "var(--accent)")}
         {[150, 450, 750].map((x) => <line key={x} x1={x} y1={92} x2={450} y2={180} stroke="var(--accent)" strokeWidth={1.6} markerEnd="url(#why-arr)" />)}
-        <rect x={250} y={182} width={400} height={56} rx={12} fill="rgba(52,209,196,.12)" stroke="var(--accent)" strokeWidth={2} />
+        <rect x={250} y={182} width={400} height={56} rx={12} fill="rgba(var(--accent-rgb),.12)" stroke="var(--accent)" strokeWidth={2} />
         <text x={450} y={208} textAnchor="middle" className="d-title">Evidence-based consequence assessment</text>
         <text x={450} y={227} textAnchor="middle" className="d-sub">predicted · conditional · unknown, per object</text>
         <line x1={450} y1={240} x2={450} y2={272} stroke="var(--accent)" strokeWidth={1.6} markerEnd="url(#why-arr)" />
@@ -185,47 +188,47 @@ function LearningLoop() {
   );
 }
 
-export function Why() {
+const PROBLEMS = [
+  { n: "01", title: "Agents act on assumptions", text: "The state of the system is assumed from the prompt, not inspected. The agent changes what it was told about, not what is really there." },
+  { n: "02", title: "Consequences hide in connections", text: "The change lands on one object; the damage lands on the objects connected to it: the proxy, the monitor, the client nobody mentioned." },
+  { n: "03", title: "Confidence is not evidence", text: "A fluent answer sounds certain. Nobody records what the agent predicted, so nobody can measure whether it was right, or learn when it was wrong." },
+];
+
+const WHY_NOW = [
+  { title: "Agents now act, not just suggest", text: "AI assistants have moved from writing suggestions to running commands, editing repositories and changing infrastructure." },
+  { title: "More autonomy, bigger blast radius", text: "Every step a human no longer checks is a step where one wrong assumption can topple the next system in line." },
+  { title: "Trust needs measurement", text: "Teams need a way to see consequences before approving, and a score for how often the agent foresaw them correctly." },
+];
+
+export function Problem() {
   const { profile } = useAFM();
   const loop = profile?.profile.core_loop ?? [];
   return (
-    <div className="stack rise why" style={{ gap: 30 }}>
-      <section className="glass panel brackets why-hero">
-        <p className="hud-label accent">The WHY · ACFM — Action–Consequence Foresight Model</p>
-        <h1 className="mt-s">An AI that assesses the consequences of its actions before acting.</h1>
-        <p className="lede" style={{ fontSize: 17 }}>AI can help us write code, manage infrastructure, analyze data and make decisions. But as AI agents become able to take actions, they need to answer one question:</p>
-        <blockquote className="why-quote">“If I do this, what will happen to the object I change, and to the people and systems connected to it?”</blockquote>
-        <p className="lede">ACFM is our effort to build an AI system that asks that question <strong>before it acts</strong>.</p>
-        <p className="row mt"><a className="btn-primary" href="#/overview" style={{ marginLeft: "auto" }}>Test it →</a></p>
+    <div className="stack rise why" style={{ gap: 34 }}>
+      <section className="glass panel brackets why-hero problem-hero">
+        <p className="hud-label accent">The problem · ACFM — Action–Consequence Foresight Model</p>
+        <h1 className="mt-s">AI agents can now act. <span className="grad-text">They can't yet see what their actions will break.</span></h1>
+        <p className="lede hero-lede">One small change (a port, a permission, a column) can topple a chain of connected systems. <strong>ACFM predicts that domino effect before anything runs</strong>, so a human decides with evidence instead of hope.</p>
+        <div className="row mt hero-ctas">
+          <a className="btn-primary btn-lg" href="#/overview">See it predict →</a>
+          <a className="btn btn-lg" href="#/project">Try it on your repo</a>
+        </div>
+        <div className="mt-l"><ConsequenceCascade /></div>
       </section>
 
-      <Section id="what" kicker="What is ACFM?" title="A consequence-aware AI framework">
-        <p>ACFM helps an AI agent understand a task, explore its environment, propose possible actions and assess their consequences <strong>before a human decides whether to proceed</strong>. It starts with five questions:</p>
-        <ol className="grid g3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {["What is my Task Goal?", "What rules and permissions must I respect?", "What objects and systems exist in my environment?", "What could happen if I take this action?", "Will the result meet the goal while respecting the rules?"].map((q, i) => (
-            <li key={q} className="glass-flat row" style={{ padding: "12px 14px", flexWrap: "nowrap" }}><span className="step-n mono">{i + 1}</span><strong>{q}</strong></li>
+      <Section id="problem" kicker="The problem" title="Every action has consequences an AI agent cannot see">
+        <p className="lede-lg">AI can write code, manage infrastructure, analyse data and make decisions. But before an agent acts on a real system, someone has to answer one question:</p>
+        <blockquote className="why-quote">“If I do this, what will happen to the object I change, and to the people and systems connected to it?”</blockquote>
+        <p>Today, nobody answers it systematically. Three gaps make AI actions risky:</p>
+        <div className="grid g3">
+          {PROBLEMS.map((p) => (
+            <div key={p.n} className="glass-flat pcard">
+              <span className="pcard-n mono">{p.n}</span>
+              <strong className="pcard-title">{p.title}</strong>
+              <p className="small dim">{p.text}</p>
+            </div>
           ))}
-        </ol>
-        <p>For example, to change a web application's port, ACFM considers more than the application configuration: it also investigates whether the web server, health monitor or other known systems depend on that port.</p>
-        <p className="dim">ACFM uses an existing LLM as a <strong>tool</strong> to help understand environments, objects and possible plans, and combines that understanding with inspection tools, rules, simulations, tests and human review. The LLM is never the authority on what is true, what is allowed or what happened.</p>
-      </Section>
-
-      <Section id="why" kicker="Why does ACFM exist?" title="Language reasoning needs evidence and feedback before it acts">
-        <p>Current LLMs are powerful at understanding language, explaining concepts and generating code. They can help propose actions and reason about outcomes. But when an LLM operates on a real project or system, questions remain:</p>
-        <div className="grid g2">
-          <ul className="bullets">
-            <li>Does it know the <strong>actual state</strong> of the environment?</li>
-            <li>Has it identified the objects <strong>connected</strong> to the one it wants to change?</li>
-            <li>Has it considered both the <strong>benefits and the negative effects</strong>?</li>
-            <li>Does it have <strong>evidence</strong> for its prediction?</li>
-          </ul>
-          <ul className="bullets">
-            <li>Will it <strong>admit when information is missing</strong>?</li>
-            <li>Can we <strong>test</strong> whether its prediction was correct?</li>
-            <li>Did it <strong>respect the human's rules</strong> while pursuing the goal?</li>
-          </ul>
         </div>
-        <p>A text response alone does not guarantee that the model inspected the system, discovered the right dependencies or verified the result. <strong>ACFM connects reasoning with evidence and feedback:</strong> inspect what it can, predict what may happen, ask for review, and compare the prediction with actual results.</p>
         <div className="glass-flat" style={{ padding: 14 }}>
           <p className="hud-label accent">Example · changing an application port</p>
           <p className="mt-s">“Move the application from port 8000 to port 9000 while keeping it accessible.”</p>
@@ -236,6 +239,47 @@ export function Why() {
           ]} /></div>
           <p className="small mt-s">The human reviews the proposed plan before any state-changing action. <a href="#/overview">Try it in the Web application playground →</a></p>
         </div>
+        <div className="grid g2">
+          <ul className="bullets">
+            <li>Does the agent know the <strong>actual state</strong> of the environment?</li>
+            <li>Has it identified the objects <strong>connected</strong> to the one it wants to change?</li>
+            <li>Has it considered both the <strong>benefits and the negative effects</strong>?</li>
+            <li>Does it have <strong>evidence</strong> for its prediction?</li>
+          </ul>
+          <ul className="bullets">
+            <li>Will it <strong>admit when information is missing</strong>?</li>
+            <li>Can we <strong>test</strong> whether its prediction was correct?</li>
+            <li>Did it <strong>respect the human's rules</strong> while pursuing the goal?</li>
+          </ul>
+        </div>
+      </Section>
+
+      <Section id="who" kicker="Who feels it" title="Anyone who lets software change real systems">
+        <Personas />
+      </Section>
+
+      <Section id="whynow" kicker="Why now" title="Agents are getting the keys to production">
+        <div className="grid g3">
+          {WHY_NOW.map((w, i) => (
+            <div key={w.title} className="glass-flat pcard">
+              <span className="pcard-n mono">{String(i + 1).padStart(2, "0")}</span>
+              <strong className="pcard-title">{w.title}</strong>
+              <p className="small dim">{w.text}</p>
+            </div>
+          ))}
+        </div>
+        <p>A text response alone does not guarantee that the model inspected the system, discovered the right dependencies or verified the result. <strong>ACFM connects reasoning with evidence and feedback:</strong> inspect what it can, predict what may happen, ask for review, and compare the prediction with actual results.</p>
+      </Section>
+
+      <Section id="solution" kicker="What ACFM does" title="A consequence-aware layer between an AI agent and the systems it changes">
+        <p>ACFM helps an AI agent understand a task, explore its environment, propose possible actions and assess their consequences <strong>before a human decides whether to proceed</strong>. It starts with five questions:</p>
+        <ol className="grid g3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          {["What is my Task Goal?", "What rules and permissions must I respect?", "What objects and systems exist in my environment?", "What could happen if I take this action?", "Will the result meet the goal while respecting the rules?"].map((q, i) => (
+            <li key={q} className="glass-flat row" style={{ padding: "12px 14px", flexWrap: "nowrap" }}><span className="step-n mono">{i + 1}</span><strong>{q}</strong></li>
+          ))}
+        </ol>
+        <p>For example, to change a web application's port, ACFM considers more than the application configuration: it also investigates whether the web server, health monitor or other known systems depend on that port.</p>
+        <p className="dim">ACFM uses an existing LLM as a <strong>tool</strong> to help understand environments, objects and possible plans, and combines that understanding with inspection tools, rules, simulations, tests and human review. The LLM is never the authority on what is true, what is allowed or what happened.</p>
         <Table caption="LLM agent compared with ACFM" head={["", "Typical LLM agent", "ACFM"]} rows={[
           ["Environment", "Assumed from the prompt", "Inspected through authorized adapters; evidence labelled observed / configured / inferred / unknown"],
           ["Consequences", "Implicit, if any", "Explicit per object: direct, connected and whole environment, each with its rule and assumptions"],
@@ -393,7 +437,7 @@ export function Why() {
       <section id="principle" className="glass panel brackets why-hero why-section" aria-label="Our principle">
         <p className="hud-label accent">Our principle</p>
         <blockquote className="why-quote">Know the goal. Understand the environment. Predict the consequences. Respect the rules. Ask before acting. Learn from what happens.</blockquote>
-        <p className="row between mt"><strong>ACFM: see the possible consequences before acting.</strong><a className="btn-primary" href="#/overview">Test it →</a></p>
+        <p className="row between mt"><strong>ACFM: see the domino effect before acting.</strong><span className="row"><a className="btn" href="#/project">Try it on your repo</a><a className="btn-primary" href="#/overview">Test it →</a></span></p>
       </section>
     </div>
   );

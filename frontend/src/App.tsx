@@ -13,8 +13,9 @@ import { ReviewPage } from "./pages/Review";
 import { Simulate } from "./pages/Simulate";
 import { LlmSettings } from "./pages/LlmSettings";
 import { Project } from "./pages/Project";
-import { Why, WhyNav } from "./pages/Why";
+import { Problem, ProblemNav } from "./pages/Problem";
 import { useAFM, useRoute } from "./state";
+import { ThemeToggle } from "./theme";
 
 const NAV = [
   { id: "overview", label: "Overview", icon: "overview", step: "1" },
@@ -34,30 +35,34 @@ export function App() {
   const { error, refresh, llm, envs, selected } = useAFM();
   const page = route[0];
   const env = envs.find((e) => e.environment_id === selected);
-  const isWhy = page === "why";
+  // "why" is the old name of the Problem page; keep old links working
+  const isProblem = page === "problem" || page === "why";
   const topbar = (
     <header className="topbar">
-      <a href="#/why" className="brand" aria-label="ACFM: The WHY">
+      <a href="#/problem" className="brand" aria-label="ACFM: The Problem">
         <Mark />
         <span><span className="brand-name">ACFM</span><span className="brand-tag">Action–Consequence Foresight Model</span></span>
       </a>
       <nav className="top-tabs" aria-label="Sections">
-        <a href="#/why" aria-current={isWhy ? "page" : undefined}><Icon name="info" size={15} /> The WHY</a>
-        <a href="#/overview" aria-current={!isWhy ? "page" : undefined}><Icon name="spark" size={15} /> TEST IT</a>
+        <a href="#/problem" aria-current={isProblem ? "page" : undefined}><Icon name="unknown" size={15} /> The Problem</a>
+        <a href="#/overview" aria-current={!isProblem ? "page" : undefined}><Icon name="spark" size={15} /> Test it</a>
       </nav>
-      <span className="faint tiny top-note" style={{ marginLeft: "auto" }}>Think before acting.</span>
+      <span className="top-right">
+        <span className="faint tiny top-note">Think before acting.</span>
+        <ThemeToggle />
+      </span>
     </header>
   );
-  if (isWhy) {
+  if (isProblem) {
     return (
       <div className="app">
         <a href="#main" className="sr-only">Skip to content</a>
         {topbar}
         <div className="shell">
-          <aside className="sidebar" aria-label="The WHY sections"><WhyNav /></aside>
+          <aside className="sidebar" aria-label="The Problem sections"><ProblemNav /></aside>
           <main className="main" id="main">
             {error && <div style={{ marginBottom: 16 }}><ErrorBox error={error} onRetry={refresh} /></div>}
-            <Why />
+            <Problem />
           </main>
         </div>
       </div>

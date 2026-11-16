@@ -53,7 +53,7 @@ export function useAFM() {
 }
 
 export function useRoute(): string[] {
-  const read = () => (window.location.hash.replace(/^#\/?/, "") || "why").split("/").map(decodeURIComponent);
+  const read = () => (window.location.hash.replace(/^#\/?/, "") || "problem").split("/").map(decodeURIComponent);
   const [r, setR] = useState(read);
   useEffect(() => {
     const on = () => { setR(read()); window.scrollTo({ top: 0 }); };

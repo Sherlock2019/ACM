@@ -60,7 +60,7 @@ start() {
     echo "loaded backend/.env (values not shown)"
   fi
   echo "starting backend :$BACK_PORT (LLM tool: ${AFM_LLM_PROVIDER:-mock}) and frontend :$FRONT_PORT ..."
-  (cd "$ROOT/backend" && AFM_LLM_PROVIDER="${AFM_LLM_PROVIDER:-mock}" setsid nohup .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$BACK_PORT" \
+  (cd "$ROOT/backend" && AFM_LLM_PROVIDER="${AFM_LLM_PROVIDER:-mock}" setsid nohup .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port "$BACK_PORT" \
     > "$LOGS/backend.log" 2>&1 < /dev/null &)
   (cd "$ROOT/frontend" && AFM_API_URL="http://127.0.0.1:$BACK_PORT" AFM_BASE_PATH="$BASE_PATH" setsid nohup npx vite --port "$FRONT_PORT" --host "$UI_HOST" --strictPort \
     > "$LOGS/frontend.log" 2>&1 < /dev/null &)
@@ -79,7 +79,7 @@ start() {
       echo "         (it can clone repositories and run approved commands on this server) and your LLM credits."
     fi
   else
-    echo "AFM did not come up within 30 s. Last log lines:"; tail -5 "$LOGS/backend.log" "$LOGS/frontend.log"; exit 1
+    echo "AFM did not come up within 30 s. Last log lines:"; tail -n 5 "$LOGS/backend.log" "$LOGS/frontend.log"; exit 1
   fi
 }
 

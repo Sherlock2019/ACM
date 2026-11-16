@@ -43,7 +43,7 @@ export function Mark({ size = 34 }: { size?: number }) {
   // AFM mark: a lens (foresight) with an action point and a ripple ring.
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" style={{ flex: "none" }}>
-      <rect x="1" y="1" width="38" height="38" rx="11" fill="rgba(52,209,196,.1)" stroke="rgba(52,209,196,.45)" />
+      <rect x="1" y="1" width="38" height="38" rx="11" fill="rgba(var(--accent-rgb),.1)" stroke="rgba(var(--accent-rgb),.45)" />
       <circle cx="20" cy="20" r="11" fill="none" stroke="var(--accent)" strokeWidth="2.2" />
       <circle cx="20" cy="20" r="6" fill="none" stroke="var(--blue)" strokeWidth="1.4" strokeDasharray="2 2.4" />
       <circle cx="20" cy="20" r="2.6" fill="var(--text)" />
