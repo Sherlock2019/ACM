@@ -6,7 +6,7 @@
 
 ## WHAT
 
-AFM is a generic decision-support system. Before anything is changed, it:
+ACM is a generic decision-support system. Before anything is changed, it:
 
 - **understands the environment**: the objects, their states and how they are connected;
 - **predicts the consequences** of each candidate plan on the target, on connected objects and on the whole environment, by simulating it on a copy;
@@ -15,11 +15,11 @@ AFM is a generic decision-support system. Before anything is changed, it:
 
 It works through *environment adapters*. Three local, fictional, **simulated** playgrounds are included, and a **real-project mode** tests code changes on a copy of your own local folder or public GitHub repository. No real AWS, SAP, server, database or production system is connected or modified.
 
-> **What this is not.** A prototype, not a trained foundation model. The environments are fictional simulations. AFM cannot guarantee it has found every dependency, and this prototype does not prove real-world safety. Saved history and chat **do not train** any model. Review every integration yourself before any real-world use.
+> **What this is not.** A prototype, not a trained foundation model. The environments are fictional simulations. ACM cannot guarantee it has found every dependency, and this prototype does not prove real-world safety. Saved history and chat **do not train** any model. Review every integration yourself before any real-world use.
 
 ### The three playgrounds
 
-| Playground | Shows | Demo goal | What AFM predicts |
+| Playground | Shows | Demo goal | What ACM predicts |
 |---|---|---|---|
 | **Generic Object Playground** (simplest) | How one change flows through connected objects: Input A → Processor B (×2) → Display C | “Change Object A's value to 10 and show me what will happen.” | A 5 → 10 (direct), B 10 → 20 and C 10 → 20 (connected), each citing its configured rule |
 | **Web application port change** (main demonstration) | Users → web server → Python app → database, plus a health monitor and an *unverified* firewall | “Change the application to port 9000 while keeping it accessible. Do not delete data. Ask me before making changes.” | **P1** (app port only): web server still forwards to 8000, users may lose access, monitor reports unhealthy, database unchanged → goal **FAIL**, port-mismatch flag. **P2** (app + web server + test): accessible, but the monitor warning remains (trade-off). **P3** (app + web server + monitor + test): **recommended** |
@@ -32,8 +32,8 @@ It works through *environment adapters*. Three local, fictional, **simulated** p
 - **Action:** one use of a registered tool with exact parameters.
 - **Relationship:** a known link between objects.
 - **Goal:** what the human wants, turned into success criteria.
-- **Rule:** a limit AFM respects whatever the goal says.
-- **Prediction:** what AFM expects to change.
+- **Rule:** a limit ACM respects whatever the goal says.
+- **Prediction:** what ACM expects to change.
 - **Simulation:** trying a plan on a copy.
 - **Observation:** looking again after an approved execution.
 - **Human approval:** a person's yes to one exact plan for one exact environment state.
@@ -43,7 +43,7 @@ It works through *environment adapters*. Three local, fictional, **simulated** p
 A single change rarely stays on one object. For example, someone moves an application to port 9000. The web server still forwards to port 8000, so users lose access, and the health monitor starts reporting the service as down.
 
 *Without foresight:* “I changed the port. The application is now unreachable.”
-*With AFM:* “I predicted the dependency problem, proposed a complete plan, and asked the human to review it.”
+*With ACM:* “I predicted the dependency problem, proposed a complete plan, and asked the human to review it.”
 
 Today these changes are made with tools that do not look ahead:
 
@@ -58,10 +58,10 @@ People and AI agents need a way to ask “if I do this, what else changes, does 
 **Benefits**
 
 - **Consequences before changes.** Each plan is simulated on a copy, and every predicted change on the target, the connected objects and the whole environment is shown with the rule that causes it.
-- **Plans compared, not just executed.** AFM proposes alternatives, compares them side by side and recommends one, or says honestly that none qualifies.
-- **AFM decides, the LLM only helps.** Rules, permissions, the consequence engine and the approval gate are deterministic backend code. LLM output is always labelled and can never change rules, skip approval or execute anything.
+- **Plans compared, not just executed.** ACM proposes alternatives, compares them side by side and recommends one, or says honestly that none qualifies.
+- **ACM decides, the LLM only helps.** Rules, permissions, the consequence engine and the approval gate are deterministic backend code. LLM output is always labelled and can never change rules, skip approval or execute anything.
 - **Approval you can trust.** An approval is bound to the exact plan (hash) and the environment fingerprint. Any change cancels it, and the plan executes once.
-- **Honest results.** Every prediction ends as MATCH, MISMATCH or NOT VERIFIED. Nothing unobserved is reported as a pass, and the AFM Win needs accuracy, goal achievement and rule compliance together.
+- **Honest results.** Every prediction ends as MATCH, MISMATCH or NOT VERIFIED. Nothing unobserved is reported as a pass, and the ACM Win needs accuracy, goal achievement and rule compliance together.
 - **Rules that cannot drift.** The 32 rules of conduct are pinned by a SHA-256 hash: if they are edited without updating the pin, the backend refuses to start.
 - **Works on real code.** Real-project mode predicts the effect of a code change, runs your tests before and after, and compares, all on a copy of your project.
 - **Bring your own model.** Claude, any OpenAI-compatible cloud, a local model (Ollama, LM Studio, vLLM, llama.cpp) or an offline mock.
@@ -101,11 +101,11 @@ People and AI agents need a way to ask “if I do this, what else changes, does 
                                                    execute ONCE in the simulation ─► observe ─► compare ─► experience history
 ```
 
-- **AFM is the decision-maker.** Its rules, permissions, consequence engine and approval gate are deterministic Python code on the backend.
-- **The LLM is a tool.** AFM may consult it to explain an object type, suggest read-only inspections, help fill in a use case in chat, or propose plans in a strict structured format. Its output is always labelled *LLM-generated / general knowledge*. It is never treated as a fact about the environment, and it can never change rules, skip approval or execute anything.
+- **ACM is the decision-maker.** Its rules, permissions, consequence engine and approval gate are deterministic Python code on the backend.
+- **The LLM is a tool.** ACM may consult it to explain an object type, suggest read-only inspections, help fill in a use case in chat, or propose plans in a strict structured format. Its output is always labelled *LLM-generated / general knowledge*. It is never treated as a fact about the environment, and it can never change rules, skip approval or execute anything.
 - **Adapters hold everything domain-specific:** objects, relationships, actions, simulation rules, goal parsing and success criteria. The generic core has no warehouse, port or object-A logic, and a test checks this.
 
-#### The 16-step workflow, from Task Goal to AFM Win
+#### The 16-step workflow, from Task Goal to ACM Win
 
 Every card on the Overview has **Run simulation**. It opens a timeline of the 16 steps for that use case: Generic Object Playground, Web Application Port Change, Inventory Assistant, or Data Readiness Agent.
 
@@ -118,13 +118,13 @@ Every card on the Overview has **Run simulation**. It opens a timeline of the 16
 | 5 | Discover relevant objects and connections | 13 | Recheck plan, **policy** and environment; execute only if approved and supported |
 | 6 | Inspect states and understand behavior (LLM explains, observations decide) | 14 | Observe the actual test results (method, time, snapshot, simulated/connected) |
 | 7 | Identify possible actions and tools | 15 | Compare predictions with test results: **MATCH / MISMATCH / NOT VERIFIED** |
-| 8 | Propose candidate plans | 16 | **Evaluate the AFM Win** |
+| 8 | Propose candidate plans | 16 | **Evaluate the ACM Win** |
 
-**Why the Task Goal starts the assessment:** AFM must know what success looks like before it looks around. That way discovery, inspection and planning stay focused on the task. Identity, rules and permissions are not "later" steps: they are standing context, loaded and enforced from the first moment (step 2 shows them; the run log records the rules and policy version right after the goal).
+**Why the Task Goal starts the assessment:** ACM must know what success looks like before it looks around. That way discovery, inspection and planning stay focused on the task. Identity, rules and permissions are not "later" steps: they are standing context, loaded and enforced from the first moment (step 2 shows them; the run log records the rules and policy version right after the goal).
 
-**Success criteria:** criteria derived by the environment adapter are labelled *proposed by adapter*. Criteria you type (one per line in step 1) are labelled *yours*; they are not machine-checkable, so you verify them after execution. AFM never presents proposals as human-approved: you explicitly agree to the criteria in the approval dialog (step 12). Without that agreement, task goal achievement stays NOT VERIFIED.
+**Success criteria:** criteria derived by the environment adapter are labelled *proposed by adapter*. Criteria you type (one per line in step 1) are labelled *yours*; they are not machine-checkable, so you verify them after execution. ACM never presents proposals as human-approved: you explicitly agree to the criteria in the approval dialog (step 12). Without that agreement, task goal achievement stays NOT VERIFIED.
 
-#### The AFM Win (step 16)
+#### The ACM Win (step 16)
 
 A **WIN** needs all three conditions, judged on observed evidence after execution:
 
@@ -144,13 +144,13 @@ A **WIN** needs all three conditions, judged on observed evidence after executio
 
 #### How the simulation page works
 
-- **Prefilled:** each step has AFM's reasoning note for the use case (editable) plus live data, with evidence labels: configured, observed, LLM-generated, predicted, conditional, unknown, human input, illustrative.
-- **Live 2D view (right panel):** a small canvas engine draws the environment, every object and the AFM agent. It animates each planned action as a beam to its target, then consequence waves to connected objects (green benefit, amber warning, blue neutral change, dashed grey unknown), then "awaiting your approval", then "executed", with ✓ on observed matches. It has plan chips and replay, respects reduced motion, and offers an "Animation as text" version.
-- **Chat overrides any step:** “step 9: …” proposes new text for that step's note; “add rule: …” proposes a use-case rule (still checked for conflicts); inputs like goal or port can change too. Every proposal waits for Accept / Edit / Dismiss. Computed results (predictions, checks, approval, execution, observation) can never be written by chat: they come only from AFM's engine (R18).
+- **Prefilled:** each step has ACM's reasoning note for the use case (editable) plus live data, with evidence labels: configured, observed, LLM-generated, predicted, conditional, unknown, human input, illustrative.
+- **Live 2D view (right panel):** a small canvas engine draws the environment, every object and the ACM agent. It animates each planned action as a beam to its target, then consequence waves to connected objects (green benefit, amber warning, blue neutral change, dashed grey unknown), then "awaiting your approval", then "executed", with ✓ on observed matches. It has plan chips and replay, respects reduced motion, and offers an "Animation as text" version.
+- **Chat overrides any step:** “step 9: …” proposes new text for that step's note; “add rule: …” proposes a use-case rule (still checked for conflicts); inputs like goal or port can change too. Every proposal waits for Accept / Edit / Dismiss. Computed results (predictions, checks, approval, execution, observation) can never be written by chat: they come only from ACM's engine (R18).
 - **Real statuses only:** Not started, Ready to run, In progress, Waiting for information, Waiting for review, Approved, Rejected, Completed, Failed, Unsupported, Not verified. Future steps are never shown as completed.
 - **Change the steps:** edit the task goal, input, output and criteria (step 1), and the role and use-case rules (step 2) directly, or ask the **chat** (Claude when configured). For example, “use port 9500 instead”. Chat proposals wait for **Accept / Edit / Dismiss**. Then **Re-run simulation**.
-- **Steps 12–16 run inline:** approve or reject the plan (the same backend gate), recheck and execute once, observe, compare, and see the **AFM Result** panel. It is also shown in Results & History.
-- **Data Readiness Agent** has no AFM adapter, so its simulation is honestly **not connected**. Steps 1 and 3–16 show *Unsupported* and there is no Win. Its notes come from a one-time read-only look at `~/DataReady` (commit `356066e`) taken while building the template, are labelled illustrative, and are not an AFM assessment.
+- **Steps 12–16 run inline:** approve or reject the plan (the same backend gate), recheck and execute once, observe, compare, and see the **ACM Result** panel. It is also shown in Results & History.
+- **Data Readiness Agent** has no ACM adapter, so its simulation is honestly **not connected**. Steps 1 and 3–16 show *Unsupported* and there is no Win. Its notes come from a one-time read-only look at `~/DataReady` (commit `356066e`) taken while building the template, are labelled illustrative, and are not an ACM assessment.
 
 Simulations are saved like use cases (local, deletable). The templates live in each adapter's `scenario.json` (`simulation`) and in `backend/app/adapters/templates/`.
 
@@ -159,10 +159,10 @@ Simulations are saved like use cases (local, deletable). The templates live in e
 Open **Create a use case** (top of the sidebar).
 
 - **Left, the structured form:** AI agent role and purpose; the 32 global rules (loaded automatically, with their version); optional use-case rules; environment (type, name, description, adapter, connection status); target object; goal, success criteria, constraints, *analysis only* or *propose a plan*; evidence notes (treated as untrusted input).
-- **Right, chat:** describe the use case in plain words, ask about an object type, or ask what AFM still needs. The chat may **propose** form updates. You **Accept**, **Edit** or **Dismiss** them; nothing is applied silently. Each answer carries labels: *General knowledge (LLM)*, *Based on a simulated environment*, *Observed adapter result*, *Prediction*, *Unknown / unverified*.
+- **Right, chat:** describe the use case in plain words, ask about an object type, or ask what ACM still needs. The chat may **propose** form updates. You **Accept**, **Edit** or **Dismiss** them; nothing is applied silently. Each answer carries labels: *General knowledge (LLM)*, *Based on a simulated environment*, *Observed adapter result*, *Prediction*, *Unknown / unverified*.
 - **Prepare assessment:**
-  - *With a simulated adapter:* runs the normal AFM loop (predict, check, recommend, then ask you).
-  - *Without an adapter* (e.g. AWS, SAP, a spreadsheet): AFM says it has **not** inspected, simulated or executed anything, lists what is missing, and can add general LLM knowledge clearly labelled. Describing an environment in chat never connects it.
+  - *With a simulated adapter:* runs the normal ACM loop (predict, check, recommend, then ask you).
+  - *Without an adapter* (e.g. AWS, SAP, a spreadsheet): ACM says it has **not** inspected, simulated or executed anything, lists what is missing, and can add general LLM knowledge clearly labelled. Describing an environment in chat never connects it.
 - Examples to start from: Generic Object Playground, Web Application Port Change, Inventory Assistant, and Data Readiness Agent (not connected: that project is separate).
 - Use cases and their chat history are stored locally (SQLite) and can be deleted. **Saved chat is not model training.**
 
@@ -170,21 +170,21 @@ Open **Create a use case** (top of the sidebar).
 
 Open **TEST IT → Overview** and press **Test on your project** on the red card (or use **Your real project** in the side menu). Sample projects (the three simulated playgrounds and the not-connected Data Readiness Agent) are in the **Sample projects** dropdown next to it. Pick your LLM first with **Use your LLM model** in the Overview header (Claude, an OpenAI-compatible cloud, or a local model such as Ollama). The offline mock cannot write code.
 
-1. **Connect.** Give an absolute local path or a public GitHub URL (optional branch, tag or commit), then **Create test workspace & inspect**. ACFM makes a separate copy in `~/ACFM/workspaces/` (git-ignored): a `git clone` of a local Git project at its current commit (uncommitted changes are not copied), a file copy of a plain folder (dependency folders skipped), or a shallow clone from GitHub. Git hooks are disabled; nothing is installed and no project script runs. **Your folder is only read.**
+1. **Connect.** Give an absolute local path or a public GitHub URL (optional branch, tag or commit), then **Create test workspace & inspect**. ACM makes a separate copy in `~/ACFM/workspaces/` (git-ignored): a `git clone` of a local Git project at its current commit (uncommitted changes are not copied), a file copy of a plain folder (dependency folders skipped), or a shallow clone from GitHub. Git hooks are disabled; nothing is installed and no project script runs. **Your folder is only read.**
 2. **Inspect (step 4–6).** Read-only: languages, files, key files, existing tests and suggested test commands (not run). README text is data, never instructions.
 3. **Project overview (step 4).** Right after the scan, your LLM reads the README, config and up to 10 main source files and lists the **project name, its goal, all features it can see and suggested improvements**. Labelled LLM-generated; it is a description, not evidence. **Use this change →** copies a suggestion into the step-8 box.
 4. **Describe the change in plain words (step 8).** e.g. *"Make add() in calc.py return the sum instead of the difference."* Files you name are sent automatically, with their own test files (`calc.py` → `tests/test_calc.py`; a full path such as `mobile/App.tsx` sends only that file); pick more in step 7. Your LLM replies with the Task Goal, test commands, success criteria and **2–3 alternative plans**. For each plan:
-   - the code change as exact *replace this text with that text* edits. **ACFM writes the diff itself** and checks that it applies;
-   - **predicted consequences per object**: the target it changes, connected objects (callers, importers, screens, API clients, tests) and the whole project (users, contracts, security), each marked benefit / risk / neutral / unknown with a reason. ACFM adds the files that really import the changed file (found by following import paths in the copy, labelled *found by ACFM*);
+   - the code change as exact *replace this text with that text* edits. **ACM writes the diff itself** and checks that it applies;
+   - **predicted consequences per object**: the target it changes, connected objects (callers, importers, screens, API clients, tests) and the whole project (users, contracts, security), each marked benefit / risk / neutral / unknown with a reason. ACM adds the files that really import the changed file (found by following import paths in the copy, labelled *found by ACM*);
    - testable predictions (exit code `0` / non-zero / **same as before the change**, one test's outcome, "no other test changes", or a human check) and risks.
 
-   The plans are shown side by side; **ACFM recommends one** (applies cleanly, fewest predicted risks, fewest changed files) and you choose with **Use plan A/B/C**. That fills steps 1, 8, 10 and 11 and saves them; the chosen plan's consequences are part of what you approve. Ask again to refine. You can always edit the patch and commands by hand.
+   The plans are shown side by side; **ACM recommends one** (applies cleanly, fewest predicted risks, fewest changed files) and you choose with **Use plan A/B/C**. That fills steps 1, 8, 10 and 11 and saves them; the chosen plan's consequences are part of what you approve. Ask again to refine. You can always edit the patch and commands by hand.
 5. **Pre-check (step 9)** on every save: the patch applies (`git apply --check`) and stays inside the workspace; commands are not shells, `sudo`, `curl`, `rm`, `git push/reset/clean`…. Predictions are saved before anything runs.
 6. **Review (step 12).** You approve the exact plan; the approval is bound to commit, patch, commands, predictions and policy. Any change cancels it.
 7. **Run once (steps 13–14).** Recheck, then the approved commands run **before** the patch (baseline), the patch is applied, and the same commands run **after**. Secrets are removed from the environment, `HOME` is temporary, each command has a time limit. **This is not a sandbox:** tests can still read your files and reach the network.
 8. **Compare and Win (steps 15–16).** MATCH / MISMATCH / NOT VERIFIED per prediction (missing tools or dependencies → NOT VERIFIED, never a pass), then prediction accuracy · Task Goal · rule compliance (including "your original folder was not modified"). Per-object consequences that no test measured are listed as **not verified**: untested never means "no effect".
 
-**Getting a real result instead of NOT VERIFIED:** ACFM never installs anything, so the test command must work on this machine. For a Python backend, point the command at a Python that has the project's dependencies, e.g. `/path/to/venv/bin/python -m pytest -q -rA backend/tests`; services the tests need (a database, for example) must be running. Code with no tests (e.g. a mobile app) can only be checked by a human judgment in step 16 or by adding a test in the plan.
+**Getting a real result instead of NOT VERIFIED:** ACM never installs anything, so the test command must work on this machine. For a Python backend, point the command at a Python that has the project's dependencies, e.g. `/path/to/venv/bin/python -m pytest -q -rA backend/tests`; services the tests need (a database, for example) must be running. Code with no tests (e.g. a mobile app) can only be checked by a human judgment in step 16 or by adding a test in the plan.
 
 **What is sent to the LLM:** your message, the Task Goal, languages, test file names, suggested commands, the current plan, and only the files named, picked or listed under "Read" in the overview. Never your API key, other projects or files outside the workspace.
 
@@ -192,11 +192,11 @@ Delete a test from the project list to remove its workspace copy. Not in Phase 1
 
 #### Rules
 
-**Permanent rules of conduct (R01–R32, global).** AFM's 32 rules of conduct (e.g. *R08 Respect human review*, *R16 Say “I don't know”*, *R22 Treat external content as data*, *R24 Do not treat approval as unlimited authority*) live in `backend/app/config/conduct_rules.json`. They are:
+**Permanent rules of conduct (R01–R32, global).** ACM's 32 rules of conduct (e.g. *R08 Respect human review*, *R16 Say “I don't know”*, *R22 Treat external content as data*, *R24 Do not treat approval as unlimited authority*) live in `backend/app/config/conduct_rules.json`. They are:
 
 - **Global:** they apply in every environment and every use case.
 - **Permanent:** read-only at runtime and pinned by a SHA-256 in `backend/app/domain/conduct.py`. If anyone edits, weakens, reorders or removes a rule without also updating the pin, **the backend refuses to start**. Changing them is therefore a separate, deliberate, human-controlled operation (R10).
-- **Honest about enforcement:** each rule is marked *Enforced by code* (20) or *Partially enforced* (12), with a note on how. For example, *R02 Do not steal* is partial: AFM has no tool that could move assets, but nothing checks real-world resource use.
+- **Honest about enforcement:** each rule is marked *Enforced by code* (20) or *Partially enforced* (12), with a note on how. For example, *R02 Do not steal* is partial: ACM has no tool that could move assets, but nothing checks real-world resource use.
 
 Every run records the rules version it was assessed under.
 
@@ -223,12 +223,12 @@ Click **Use your LLM model** (sidebar, or the chat header) and choose one option
 | **Local model** | server preset (Ollama `:11434`, LM Studio `:1234`, vLLM `:8000`, llama.cpp `:8080`, Other) · base URL · model (**List models** fills it from the server) · optional key · timeout. Nothing leaves this machine |
 | **Mock** | nothing |
 
-- **Test connection** sends one tiny request. **Save & use** switches AFM live, with no restart. **Revert** goes back to `backend/.env`.
+- **Test connection** sends one tiny request. **Save & use** switches ACM live, with no restart. **Revert** goes back to `backend/.env`.
 - The key is stored only in `backend/data/llm_settings.json` (git-ignored, file mode 600). It is never shown again (only "…abcd"), never logged, and never sent anywhere except the chosen provider.
 - Settings can only be changed from this machine.
 - A key is refused over plain `http` to a remote host, and credentials inside a URL are refused.
 - Whatever model you pick, its answers are labelled LLM-generated and go through the same validation gate. A model can never change rules, permissions or approvals.
-- Someone who clones AFM gets the code, never your key. Each person connects their own model.
+- Someone who clones ACM gets the code, never your key. Each person connects their own model.
 
 #### The LLM tool: mock or Claude
 
@@ -317,10 +317,10 @@ docs/                   architecture, object model, rules and approval
 
 > Draft: the stages and models below are hypotheses to test with design partners, not commitments or results.
 
-1. **Pilot (now → first design partners).** Run AFM with 2–3 teams that make risky changes often (platform/DevOps, ERP operations, teams using AI coding agents). Measure how many consequences AFM predicts that the team had missed, and how often its predictions MATCH what is observed.
+1. **Pilot (now → first design partners).** Run ACM with 2–3 teams that make risky changes often (platform/DevOps, ERP operations, teams using AI coding agents). Measure how many consequences ACM predicts that the team had missed, and how often its predictions MATCH what is observed.
 2. **Real-system adapters.** Start read-only (inspect and simulate only) for common environments such as cloud configuration, web servers and ERP sandboxes, then add approval-gated execution. Add container isolation and private repositories to real-project mode.
 3. **Product.** Login, users and roles for approvals; audit export of plans, predictions, approvals and observations; on-premises deployment for regulated clients.
-4. **Scale.** Offer AFM as a "foresight and approval gate" for AI agents and automation tools, with partner channels and a library of reviewed adapters. Revenue models to test: per-seat SaaS, enterprise licence, paid adapters, education licences.
+4. **Scale.** Offer ACM as a "foresight and approval gate" for AI agents and automation tools, with partner channels and a library of reviewed adapters. Revenue models to test: per-seat SaaS, enterprise licence, paid adapters, education licences.
 
 ---
 
@@ -333,7 +333,7 @@ docs/                   architecture, object model, rules and approval
 ```bash
 git clone git@github.com:Sherlock2019/ACM.git
 cd ACM
-./start.sh            # always stops running AFM servers, then starts fresh (installs on first run)
+./start.sh            # always stops running ACM servers, then starts fresh (installs on first run)
 # UI  → http://127.0.0.1:5530      API → http://127.0.0.1:8530 (interactive docs at /docs)
 ```
 
@@ -346,11 +346,11 @@ Try each playground (about 2 minutes each):
 5. **Results & History** shows predicted vs observed values: MATCH / DIFFERENCE / NOT VERIFIED.
 6. **Reset playground** (sidebar) restores that simulation only.
 
-Start with the **Web application port change**: it shows why changing only the app port fails, and why AFM recommends the complete plan.
+Start with the **Web application port change**: it shows why changing only the app port fails, and why ACM recommends the complete plan.
 
 **More commands:** `./start.sh stop` · `./start.sh status` · `./start.sh restart` · `./start.sh test`
 
-**Other ports:** `AFM_FRONTEND_PORT=3010 ./start.sh` (and `AFM_BACKEND_PORT=…`), or put `AFM_FRONTEND_PORT=3010` in `backend/.env` once. `start.sh` stops every ACFM server started from this folder whatever its port, never stops another program, and if another program (another app, another user, Docker) holds a port it says so right away instead of waiting. The app lives under `/acm/` and its home page is **`/acm/home`** (e.g. `http://127.0.0.1:3010/acm/home`; the bare address redirects there). Change it with `AFM_BASE_PATH`.
+**Other ports:** `AFM_FRONTEND_PORT=3010 ./start.sh` (and `AFM_BACKEND_PORT=…`), or put `AFM_FRONTEND_PORT=3010` in `backend/.env` once. `start.sh` stops every ACM server started from this folder whatever its port, never stops another program, and if another program (another app, another user, Docker) holds a port it says so right away instead of waiting. The app lives under `/acm/` and its home page is **`/acm/home`** (e.g. `http://127.0.0.1:3010/acm/home`; the bare address redirects there). Change it with `AFM_BASE_PATH`.
 
 **From another machine:** by default the UI listens on `127.0.0.1` only. Use an SSH tunnel, e.g. `ssh -L 3010:127.0.0.1:3010 ubuntu@your-server`, then open `http://127.0.0.1:3010/acm/home`.
 
@@ -367,7 +367,7 @@ The app is then at `http://<server-public-ip>:3010/acm/home`. The backend stays 
 
 > To fill in: the amounts and terms below are placeholders, not figures.
 
-- **Raising:** `[amount]` for `[period]` to take AFM from proof of concept to paid pilots.
+- **Raising:** `[amount]` for `[period]` to take ACM from proof of concept to paid pilots.
 - **Use of funds** (draft split, to confirm):
   - real-system adapters, starting read-only;
   - isolation and security for real-project mode (containers, private repositories);
