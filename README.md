@@ -2,6 +2,32 @@
 
 **Think before acting.**
 
+> ### 👋 To Y Combinator and investors
+>
+> **1 · The problem.** AI agents are starting to act in the world: they edit code, change server settings
+> and place orders. But language models predict the next word, not the consequences of an action. They
+> don't track what an action changes, can't show why, and rarely say "I don't know". An agent that cannot
+> foresee what its action changes cannot be trusted to act.
+>
+> **2 · Our solution and where it stands.** Two working proofs of concept:
+> - **ACM** (this repository) predicts the consequences of an AI agent's action inside its digital world.
+>   It simulates each plan on a copy, checks it against the goal and 32 permanent rules, and asks a human
+>   to approve one exact plan. It then acts once and compares the prediction with what happened.
+> - **[ACMP](https://github.com/Sherlock2019/Butterfly-effect-AImodel)** extends it to a ten-layer world
+>   view, from Earth & Ecosystems down to the Physical World. One action produces a cascade of
+>   consequences across every affected layer.
+>
+> Today ACM has a generic consequence engine, three simulated playgrounds, the 16-step workflow with its
+> approval gate, real-project mode for code, and 54 backend tests. It is not a trained model yet, and no
+> real-system adapter exists.
+>
+> **3 · What next.** We need resources and engineers to build a full, new **Action Prediction Model**:
+> train it, test it, evaluate it, then improve and retrain it in a loop. We also want to collaborate with
+> AI frontier labs and sell the model to them. See [My ask for investors](#my-ask-for-investors) and
+> [Build it with us](#build-it-with-us).
+>
+> *Draft: frontier labs as partners and customers is a hypothesis to validate. Amounts are placeholders.*
+
 ---
 
 ## WHY
@@ -422,6 +448,37 @@ The app is then at `http://<server-public-ip>:3010/acm/home`. The backend stays 
 3. **Later**
    - A "think before acting" gate for AI agents and automation: every state-changing action is predicted, checked against rules and approved by a human before it runs once.
    - Prediction accuracy tracked over time from the experience history, shown only where the evidence supports it.
+
+### From one environment to the whole world: the Global World View prediction model
+
+ACM today predicts the consequences of a change inside **one environment** at a time: a web stack, two warehouses, a code project. It reaches each one through that environment's adapter. The next step is to widen the view to **every world an action can touch**.
+
+That is the **Global World View prediction model** I am building in **[Butterfly-effect-AImodel](https://github.com/Sherlock2019/Butterfly-effect-AImodel)** (ACMP · Butterfly Eye View). One actor does one action, and its consequences cascade across ten worlds:
+
+- Earth & Ecosystems
+- Government, Politics & Military
+- Society & Economy
+- Business & Institutions
+- Social Media & News
+- Network & Communications
+- Digital & IT Systems
+- Human & Animal Behaviour
+- Perception
+- the Physical World, down to its molecular, atomic and quantum scales
+
+How ACM evolves into it:
+
+| ACM today | Global World View model |
+|---|---|
+| One environment per assessment, through its adapter | Ten worlds; prediction routing reads the action and picks the worlds it touches |
+| Objects, states, relationships and rules defined per adapter | Each world has its own laws, with the best specialist model per world (physics engine, vision, behaviour, economic, climate); rules stand in until a model exists |
+| Consequences on the target, the connected objects and the whole environment | Consequences that cascade from one world into the next: a physical fault becomes a digital outage, then a business loss, then a news story |
+| Rules, permissions and one human-approved plan, executed once | The same "think before acting" gate, now judging the full cross-world picture before any action |
+| Prediction compared with observation in one environment | Prediction compared with observation per world, building the evidence to calibrate each world's model |
+
+Put together, ACMP gives the **world view** (what an action can change, everywhere) and ACM gives the **decision gate** (check the goal and the rules, ask the human, act once, verify). The goal is an AI agent, or a person, who sees the consequences of an action across every world before taking it.
+
+*Status:* ACMP already runs the ten-world stack, prediction routing and the cascade, using prototype rules and authored consequences for 22 scenarios. Connecting real specialist models per world, and joining the two projects, are next steps.
 
 ### Build it with us
 
