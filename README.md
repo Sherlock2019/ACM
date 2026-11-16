@@ -27,6 +27,8 @@
 > [Build it with us](#build-it-with-us).
 >
 > *Draft: frontier labs as partners and customers is a hypothesis to validate. Amounts are placeholders.*
+> > DzoanNguyentran@gmail.com  Founder / S4BWB Solution for a Better World Builder
+> https://dzoannguyentran.jobsmatchnow.com/#home
 
 **📖 [Full README](#why)** &nbsp;·&nbsp; **⏱️ [30-second version](README-30s.md)**
 
